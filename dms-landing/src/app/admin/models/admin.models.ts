@@ -41,7 +41,7 @@ export interface Disaster {
     name: string;
     affectedRegions: string[];
     severity: 'low' | 'medium' | 'high' | 'critical';
-    status: 'active' | 'closed';
+    status: 'active' | 'closed'; // Frontend simplified status
     reportedDate: Date;
     affectedPopulation: number;
     description: string;
@@ -54,6 +54,7 @@ export interface RegionAssignment {
     disasterName: string;
     region: string;
     assignedNGOs: string[]; // NGO IDs
+    ngoNames?: string[]; // NGO Names (optional for backward compatibility)
     resourceRequirements: {
         food: number;
         medical: number;

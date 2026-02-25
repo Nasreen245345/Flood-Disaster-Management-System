@@ -80,6 +80,7 @@ export const routes: Routes = [
                 path: 'volunteer', children: [
                     { path: '', redirectTo: 'home', pathMatch: 'full' },
                     { path: 'home', loadComponent: () => import('./dashboard/volunteer/home/volunteer-home').then(m => m.VolunteerHomeComponent) },
+                    { path: 'register', loadComponent: () => import('./dashboard/volunteer/register/volunteer-register').then(m => m.VolunteerRegisterComponent) },
                     { path: 'tasks', loadComponent: () => import('./dashboard/volunteer/my-tasks/my-tasks').then(m => m.MyTasksComponent) },
                     { path: 'region', loadComponent: () => import('./dashboard/volunteer/region/assigned-region').then(m => m.AssignedRegionComponent) },
                     { path: 'history', loadComponent: () => import('./dashboard/volunteer/activity-log/activity-log').then(m => m.ActivityLogComponent) },

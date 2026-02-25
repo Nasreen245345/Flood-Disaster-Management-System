@@ -1,10 +1,22 @@
 <div class="requests-page">
     <div class="page-header">
         <h1>Aid Requests</h1>
+        <p class="subtitle">Manage aid requests assigned to your organization</p>
     </div>
 
-    <mat-card class="table-card">
-        <table mat-table [dataSource]="requests$" class="w-full">
+    <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading aid requests...</p>
+    </div>
+
+    <mat-card class="table-card" *ngIf="!loading">
+        <div *ngIf="requests.length === 0" class="no-data">
+            <mat-icon>inbox</mat-icon>
+            <p>No aid requests assigned yet</p>
+            <small>Requests will appear here when victims submit aid requests in your assigned regions</small>
+        </div>
+
+        <table mat-table [dataSource]="requests" class="w-full" *ngIf="requests.length > 0">
 
             <!-- Victim -->
             <ng-container matColumnDef="victim">
@@ -12,37 +24,63 @@
                 <td mat-cell *matCellDef="let req">
                     <div class="victim-info">
                         <span class="name">{{ req.victimName }}</span>
-                        <span class="id">ID: {{ req.victimId }}</span>
+                        <span class="id">CNIC: {{ req.victimCNIC }}</span>
+                        <span class="phone">{{ req.victimPhone }}</span>
                     </div>
                 </td>
             </ng-container>
 
-            <!-- Priority -->
-            <ng-container matColumnDef="priority">
-                <th mat-header-cell *matHeaderCellDef> Priority </th>
+            <!-- Location -->
+            <ng-container matColumnDef="location">
+                <th mat-header-cell *matHeaderCellDef> Location </th>
                 <td mat-cell *matCellDef="let req">
-                    <span class="priority-badge" [class]="req.priority | lowercase">{{ req.priority }}</span>
+                    <div class="location-info">
+                        <span>{{ req.location }}</span>
+                        <button mat-icon-button (click)="viewOnMap(req)" *ngIf="req.coordinates" 
+                                matTooltip="View on map">
+                            <mat-icon>map</mat-icon>
+                        </button>
+                    </div>
                 </td>
             </ng-container>
 
-            <!-- Region -->
-            <ng-container matColumnDef="region">
-                <th mat-header-cell *matHeaderCellDef> Region </th>
-                <td mat-cell *matCellDef="let req"> {{ req.region }} </td>
+            <!-- Packages -->
+            <ng-container matColumnDef="packages">
+                <th mat-header-cell *matHeaderCellDef> Packages Needed </th>
+                <td mat-cell *matCellDef="let req">
+                    <div class="packages-list">
+                        {{ getPackagesList(req) }}
+                    </div>
+                </td>
             </ng-container>
 
-            <!-- Items -->
-            <ng-container matColumnDef="items">
-                <th mat-header-cell *matHeaderCellDef> Requested Items </th>
-                <td mat-cell *matCellDef="let req"> {{ req.items.join(', ') }} </td>
+            <!-- People Count -->
+            <ng-container matColumnDef="people">
+                <th mat-header-cell *matHeaderCellDef> People </th>
+                <td mat-cell *matCellDef="let req">
+                    <div class="people-count">
+                        <mat-icon>people</mat-icon>
+                        <span>{{ req.peopleCount }}</span>
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Urgency -->
+            <ng-container matColumnDef="urgency">
+                <th mat-header-cell *matHeaderCellDef> Urgency </th>
+                <td mat-cell *matCellDef="let req">
+                    <span class="urgency-badge" [class]="getUrgencyColor(req.urgency)">
+                        {{ req.urgency | uppercase }}
+                    </span>
+                </td>
             </ng-container>
 
             <!-- Status -->
             <ng-container matColumnDef="status">
                 <th mat-header-cell *matHeaderCellDef> Status </th>
                 <td mat-cell *matCellDef="let req">
-                    <mat-chip [color]="req.status === 'Approved' ? 'warn' : 'primary'" selected>
-                        {{ req.status }}
+                    <mat-chip [color]="getStatusColor(req.status)" selected>
+                        {{ req.status | titlecase }}
                     </mat-chip>
                 </td>
             </ng-container>
@@ -51,13 +89,24 @@
             <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef> Actions </th>
                 <td mat-cell *matCellDef="let req">
-                    <button mat-raised-button color="accent" *ngIf="req.status === 'Approved'"
-                        (click)="moveToReady(req.id)">
-                        Prepare
-                    </button>
-                    <span *ngIf="req.status !== 'Approved'" class="text-gray-500">
-                        <mat-icon>check_circle</mat-icon>
-                    </span>
+                    <div class="action-buttons">
+                        <button mat-raised-button color="primary" 
+                                *ngIf="req.status === 'approved'"
+                                (click)="markInProgress(req)">
+                            <mat-icon>play_arrow</mat-icon>
+                            Start
+                        </button>
+                        <button mat-raised-button color="accent" 
+                                *ngIf="req.status === 'in_progress'"
+                                (click)="markFulfilled(req)">
+                            <mat-icon>check_circle</mat-icon>
+                            Fulfill
+                        </button>
+                        <span *ngIf="req.status === 'fulfilled'" class="fulfilled-badge">
+                            <mat-icon>check_circle</mat-icon>
+                            Completed
+                        </span>
+                    </div>
                 </td>
             </ng-container>
 

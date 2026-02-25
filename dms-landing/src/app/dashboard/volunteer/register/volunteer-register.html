@@ -1,0 +1,260 @@
+<div class="volunteer-register-container">
+  <div class="page-header">
+    <h1 class="page-title">{{ isEditMode ? 'Edit Volunteer Profile' : 'Volunteer Registration' }}</h1>
+    <p class="page-subtitle">{{ isEditMode ? 'Update your volunteer information' : 'Join an NGO and help those in need' }}</p>
+  </div>
+
+  <mat-card class="registration-card">
+    <mat-stepper linear #stepper>
+      
+      <!-- Step 1: Basic Information -->
+      <mat-step [stepControl]="basicInfoForm">
+        <form [formGroup]="basicInfoForm">
+          <ng-template matStepLabel>Basic Information</ng-template>
+          
+          <div class="step-content">
+            <h3>Personal Details</h3>
+            
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Full Name</mat-label>
+              <input matInput formControlName="fullName" placeholder="Enter your full name" required>
+              <mat-icon matPrefix>person</mat-icon>
+              <mat-error *ngIf="basicInfoForm.get('fullName')?.hasError('required')">
+                Full name is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>CNIC / National ID</mat-label>
+              <input matInput formControlName="cnic" placeholder="12345-1234567-1" required>
+              <mat-icon matPrefix>badge</mat-icon>
+              <mat-error *ngIf="basicInfoForm.get('cnic')?.hasError('required')">
+                CNIC is required
+              </mat-error>
+              <mat-error *ngIf="basicInfoForm.get('cnic')?.hasError('pattern')">
+                Invalid CNIC format (e.g., 12345-1234567-1)
+              </mat-error>
+            </mat-form-field>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Phone Number</mat-label>
+                <input matInput formControlName="phone" placeholder="+92 300 1234567" required>
+                <mat-icon matPrefix>phone</mat-icon>
+                <mat-error *ngIf="basicInfoForm.get('phone')?.hasError('required')">
+                  Phone is required
+                </mat-error>
+                <mat-error *ngIf="basicInfoForm.get('phone')?.hasError('pattern')">
+                  Invalid phone format
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Email (Optional)</mat-label>
+                <input matInput formControlName="email" type="email" placeholder="your@email.com">
+                <mat-icon matPrefix>email</mat-icon>
+                <mat-error *ngIf="basicInfoForm.get('email')?.hasError('email')">
+                  Invalid email format
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <h3 class="mt-4">Select NGO to Work Under</h3>
+            <p class="helper-text">Choose the organization you want to volunteer with</p>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>NGO Organization</mat-label>
+              <mat-select formControlName="assignedNGO" required>
+                <mat-option *ngFor="let ngo of approvedNGOs" [value]="ngo._id">
+                  <div class="ngo-option">
+                    <span class="ngo-name">{{ ngo.name }}</span>
+                    <span class="ngo-type">{{ ngo.type | uppercase }}</span>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>business</mat-icon>
+              <mat-error *ngIf="basicInfoForm.get('assignedNGO')?.hasError('required')">
+                Please select an NGO
+              </mat-error>
+            </mat-form-field>
+
+            <div *ngIf="loading" class="loading-state">
+              <mat-icon>hourglass_empty</mat-icon>
+              <p>Loading approved NGOs...</p>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-raised-button color="primary" matStepperNext [disabled]="basicInfoForm.invalid">
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 2: Classification -->
+      <mat-step [stepControl]="classificationForm">
+        <form [formGroup]="classificationForm">
+          <ng-template matStepLabel>Classification</ng-template>
+          
+          <div class="step-content">
+            <h3>Volunteer Category</h3>
+            <p class="helper-text">Select your area of expertise</p>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Category</mat-label>
+              <mat-select formControlName="category" required>
+                <mat-option *ngFor="let cat of categories" [value]="cat.value">
+                  <div class="category-option">
+                    <span class="category-label">{{ cat.label }}</span>
+                    <span class="category-desc">{{ cat.description }}</span>
+                  </div>
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>category</mat-icon>
+            </mat-form-field>
+
+            <h3 class="mt-4">Skill Level</h3>
+            <p class="helper-text">Your skill level determines your service capacity</p>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Skill Level</mat-label>
+              <mat-select formControlName="skillLevel" required>
+                <mat-option *ngFor="let skill of skillLevels" [value]="skill.value">
+                  <div class="skill-option">
+                    <span class="skill-label">{{ skill.label }}</span>
+                    <span class="skill-rate">{{ skill.rate }} victims/day</span>
+                  </div>
+                  <div class="skill-desc">{{ skill.description }}</div>
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>star</mat-icon>
+            </mat-form-field>
+
+            <div *ngIf="classificationForm.get('skillLevel')?.value" class="capacity-info">
+              <mat-icon>info</mat-icon>
+              <span>Your service capacity: <strong>{{ getSelectedSkillRate() }} victims per day</strong></span>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" matStepperNext [disabled]="classificationForm.invalid">
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 3: Availability -->
+      <mat-step [stepControl]="availabilityForm">
+        <form [formGroup]="availabilityForm">
+          <ng-template matStepLabel>Availability</ng-template>
+          
+          <div class="step-content">
+            <h3>Availability Status</h3>
+            
+            <mat-radio-group formControlName="availabilityStatus" class="radio-group">
+              <mat-radio-button value="active">
+                <div class="radio-content">
+                  <strong>Active</strong>
+                  <span>Ready to volunteer immediately</span>
+                </div>
+              </mat-radio-button>
+              <mat-radio-button value="on_call">
+                <div class="radio-content">
+                  <strong>On-Call</strong>
+                  <span>Available when needed</span>
+                </div>
+              </mat-radio-button>
+              <mat-radio-button value="inactive">
+                <div class="radio-content">
+                  <strong>Inactive</strong>
+                  <span>Not currently available</span>
+                </div>
+              </mat-radio-button>
+            </mat-radio-group>
+
+            <h3 class="mt-4">Shift Type</h3>
+            
+            <mat-radio-group formControlName="shiftType" class="radio-group">
+              <mat-radio-button value="full_day">
+                <div class="radio-content">
+                  <strong>Full Day</strong>
+                  <span>8+ hours per day (100% capacity)</span>
+                </div>
+              </mat-radio-button>
+              <mat-radio-button value="half_day">
+                <div class="radio-content">
+                  <strong>Half Day</strong>
+                  <span>4-6 hours per day (50% capacity)</span>
+                </div>
+              </mat-radio-button>
+              <mat-radio-button value="emergency_only">
+                <div class="radio-content">
+                  <strong>Emergency Only</strong>
+                  <span>Critical situations only (30% capacity)</span>
+                </div>
+              </mat-radio-button>
+            </mat-radio-group>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="primary" matStepperNext>
+              Next
+              <mat-icon>arrow_forward</mat-icon>
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+      <!-- Step 4: Deployment Details (Optional) -->
+      <mat-step [stepControl]="deploymentForm">
+        <form [formGroup]="deploymentForm">
+          <ng-template matStepLabel>Deployment Details</ng-template>
+          
+          <div class="step-content">
+            <h3>Additional Information (Optional)</h3>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Preferred Working Area</mat-label>
+              <input matInput formControlName="preferredWorkingArea" placeholder="e.g., Karachi, Lahore">
+              <mat-icon matPrefix>location_on</mat-icon>
+            </mat-form-field>
+
+            <div class="checkbox-group">
+              <mat-checkbox formControlName="hasMobility">
+                I have my own transportation/mobility
+              </mat-checkbox>
+              <mat-checkbox formControlName="hasVehicle">
+                I have a vehicle available for relief work
+              </mat-checkbox>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button mat-button matStepperPrevious>
+              <mat-icon>arrow_back</mat-icon>
+              Back
+            </button>
+            <button mat-raised-button color="accent" (click)="onSubmit()" [disabled]="isSubmitting">
+              <mat-icon *ngIf="!isSubmitting">check_circle</mat-icon>
+              <mat-icon *ngIf="isSubmitting" class="spinning">hourglass_empty</mat-icon>
+              {{ isSubmitting ? (isEditMode ? 'Updating...' : 'Submitting...') : (isEditMode ? 'Update Profile' : 'Submit Registration') }}
+            </button>
+          </div>
+        </form>
+      </mat-step>
+
+    </mat-stepper>
+  </mat-card>
+</div>

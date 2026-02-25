@@ -56,10 +56,15 @@ export class MyRequestsComponent {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                // Mock submission to service using result data
-                // For now, we simulate a 'general' request since the dialog data might vary slightly from service expectation
-                this.victimService.submitRequest('General Aid', 'High', 'Request via Dialog');
-                this.snackBar.open('Request Submitted Successfully!', 'Close', { duration: 3000 });
+                this.victimService.submitRequest(result).subscribe({
+                    next: () => {
+                        this.snackBar.open('Request Submitted Successfully!', 'Close', { duration: 3000 });
+                    },
+                    error: (err) => {
+                        console.error('Submission Error:', err);
+                        this.snackBar.open('Failed to submit request. Please try again.', 'Close', { duration: 3000 });
+                    }
+                });
             }
         });
     }

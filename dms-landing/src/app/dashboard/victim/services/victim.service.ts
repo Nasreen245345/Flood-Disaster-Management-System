@@ -1,8 +1,8 @@
 import { Injectable, inject, effect } from '@angular/core';
-import { BehaviorSubject, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, Observable } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { AuthService } from '../../../auth/services/auth.service';
-
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface AidHistory {
     id: string;
@@ -24,14 +24,15 @@ export interface DistributionPoint {
 
 export interface VictimRequest {
     id: string;
-    type: 'Food' | 'Medical' | 'Shelter';
-    urgency: 'Low' | 'Medium' | 'Critical';
+    type: string;
+    urgency: string;
     note?: string;
-    status: 'Pending' | 'Approved' | 'Ready' | 'Fulfilled';
+    status: string;
     allocatedNGO?: string;
     allocatedPoint?: string;
     validUntil?: Date;
     createdAt: Date;
+    requiredAmount?: number;
 }
 
 export interface VictimProfile {
@@ -50,20 +51,13 @@ export interface VictimProfile {
     providedIn: 'root'
 })
 export class VictimService {
-
-    // Mock Data
-    private _history = new BehaviorSubject<AidHistory[]>([
-        { id: 'H1', type: 'Food Pack', date: new Date(Date.now() - 86400000 * 2), ngoName: 'Edhi Foundation', pointName: 'Swat Camp A', quantity: '2 Bags' },
-        { id: 'H2', type: 'Medical Kit', date: new Date(Date.now() - 86400000 * 10), ngoName: 'Red Crescent', pointName: 'Mobile Unit 4', quantity: '1 Kit' }
-    ]);
-
-    private _points = new BehaviorSubject<DistributionPoint[]>([
-        { id: 'P1', name: 'Swat Central Camp', location: 'Mingora, Swat', activeNGOs: ['Edhi', 'Al-Khidmat'], hours: '08:00 AM - 06:00 PM', status: 'Active' },
-        { id: 'P2', name: 'Charsadda Relief Point', location: 'Charsadda Bazaar', activeNGOs: ['Red Crescent'], hours: '09:00 AM - 05:00 PM', status: 'Active' },
-        { id: 'P3', name: 'Nowshera Medical Camp', location: 'Nowshera Cantt', activeNGOs: ['Doctors Without Borders'], hours: '24/7', status: 'Active' }
-    ]);
+    private http = inject(HttpClient);
     private authService = inject(AuthService);
+    private apiUrl = 'http://localhost:5000/api/aid-requests';
 
+    // State
+    private _history = new BehaviorSubject<AidHistory[]>([]);
+    private _points = new BehaviorSubject<DistributionPoint[]>([]);
     private _profile = new BehaviorSubject<VictimProfile>({
         name: 'Guest',
         familySize: 1,
@@ -74,11 +68,7 @@ export class VictimService {
         phone: '',
         email: ''
     });
-
-    private _requests = new BehaviorSubject<VictimRequest[]>([
-        { id: 'R1', type: 'Shelter', urgency: 'Critical', note: 'Need tent for 5 people', status: 'Ready', allocatedNGO: 'Al-Khidmat', allocatedPoint: 'Swat Central Camp', validUntil: new Date(Date.now() + 86400000), createdAt: new Date(Date.now() - 3600000) },
-        { id: 'R2', type: 'Medical', urgency: 'Medium', note: 'Insulin required', status: 'Pending', createdAt: new Date() }
-    ]);
+    private _requests = new BehaviorSubject<VictimRequest[]>([]);
 
     // Observables
     history$ = this._history.asObservable();
@@ -95,41 +85,82 @@ export class VictimService {
                     id: user.id,
                     name: user.name,
                     familySize: 1,
-                    specialNeeds: [],
                     contact: user.phone || 'Not provided',
                     qrCodeData: user.id || 'SECURE-TOKEN',
                     location: user.region || 'Unknown',
                     phone: user.phone || 'Not provided',
                     email: user.email || 'Not provided'
                 });
+
+                // Fetch requests when user is logged in
+                this.loadMyRequests();
             }
         });
     }
 
-    // Methods
-    submitRequest(type: any, urgency: any, note: string) {
-        const newReq: VictimRequest = {
-            id: 'R' + Math.floor(Math.random() * 1000),
-            type,
-            urgency,
-            note,
-            status: 'Pending',
-            createdAt: new Date()
-        };
+    loadMyRequests() {
+        // Need token in headers? AuthService usually handles interceptor, but if not:
+        const token = localStorage.getItem('dms_token');
+        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-        // Simulate auto-allocation after delay
-        this._requests.next([newReq, ...this._requests.value]);
+        this.http.get<any>(`${this.apiUrl}/my-requests`, { headers }).subscribe({
+            next: (res) => {
+                if (res.success) {
+                    const mappedRequests: VictimRequest[] = res.data.map((r: any) => ({
+                        id: r._id,
+                        type: this.capitalize(r.category),
+                        urgency: this.capitalize(r.urgency),
+                        note: r.description,
+                        status: this.capitalize(r.status),
+                        createdAt: new Date(r.createdAt),
+                        requiredAmount: r.requiredAmount
+                    }));
+                    this._requests.next(mappedRequests);
+                }
+            },
+            error: (err) => console.error('Error loading requests', err)
+        });
+    }
 
-        // Mock Backend Allocation Logic
-        setTimeout(() => {
-            const reqs = this._requests.value;
-            const target = reqs.find(r => r.id === newReq.id);
-            if (target) {
-                target.status = 'Approved';
-                target.allocatedNGO = 'Auto-Assigned NGO';
-                target.allocatedPoint = 'Nearest Camp';
-                this._requests.next([...reqs]);
-            }
-        }, 3000); // 3 sec delay
+    private capitalize(s: string): string {
+        if (!s) return '';
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    submitRequest(formData: any): Observable<any> {
+        const token = localStorage.getItem('dms_token');
+        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+        console.log('Form Data Received:', formData);
+        console.log('Items array:', formData.items);
+        console.log('First item:', formData.items[0]);
+
+        // The form has an array of items. We create one request per item.
+        const requests = formData.items.map((item: any, index: number) => {
+            console.log(`Item ${index}:`, item);
+            console.log(`Item ${index} quantity:`, item.quantity);
+            const payload = {
+                title: `Request for ${item.category || 'aid'}`,
+                description: formData.notes || '',
+                category: item.category ? item.category.toLowerCase() : 'other',
+                urgency: formData.urgency ? formData.urgency.toLowerCase() : 'medium',
+                location: formData.location,
+                requiredAmount: item.quantity || 'Not specified',
+                peopleCount: formData.peopleCount || 1
+            };
+            console.log('Payload to send:', payload);
+            return payload;
+        });
+
+        const observables = requests.map((req: any) =>
+            this.http.post<any>(this.apiUrl, req, { headers })
+        );
+
+        return forkJoin(observables).pipe(
+            tap(() => {
+                // Refresh list
+                this.loadMyRequests();
+            })
+        );
     }
 }

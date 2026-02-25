@@ -31,6 +31,18 @@ exports.protect = async (req, res, next) => {
             });
         }
 
+        // Check if user is active
+        if (req.user.status !== 'active') {
+            return res.status(403).json({
+                success: false,
+                message: `Your account is ${req.user.status}. Please contact administrator.`
+            });
+        }
+
+        // Update last active timestamp
+        req.user.lastActive = Date.now();
+        await req.user.save({ validateBeforeSave: false });
+
         next();
     } catch (error) {
         return res.status(401).json({

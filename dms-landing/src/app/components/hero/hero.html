@@ -42,7 +42,8 @@
 
             <button mat-raised-button
                 class="px-8 py-6 rounded-xl text-lg !bg-white !text-blue-900 font-bold hover:!bg-blue-50 hover:scale-105 transition-all shadow-xl"
-                routerLink="/auth/signup">
+                routerLink="/auth/signup"
+                [queryParams]="{ role: 'volunteer' }">
                 <mat-icon class="mr-2">volunteer_activism</mat-icon>
                 Join as Volunteer
             </button>

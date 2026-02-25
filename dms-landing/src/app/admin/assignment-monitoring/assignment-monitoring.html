@@ -60,11 +60,7 @@
             <ng-container matColumnDef="ngos">
                 <th mat-header-cell *matHeaderCellDef>Assigned NGO(s)</th>
                 <td mat-cell *matCellDef="let assignment">
-                    <div class="ngos-list">
-                        <mat-chip *ngFor="let ngoId of assignment.assignedNGOs" class="ngo-chip">
-                            {{ adminService.getOrganizationById(ngoId)?.name || 'Unknown' }}
-                        </mat-chip>
-                    </div>
+                    {{ getNGONames(assignment) }}
                 </td>
             </ng-container>
 

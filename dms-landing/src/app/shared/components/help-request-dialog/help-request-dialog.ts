@@ -31,34 +31,50 @@ export class HelpRequestDialogComponent {
   private snackBar = inject(MatSnackBar);
 
   helpForm: FormGroup = this.fb.group({
-    fullName: [''],
+    // Victim Information
+    victimName: ['', Validators.required],
+    victimCNIC: ['', [Validators.required, Validators.pattern(/^\d{5}-\d{7}-\d{1}$/)]],
+    victimPhone: ['', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
+    
+    // Request Details
     location: ['', Validators.required],
-    items: this.fb.array([this.createItem()]), // Init with 1 item
-    peopleCount: [1, [Validators.required, Validators.min(1)]],
+    peopleCount: [1, [Validators.required, Validators.min(1)]], // This determines quantity!
+    packagesNeeded: this.fb.array([this.createPackageItem()]), // Just category selection, no quantity
     urgency: ['high', Validators.required],
-    notes: ['']
+    additionalNotes: ['']
   });
 
   isSubmitting = false;
+  isLoadingLocation = false;
+  locationError = '';
+  coordinates: { lat: number; lng: number } | null = null;
 
-  get items(): FormArray {
-    return this.helpForm.get('items') as FormArray;
+  // Available package categories
+  packageCategories = [
+    { value: 'food', label: 'Food Package', description: 'Essential food items' },
+    { value: 'medical', label: 'Medical Kit', description: 'First aid and medicines' },
+    { value: 'shelter', label: 'Shelter Kit', description: 'Tent and bedding' },
+    { value: 'clothing', label: 'Clothing Package', description: 'Essential clothing items' }
+  ];
+
+  get packagesNeeded(): FormArray {
+    return this.helpForm.get('packagesNeeded') as FormArray;
   }
 
-  createItem(): FormGroup {
+  createPackageItem(): FormGroup {
     return this.fb.group({
-      category: ['', Validators.required],
-      quantity: ['', Validators.required]
+      category: ['', Validators.required]
+      // No quantity field - it's calculated from peopleCount
     });
   }
 
-  addItem() {
-    this.items.push(this.createItem());
+  addPackage() {
+    this.packagesNeeded.push(this.createPackageItem());
   }
 
-  removeItem(index: number) {
-    if (this.items.length > 1) {
-      this.items.removeAt(index);
+  removePackage(index: number) {
+    if (this.packagesNeeded.length > 1) {
+      this.packagesNeeded.removeAt(index);
     }
   }
 
@@ -67,18 +83,66 @@ export class HelpRequestDialogComponent {
 
     this.isSubmitting = true;
 
-    // Simulate API call
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.snackBar.open('Help request sent successfully. Responders notified.', 'OK', {
-        duration: 5000,
-        panelClass: ['bg-green-600', 'text-white']
-      });
-      this.dialogRef.close(true);
-    }, 1500);
+    // Include coordinates if available
+    const formValue = {
+      ...this.helpForm.value,
+      coordinates: this.coordinates
+    };
+
+    this.dialogRef.close(formValue);
   }
 
   onCancel() {
     this.dialogRef.close();
+  }
+
+  getCurrentLocation() {
+    if (!navigator.geolocation) {
+      this.locationError = 'Geolocation is not supported by your browser';
+      this.snackBar.open('Geolocation not supported', 'Close', { duration: 3000 });
+      return;
+    }
+
+    this.isLoadingLocation = true;
+    this.locationError = '';
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        this.coordinates = { lat, lng };
+
+        // Store coordinates directly in location field
+        this.isLoadingLocation = false;
+        this.helpForm.patchValue({ 
+          location: `${lat.toFixed(6)}, ${lng.toFixed(6)}` 
+        });
+        this.snackBar.open('Location detected successfully!', 'Close', { duration: 3000 });
+      },
+      (error) => {
+        this.isLoadingLocation = false;
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            this.locationError = 'Location permission denied. Please enable location access.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            this.locationError = 'Location information unavailable.';
+            break;
+          case error.TIMEOUT:
+            this.locationError = 'Location request timed out.';
+            break;
+          default:
+            this.locationError = 'An unknown error occurred.';
+        }
+        
+        this.snackBar.open(this.locationError, 'Close', { duration: 5000 });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   }
 }

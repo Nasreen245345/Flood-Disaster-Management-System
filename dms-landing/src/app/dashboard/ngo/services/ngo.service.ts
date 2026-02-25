@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, of, Observable } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, map, tap } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 // --- Interfaces ---
 export interface Region {
@@ -57,6 +58,13 @@ export interface DistributionLog {
     providedIn: 'root'
 })
 export class NgoService {
+    private http = inject(HttpClient);
+    private apiUrl = 'http://localhost:5000/api';
+
+    private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('dms_token');
+        return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    }
     // --- Mock Data ---
     private _regions = new BehaviorSubject<Region[]>([
         { id: '1', name: 'Nowshera Block B', disasterType: 'Flood', population: 2500, requiredResources: 'Boats, Food, Medicine', status: 'Active', location: 'Nowshera, KPK', lastUpdate: new Date() },
@@ -195,5 +203,86 @@ export class NgoService {
             v.assignedTask = undefined;
             this._volunteers.next([...vols]);
         }
+    }
+
+    // ========== NEW API INTEGRATION METHODS ==========
+
+    // Get NGO organization
+    getMyOrganization(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/organizations/me`, { 
+            headers: this.getHeaders() 
+        });
+    }
+
+    // Get volunteers for NGO
+    getVolunteers(ngoId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/volunteers/ngo/${ngoId}`, { 
+            headers: this.getHeaders() 
+        });
+    }
+
+    // Get capacity calculation
+    getCapacity(ngoId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/volunteers/capacity/${ngoId}`, { 
+            headers: this.getHeaders() 
+        });
+    }
+
+    // Verify volunteer
+    verifyVolunteer(volunteerId: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/volunteers/${volunteerId}/verify`, {
+            verifiedByNGO: true,
+            verificationStatus: 'verified'
+        }, { headers: this.getHeaders() });
+    }
+
+    // Update inventory
+    updateInventory(ngoId: string, inventory: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/organizations/${ngoId}/inventory`, 
+            inventory, 
+            { headers: this.getHeaders() }
+        );
+    }
+
+    // Update active distributions
+    updateActiveDistributions(ngoId: string, count: number): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/organizations/${ngoId}/distributions`, {
+            activeDistributions: count
+        }, { headers: this.getHeaders() });
+    }
+
+    // Get all organizations (for admin)
+    getAllOrganizations(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/organizations`, { 
+            headers: this.getHeaders() 
+        });
+    }
+
+    // Get assigned regions for NGO
+    getAssignedRegions(ngoId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/region-assignments/ngo/${ngoId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Update assignment status
+    updateAssignmentStatus(assignmentId: string, status: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/region-assignments/${assignmentId}/status`, {
+            status
+        }, { headers: this.getHeaders() });
+    }
+
+    // Get aid requests for NGO
+    getAidRequests(ngoId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/aid-requests/ngo/${ngoId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Update aid request status
+    updateAidRequestStatus(requestId: string, status: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/aid-requests/${requestId}/status`, {
+            status
+        }, { headers: this.getHeaders() });
     }
 }

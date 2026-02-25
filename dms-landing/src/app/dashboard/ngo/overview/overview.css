@@ -11,6 +11,10 @@
     color: #1e293b;
 }
 
+.capacity-section {
+    margin-bottom: 32px;
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

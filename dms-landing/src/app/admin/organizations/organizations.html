@@ -88,12 +88,11 @@
                     <div class="capacity-info">
                         <div class="capacity-item">
                             <mat-icon class="capacity-icon">people</mat-icon>
-                            <span>{{ org.capacity.volunteers }} volunteers</span>
+                            <span>{{ org.capacity.volunteers || 0 }} volunteers</span>
                         </div>
                         <div class="capacity-item">
                             <mat-icon class="capacity-icon">inventory_2</mat-icon>
-                            <span>{{ org.capacity.resources.food + org.capacity.resources.medical +
-                                org.capacity.resources.shelter }} resources</span>
+                            <span>{{ org.capacity.resources || 0 }} resources</span>
                         </div>
                     </div>
                 </td>

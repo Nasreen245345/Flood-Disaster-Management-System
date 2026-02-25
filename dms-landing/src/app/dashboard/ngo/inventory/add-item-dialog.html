@@ -1,6 +1,6 @@
 <div class="dialog-container">
     <div class="dialog-header">
-        <h2>Add New Item</h2>
+        <h2>{{ isEditMode ? 'Edit Package' : 'Add New Package' }}</h2>
         <button mat-icon-button (click)="close()">
             <mat-icon>close</mat-icon>
         </button>
@@ -8,38 +8,59 @@
 
     <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="dialog-content">
+            
+            <!-- Package Name -->
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Item Name</mat-label>
-                <input matInput formControlName="name" placeholder="e.g. Rice Bags">
-                <mat-error *ngIf="form.get('name')?.hasError('required')">Name is required</mat-error>
+                <mat-label>Package Name</mat-label>
+                <input matInput formControlName="packageName" placeholder="e.g. Food Package - Family Size">
+                <mat-icon matPrefix>inventory_2</mat-icon>
+                <mat-error *ngIf="form.get('packageName')?.hasError('required')">
+                    Package name is required
+                </mat-error>
             </mat-form-field>
 
-            <div class="row">
-                <mat-form-field appearance="outline" class="w-half">
-                    <mat-label>Category</mat-label>
-                    <mat-select formControlName="category">
-                        <mat-option *ngFor="let cat of categories" [value]="cat">{{cat}}</mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="w-half">
-                    <mat-label>Unit</mat-label>
-                    <mat-select formControlName="unit">
-                        <mat-option *ngFor="let u of units" [value]="u">{{u}}</mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
-
+            <!-- Category -->
             <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Quantity</mat-label>
-                <input matInput type="number" formControlName="quantity" placeholder="0">
-                <mat-error *ngIf="form.get('quantity')?.hasError('min')">Quantity must be > 0</mat-error>
+                <mat-label>Category</mat-label>
+                <mat-select formControlName="category">
+                    <mat-option *ngFor="let cat of packageCategories" [value]="cat.value">
+                        <div class="category-option">
+                            <mat-icon [style.color]="cat.color">{{ cat.icon }}</mat-icon>
+                            <span>{{ cat.label }}</span>
+                        </div>
+                    </mat-option>
+                </mat-select>
+                <mat-icon matPrefix>category</mat-icon>
             </mat-form-field>
+
+            <!-- Quantity -->
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Quantity (Number of Packages)</mat-label>
+                <input matInput type="number" formControlName="quantity" placeholder="0" min="0">
+                <mat-icon matPrefix>numbers</mat-icon>
+                <mat-hint>Number of packages available</mat-hint>
+                <mat-error *ngIf="form.get('quantity')?.hasError('min')">
+                    Quantity must be 0 or more
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Description -->
+            <mat-form-field appearance="outline" class="w-full">
+                <mat-label>Description (Optional)</mat-label>
+                <textarea matInput formControlName="description" 
+                          placeholder="e.g. Rice, flour, oil, lentils, salt, sugar"
+                          rows="3"></textarea>
+                <mat-icon matPrefix>description</mat-icon>
+                <mat-hint>What's included in this package</mat-hint>
+            </mat-form-field>
+
         </div>
 
         <div class="dialog-actions">
             <button mat-stroked-button type="button" (click)="close()">Cancel</button>
-            <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Add Item</button>
+            <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">
+                {{ isEditMode ? 'Update Package' : 'Add Package' }}
+            </button>
         </div>
     </form>
 </div>

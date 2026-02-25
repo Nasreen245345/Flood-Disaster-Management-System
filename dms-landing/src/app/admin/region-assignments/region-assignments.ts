@@ -185,13 +185,15 @@ export class RegionAssignmentsComponent implements OnInit {
     };
 
     this.adminService.createAssignment(assignment).subscribe({
-      next: () => {
+      next: (result) => {
+        console.log('✅ Assignment created:', result);
         alert(`Successfully assigned ${this.selectedRegion} to ${this.selectedNGOs.length} NGO(s)!`);
         this.resetForm();
         this.assigning = false;
       },
-      error: () => {
-        alert('Failed to create assignment. Please try again.');
+      error: (err) => {
+        console.error('❌ Assignment error:', err);
+        alert('Failed to create assignment: ' + (err.error?.message || err.message));
         this.assigning = false;
       }
     });

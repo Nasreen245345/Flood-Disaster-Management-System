@@ -1,100 +1,159 @@
-<form [formGroup]="helpForm" (ngSubmit)="onSubmit()" class="flex flex-col h-full max-h-[85vh]">
+<div class="help-dialog">
+  <h2 mat-dialog-title>
+    <mat-icon class="sos-icon">sos</mat-icon>
+    Request Immediate Help
+  </h2>
+  
+  <p class="subtitle">Specify what you need. Responders will get exact details.</p>
 
-    <div class="dialog-header pt-4 pb-2 px-6">
-        <h2 class="dialog-title">
-            <mat-icon class="text-red-600 mr-2">sos</mat-icon>
-            Request Immediate Help
-        </h2>
-        <p class="dialog-subtitle">Specify what you need. Responders will get exact details.</p>
-    </div>
-
-    <mat-dialog-content class="!flex-1">
-
-        <!-- Location (Critical) -->
-        <mat-form-field appearance="outline" class="w-full mt-2">
-            <mat-label>Current Location / Address</mat-label>
-            <input matInput formControlName="location" placeholder="e.g., 123 Main St, Sector 4" required>
-            <mat-icon matSuffix class="text-neutral-400">my_location</mat-icon>
-            <mat-error *ngIf="helpForm.get('location')?.hasError('required')">Location is crucial for
-                rescue.</mat-error>
+  <mat-dialog-content>
+    <form [formGroup]="helpForm">
+      
+      <!-- Victim Information Section -->
+      <div class="form-section">
+        <h3>Victim Information</h3>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Full Name</mat-label>
+          <input matInput formControlName="victimName" placeholder="Enter victim's full name" required>
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-error *ngIf="helpForm.get('victimName')?.hasError('required')">
+            Name is required
+          </mat-error>
         </mat-form-field>
 
-        <!-- Dynamic Items List -->
-        <div class="items-section">
-            <div class="section-label">Items Needed</div>
-
-            <div formArrayName="items">
-                <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-row fade-in">
-
-                    <!-- Category -->
-                    <mat-form-field appearance="outline" class="flex-1">
-                        <mat-label>Category</mat-label>
-                        <mat-select formControlName="category" required>
-                            <mat-option value="medical">🚑 Medical</mat-option>
-                            <mat-option value="food">🍲 Food/Water</mat-option>
-                            <mat-option value="shelter">⛺ Shelter/Tents</mat-option>
-                            <mat-option value="clothing">👕 Clothing</mat-option>
-                            <mat-option value="rescue">🚁 Rescue</mat-option>
-                            <mat-option value="other">❓ Other</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-
-                    <!-- Quantity / Description -->
-                    <mat-form-field appearance="outline" class="flex-[1.5]">
-                        <mat-label>Quantity / Details</mat-label>
-                        <input matInput formControlName="quantity" placeholder="e.g. 5kg Rice, 2 Adults" required>
-                    </mat-form-field>
-
-                    <!-- Remove Button -->
-                    <button type="button" mat-icon-button color="warn" (click)="removeItem(i)" *ngIf="items.length > 1"
-                        title="Remove Item">
-                        <mat-icon>delete_outline</mat-icon>
-                    </button>
-                </div>
-            </div>
-
-            <button type="button" mat-stroked-button color="primary" (click)="addItem()" class="w-full dashed-btn">
-                <mat-icon class="mr-1">add_circle_outline</mat-icon> Add Another Item
-            </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            <!-- Urgency -->
-            <mat-form-field appearance="outline" class="w-full">
-                <mat-label>Urgency Level</mat-label>
-                <mat-select formControlName="urgency" required>
-                    <mat-option value="critical" class="text-red-600 font-bold">🔴 Critical</mat-option>
-                    <mat-option value="high" class="text-orange-600">🟠 High</mat-option>
-                    <mat-option value="medium" class="text-yellow-600">🟡 Medium</mat-option>
-                    <mat-option value="low" class="text-green-600">🟢 Low</mat-option>
-                </mat-select>
-            </mat-form-field>
-
-            <!-- People Count -->
-            <mat-form-field appearance="outline" class="w-full">
-                <mat-label>People Affected</mat-label>
-                <input matInput type="number" formControlName="peopleCount" min="1" required>
-                <mat-icon matPrefix class="mr-2 text-neutral-400">group</mat-icon>
-            </mat-form-field>
-        </div>
-
-        <!-- Additional Notes -->
-        <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Additional Notes (Optional)</mat-label>
-            <textarea matInput formControlName="notes" rows="2"
-                placeholder="Any special needs or critical info..."></textarea>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>CNIC Number</mat-label>
+          <input matInput formControlName="victimCNIC" placeholder="12345-1234567-1" required>
+          <mat-icon matPrefix>badge</mat-icon>
+          <mat-hint>Format: 12345-1234567-1</mat-hint>
+          <mat-error *ngIf="helpForm.get('victimCNIC')?.hasError('required')">
+            CNIC is required
+          </mat-error>
+          <mat-error *ngIf="helpForm.get('victimCNIC')?.hasError('pattern')">
+            Invalid CNIC format
+          </mat-error>
         </mat-form-field>
 
-    </mat-dialog-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Phone Number</mat-label>
+          <input matInput formControlName="victimPhone" placeholder="03001234567" required>
+          <mat-icon matPrefix>phone</mat-icon>
+          <mat-error *ngIf="helpForm.get('victimPhone')?.hasError('required')">
+            Phone number is required
+          </mat-error>
+          <mat-error *ngIf="helpForm.get('victimPhone')?.hasError('pattern')">
+            Invalid phone number
+          </mat-error>
+        </mat-form-field>
+      </div>
 
-    <!-- Actions -->
-    <mat-dialog-actions align="end" class="!px-6 !pb-6 border-t border-neutral-100">
-        <button type="button" mat-button (click)="onCancel()" class="cancel-btn">Cancel</button>
-        <button type="submit" mat-flat-button color="primary" class="submit-btn"
-            [disabled]="helpForm.invalid || isSubmitting">
-            <span *ngIf="!isSubmitting">SEND REQUEST</span>
-            <span *ngIf="isSubmitting">Sending...</span>
+      <!-- Location Section -->
+      <div class="location-section">
+        <mat-form-field appearance="outline" class="location-field">
+          <mat-label>Location (Coordinates)</mat-label>
+          <input matInput formControlName="location" placeholder="Latitude, Longitude" required>
+          <mat-icon matPrefix>location_on</mat-icon>
+          <mat-hint class="location-hint">GPS coordinates are crucial for rescue.</mat-hint>
+          <mat-error *ngIf="helpForm.get('location')?.hasError('required')">
+            Location is required
+          </mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button type="button" color="primary" 
+                (click)="getCurrentLocation()" 
+                [disabled]="isLoadingLocation"
+                class="detect-location-btn">
+          <mat-icon>{{ isLoadingLocation ? 'hourglass_empty' : 'my_location' }}</mat-icon>
+          {{ isLoadingLocation ? 'Detecting...' : 'Detect Location' }}
         </button>
-    </mat-dialog-actions>
+      </div>
 
-</form>
+      <div *ngIf="locationError" class="location-error">
+        <mat-icon>error</mat-icon>
+        {{ locationError }}
+      </div>
+
+      <!-- Packages Needed Section -->
+      <div class="form-section">
+        <h3>Packages Needed</h3>
+        <p class="package-info">
+          <mat-icon>info</mat-icon>
+          Each package serves 1 person. Quantity will be calculated based on people count.
+        </p>
+        
+        <div formArrayName="packagesNeeded">
+          <div *ngFor="let package of packagesNeeded.controls; let i = index" [formGroupName]="i" class="package-item">
+            <div class="package-row">
+              <mat-form-field appearance="outline" class="category-field">
+                <mat-label>Package Category</mat-label>
+                <mat-select formControlName="category" required>
+                  <mat-option *ngFor="let cat of packageCategories" [value]="cat.value">
+                    {{ cat.label }}
+                    <span class="package-desc">- {{ cat.description }}</span>
+                  </mat-option>
+                </mat-select>
+                <mat-error>Category is required</mat-error>
+              </mat-form-field>
+
+              <div class="quantity-display">
+                <mat-icon>inventory</mat-icon>
+                <span class="qty-text">Qty: {{ helpForm.get('peopleCount')?.value || 1 }}</span>
+              </div>
+
+              <button mat-icon-button type="button" color="warn" 
+                      (click)="removePackage(i)" 
+                      [disabled]="packagesNeeded.length === 1"
+                      class="remove-btn">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button mat-stroked-button type="button" (click)="addPackage()" class="add-package-btn">
+          <mat-icon>add_circle</mat-icon>
+          Add Another Package Type
+        </button>
+      </div>
+
+      <!-- Additional Details -->
+      <div class="details-row">
+        <mat-form-field appearance="outline" class="people-field">
+          <mat-label>People Affected</mat-label>
+          <input matInput type="number" formControlName="peopleCount" min="1" required>
+          <mat-icon matPrefix>group</mat-icon>
+          <mat-hint>This determines package quantity (1 package per person)</mat-hint>
+          <mat-error>Required (min: 1)</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="urgency-field">
+          <mat-label>Urgency Level</mat-label>
+          <mat-select formControlName="urgency" required>
+            <mat-option value="low">Low</mat-option>
+            <mat-option value="medium">Medium</mat-option>
+            <mat-option value="high">High</mat-option>
+            <mat-option value="critical">Critical</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Additional Notes -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Additional Notes (Optional)</mat-label>
+        <textarea matInput formControlName="additionalNotes" rows="3" 
+                  placeholder="Any additional information that might help responders"></textarea>
+      </mat-form-field>
+
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isSubmitting">Cancel</button>
+    <button mat-raised-button color="warn" (click)="onSubmit()" 
+            [disabled]="helpForm.invalid || isSubmitting">
+      <mat-icon>send</mat-icon>
+      {{ isSubmitting ? 'Sending...' : 'SEND REQUEST' }}
+    </button>
+  </mat-dialog-actions>
+</div>

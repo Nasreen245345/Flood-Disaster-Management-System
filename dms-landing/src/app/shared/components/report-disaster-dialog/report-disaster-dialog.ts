@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-report-disaster-dialog',
@@ -33,6 +34,8 @@ export class ReportDisasterDialogComponent {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<ReportDisasterDialogComponent>);
   private snackBar = inject(MatSnackBar);
+  private http = inject(HttpClient);
+  private apiUrl = 'http://localhost:5000/api/disasters';
 
   reportForm: FormGroup = this.fb.group({
     location: ['', Validators.required],
@@ -59,15 +62,24 @@ export class ReportDisasterDialogComponent {
 
     this.isSubmitting = true;
 
-    // Simulate API call
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.snackBar.open('Disaster report submitted. Monitoring team alerted.', 'OK', {
-        duration: 5000,
-        panelClass: ['bg-red-600', 'text-white']
-      });
-      this.dialogRef.close(true);
-    }, 1500);
+    // Submit to backend
+    this.http.post<any>(this.apiUrl, this.reportForm.value).subscribe({
+      next: (response) => {
+        this.isSubmitting = false;
+        this.snackBar.open('Disaster report submitted. Monitoring team alerted.', 'OK', {
+          duration: 5000,
+          panelClass: ['bg-red-600', 'text-white']
+        });
+        this.dialogRef.close(response.data);
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        console.error('Disaster Report Error:', err);
+        this.snackBar.open('Failed to submit disaster report. Please try again.', 'Close', {
+          duration: 5000
+        });
+      }
+    });
   }
 
   onCancel() {

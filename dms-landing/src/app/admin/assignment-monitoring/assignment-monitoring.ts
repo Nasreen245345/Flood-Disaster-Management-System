@@ -31,6 +31,7 @@ export class AssignmentMonitoringComponent implements OnInit {
 
   assignments: RegionAssignment[] = [];
   filteredAssignments: RegionAssignment[] = [];
+  organizations: Organization[] = [];
   loading = true;
 
   // Filters
@@ -40,11 +41,23 @@ export class AssignmentMonitoringComponent implements OnInit {
   displayedColumns: string[] = ['disaster', 'region', 'ngos', 'coverage', 'population', 'status', 'assignedDate'];
 
   ngOnInit() {
-    this.loadAssignments();
+    this.loadData();
+  }
+
+  private loadData() {
+    // Load both assignments and organizations
+    this.adminService.getOrganizations().subscribe(orgs => {
+      console.log('=== LOADED ORGANIZATIONS ===');
+      console.log('Organizations:', orgs);
+      this.organizations = orgs;
+      this.loadAssignments();
+    });
   }
 
   private loadAssignments() {
     this.adminService.getAssignments().subscribe(assignments => {
+      console.log('=== LOADED ASSIGNMENTS ===');
+      console.log('Assignments:', assignments);
       this.assignments = assignments;
       this.applyFilters();
       this.loading = false;
@@ -83,15 +96,38 @@ export class AssignmentMonitoringComponent implements OnInit {
     return '#ef4444'; // red
   }
 
-  getNGONames(ngoIds: string[]): string {
+  getNGONames(assignment: RegionAssignment): string {
+    console.log('=== GET NGO NAMES ===');
+    console.log('Assignment:', assignment);
+    
+    // First try to use the ngoNames array if available
+    if (assignment.ngoNames && assignment.ngoNames.length > 0) {
+      const result = assignment.ngoNames.join(', ');
+      console.log('Using ngoNames array:', result);
+      return result;
+    }
+    
+    // Fallback to looking up by ID
+    const ngoIds = assignment.assignedNGOs;
+    console.log('NGO IDs:', ngoIds);
+    console.log('Available Organizations:', this.organizations.map(o => ({ id: o.id, name: o.name })));
+    
+    if (!ngoIds || ngoIds.length === 0) {
+      return 'No NGOs assigned';
+    }
+    
     const ngoNames: string[] = [];
     ngoIds.forEach(id => {
-      const ngo = this.adminService.getOrganizationById(id);
+      const ngo = this.organizations.find(org => org.id === id);
+      console.log(`Looking for NGO with ID ${id}:`, ngo);
       if (ngo) {
         ngoNames.push(ngo.name);
       }
     });
-    return ngoNames.join(', ');
+    
+    const result = ngoNames.length > 0 ? ngoNames.join(', ') : 'Unknown';
+    console.log('Result:', result);
+    return result;
   }
 
   formatDate(date: Date): string {

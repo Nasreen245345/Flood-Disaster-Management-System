@@ -5,6 +5,12 @@ const connectDB = require('./config/database');
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
+const aidRequestRoutes = require('./routes/aidRequest.routes');
+const disasterRoutes = require('./routes/disaster.routes');
+const userRoutes = require('./routes/user.routes');
+const volunteerRoutes = require('./routes/volunteer.routes');
+const organizationRoutes = require('./routes/organization.routes');
+const regionAssignmentRoutes = require('./routes/regionAssignment.routes');
 
 // Initialize express app
 const app = express();
@@ -22,6 +28,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/aid-requests', aidRequestRoutes);
+app.use('/api/disasters', disasterRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/volunteers', volunteerRoutes);
+app.use('/api/organizations', organizationRoutes);
+app.use('/api/region-assignments', regionAssignmentRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

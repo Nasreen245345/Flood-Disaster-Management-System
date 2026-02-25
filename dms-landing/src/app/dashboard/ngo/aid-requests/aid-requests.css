@@ -1,6 +1,6 @@
 .requests-page {
     padding: 24px;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
@@ -12,6 +12,49 @@
     font-size: 1.5rem;
     color: #1e293b;
     margin: 0;
+}
+
+.page-header .subtitle {
+    color: #64748b;
+    margin-top: 4px;
+    font-size: 0.875rem;
+}
+
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    gap: 16px;
+}
+
+.no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    color: #64748b;
+    text-align: center;
+}
+
+.no-data mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.no-data p {
+    font-size: 1.125rem;
+    margin: 8px 0;
+}
+
+.no-data small {
+    font-size: 0.875rem;
+    color: #94a3b8;
 }
 
 .table-card {
@@ -26,39 +69,130 @@
 .victim-info {
     display: flex;
     flex-direction: column;
+    gap: 4px;
 }
 
 .victim-info .name {
     font-weight: 600;
+    color: #1e293b;
 }
 
-.victim-info .id {
+.victim-info .id,
+.victim-info .phone {
     font-size: 0.75rem;
     color: #64748b;
 }
 
-.priority-badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.high {
+.location-info span {
+    font-size: 0.875rem;
+    color: #475569;
+}
+
+.packages-list {
+    font-size: 0.875rem;
+    color: #475569;
+    max-width: 300px;
+}
+
+.people-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #475569;
+}
+
+.people-count mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+.urgency-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.urgency-badge.critical {
     background: #fee2e2;
     color: #dc2626;
 }
 
-.medium {
+.urgency-badge.high {
     background: #ffedd5;
     color: #ea580c;
 }
 
-.low {
+.urgency-badge.medium {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.urgency-badge.low {
     background: #dcfce7;
     color: #16a34a;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.action-buttons button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.action-buttons button mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.fulfilled-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #16a34a;
+    font-weight: 500;
+}
+
+.fulfilled-badge mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
 .text-gray-500 {
     color: #94a3b8;
+}
+
+/* Table styling */
+table {
+    background: white;
+}
+
+th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+td {
+    padding: 16px 12px;
+}
+
+tr:hover {
+    background: #f8fafc;
 }

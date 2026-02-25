@@ -1,46 +1,144 @@
-<div class="regions-page">
+<div class="assigned-regions-container">
     <div class="page-header">
-        <h1>Assigned Regions</h1>
-        <p class="subtitle">Disaster regions currently assigned to your organization</p>
+        <h2 class="page-title">Assigned Regions</h2>
+        <p class="page-subtitle">Disaster relief regions assigned to your organization</p>
     </div>
 
-    <div class="regions-grid">
-        <mat-card class="region-card" *ngFor="let region of regions$ | async">
-            <div class="card-header">
-                <div class="icon-box" [class]="region.disasterType | lowercase">
-                    <mat-icon *ngIf="region.disasterType === 'Flood'">water_drop</mat-icon>
-                    <mat-icon *ngIf="region.disasterType === 'Earthquake'">landscape</mat-icon>
-                    <mat-icon *ngIf="region.disasterType === 'Fire'">local_fire_department</mat-icon>
-                </div>
-                <div class="status-chip" [class.active]="region.status === 'Active'">
-                    {{ region.status }}
-                </div>
-            </div>
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading assigned regions...</p>
+    </div>
 
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && assignments.length === 0" class="empty-state">
+        <mat-icon class="empty-icon">location_off</mat-icon>
+        <h3>No Assigned Regions</h3>
+        <p>Your organization has not been assigned to any disaster relief regions yet.</p>
+        <p class="hint">Assignments are made by system administrators based on disaster needs and your organization's capacity.</p>
+    </div>
+
+    <!-- Assignments Grid -->
+    <div *ngIf="!isLoading && assignments.length > 0" class="regions-grid">
+        <mat-card *ngFor="let assignment of assignments" class="region-card">
             <mat-card-header>
-                <mat-card-title>{{ region.name }}</mat-card-title>
-                <mat-card-subtitle>{{ region.location }}</mat-card-subtitle>
+                <div class="card-header-content">
+                    <div class="header-left">
+                        <mat-icon class="region-icon">location_on</mat-icon>
+                        <div class="header-text">
+                            <h3 class="region-name">{{ assignment.region }}</h3>
+                            <p class="disaster-name">{{ assignment.disasterName }}</p>
+                        </div>
+                    </div>
+                    <mat-chip [style.background-color]="getStatusColor(assignment.status)" class="status-chip">
+                        <mat-icon class="chip-icon">{{ getStatusIcon(assignment.status) }}</mat-icon>
+                        {{ assignment.status | uppercase }}
+                    </mat-chip>
+                </div>
             </mat-card-header>
 
             <mat-card-content>
-                <div class="detail-row">
-                    <mat-icon>groups</mat-icon>
-                    <span>{{ region.population }} Affected</span>
+                <!-- Disaster Info -->
+                <div class="info-section" *ngIf="assignment.disaster">
+                    <div class="info-row">
+                        <mat-icon class="info-icon">warning</mat-icon>
+                        <span class="info-label">Disaster Type:</span>
+                        <span class="info-value">{{ assignment.disaster.disasterType | uppercase }}</span>
+                    </div>
+                    <div class="info-row">
+                        <mat-icon class="info-icon">speed</mat-icon>
+                        <span class="info-label">Severity:</span>
+                        <span class="info-value severity-{{ assignment.disaster.severity }}">
+                            {{ assignment.disaster.severity | uppercase }}
+                        </span>
+                    </div>
                 </div>
-                <div class="resources-section">
-                    <span class="label">Required Resources:</span>
-                    <mat-chip-set>
-                        <mat-chip *ngFor="let res of region.requiredResources.split(',')">
-                            {{ res.trim() }}
-                        </mat-chip>
-                    </mat-chip-set>
+
+                <mat-divider></mat-divider>
+
+                <!-- Population -->
+                <div class="stat-section">
+                    <div class="stat-item">
+                        <mat-icon class="stat-icon">people</mat-icon>
+                        <div class="stat-content">
+                            <span class="stat-label">Affected Population</span>
+                            <span class="stat-value">{{ assignment.affectedPopulation | number }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <!-- Resource Requirements -->
+                <div class="requirements-section">
+                    <h4 class="section-title">Resource Requirements</h4>
+                    <div class="requirements-grid">
+                        <div class="requirement-item">
+                            <mat-icon class="req-icon food">restaurant</mat-icon>
+                            <div class="req-content">
+                                <span class="req-label">Food</span>
+                                <span class="req-value">{{ assignment.resourceRequirements.food | number }}</span>
+                            </div>
+                        </div>
+                        <div class="requirement-item">
+                            <mat-icon class="req-icon medical">medical_services</mat-icon>
+                            <div class="req-content">
+                                <span class="req-label">Medical</span>
+                                <span class="req-value">{{ assignment.resourceRequirements.medical | number }}</span>
+                            </div>
+                        </div>
+                        <div class="requirement-item">
+                            <mat-icon class="req-icon shelter">home</mat-icon>
+                            <div class="req-content">
+                                <span class="req-label">Shelter</span>
+                                <span class="req-value">{{ assignment.resourceRequirements.shelter | number }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <!-- Coverage -->
+                <div class="coverage-section">
+                    <div class="coverage-header">
+                        <span class="coverage-label">Resource Coverage</span>
+                        <span class="coverage-value">{{ assignment.resourceCoverage }}%</span>
+                    </div>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" 
+                             [style.width.%]="assignment.resourceCoverage"
+                             [style.background-color]="assignment.resourceCoverage >= 80 ? '#10b981' : assignment.resourceCoverage >= 60 ? '#f59e0b' : '#ef4444'">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assignment Date -->
+                <div class="footer-info">
+                    <mat-icon class="footer-icon">schedule</mat-icon>
+                    <span class="footer-text">Assigned: {{ formatDate(assignment.createdAt) }}</span>
                 </div>
             </mat-card-content>
 
-            <mat-divider></mat-divider>
-
             <mat-card-actions>
-                <button mat-stroked-button color="primary" (click)="openDetails(region)">View Details</button>
+                <button mat-button (click)="openDetails(assignment)">
+                    <mat-icon>info</mat-icon>
+                    View Details
+                </button>
+                <button mat-button 
+                        *ngIf="assignment.status === 'assigned'" 
+                        (click)="updateStatus(assignment, 'in-progress')"
+                        color="primary">
+                    <mat-icon>play_arrow</mat-icon>
+                    Start Work
+                </button>
+                <button mat-button 
+                        *ngIf="assignment.status === 'in-progress'" 
+                        (click)="updateStatus(assignment, 'completed')"
+                        color="accent">
+                    <mat-icon>check_circle</mat-icon>
+                    Mark Complete
+                </button>
             </mat-card-actions>
         </mat-card>
     </div>

@@ -1,22 +1,40 @@
 <div class="inventory-page">
     <div class="page-header">
-        <h1>Inventory Management</h1>
-        <button mat-flat-button color="primary" (click)="addItem()">
+        <div>
+            <h1>Package Inventory Management</h1>
+            <p class="subtitle">Manage your aid packages for distribution</p>
+        </div>
+        <button mat-flat-button color="primary" (click)="addItem()" [disabled]="isLoading">
             <mat-icon>add</mat-icon>
-            Add Item
+            Add Package
         </button>
     </div>
 
-    <mat-card class="table-card">
-        <table mat-table [dataSource]="inventory$" class="w-full">
+    <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading inventory...</p>
+    </div>
 
-            <!-- Name -->
-            <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef> Item Name </th>
+    <mat-card class="table-card" *ngIf="!isLoading">
+        <div *ngIf="inventory.length === 0" class="empty-state">
+            <mat-icon>inventory_2</mat-icon>
+            <h3>No packages in inventory</h3>
+            <p>Add your first package to start managing inventory</p>
+            <button mat-flat-button color="primary" (click)="addItem()">
+                <mat-icon>add</mat-icon>
+                Add Package
+            </button>
+        </div>
+
+        <table mat-table [dataSource]="inventory" class="w-full" *ngIf="inventory.length > 0">
+
+            <!-- Package Name -->
+            <ng-container matColumnDef="packageName">
+                <th mat-header-cell *matHeaderCellDef> Package Name </th>
                 <td mat-cell *matCellDef="let item">
                     <div class="item-name">
-                        <span class="category-dot" [class]="item.category | lowercase"></span>
-                        {{ item.name }}
+                        <span class="category-dot" [style.background]="getCategoryColor(item.category)"></span>
+                        <strong>{{ item.packageName }}</strong>
                     </div>
                 </td>
             </ng-container>
@@ -24,39 +42,64 @@
             <!-- Category -->
             <ng-container matColumnDef="category">
                 <th mat-header-cell *matHeaderCellDef> Category </th>
-                <td mat-cell *matCellDef="let item"> {{ item.category }} </td>
+                <td mat-cell *matCellDef="let item">
+                    <span class="category-badge" [style.background]="getCategoryColor(item.category)">
+                        {{ getCategoryLabel(item.category) }}
+                    </span>
+                </td>
             </ng-container>
 
             <!-- Quantity -->
             <ng-container matColumnDef="quantity">
                 <th mat-header-cell *matHeaderCellDef> Quantity </th>
                 <td mat-cell *matCellDef="let item">
-                    <span [class.text-red-500]="item.quantity < 20">{{ item.quantity }}</span>
+                    <span class="quantity-badge" [class.low-stock]="item.quantity < 20">
+                        {{ item.quantity }} packages
+                    </span>
                 </td>
             </ng-container>
 
-            <!-- Unit -->
-            <ng-container matColumnDef="unit">
-                <th mat-header-cell *matHeaderCellDef> Unit </th>
-                <td mat-cell *matCellDef="let item"> {{ item.unit }} </td>
+            <!-- Description -->
+            <ng-container matColumnDef="description">
+                <th mat-header-cell *matHeaderCellDef> Description </th>
+                <td mat-cell *matCellDef="let item">
+                    <span class="description">{{ item.description || '-' }}</span>
+                </td>
             </ng-container>
 
             <!-- Last Updated -->
             <ng-container matColumnDef="lastUpdated">
                 <th mat-header-cell *matHeaderCellDef> Last Updated </th>
-                <td mat-cell *matCellDef="let item"> {{ item.lastUpdated | date:'shortDate' }} </td>
+                <td mat-cell *matCellDef="let item">
+                    {{ item.lastUpdated | date:'short' }}
+                </td>
             </ng-container>
 
             <!-- Actions -->
             <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef> Actions </th>
-                <td mat-cell *matCellDef="let item">
-                    <button mat-icon-button color="primary" (click)="updateQuantity(item.id, 1)">
-                        <mat-icon>add</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="updateQuantity(item.id, -1)">
-                        <mat-icon>remove</mat-icon>
-                    </button>
+                <td mat-cell *matCellDef="let item; let i = index">
+                    <div class="action-buttons">
+                        <button mat-icon-button color="primary" 
+                                (click)="updateQuantity(i, 10)"
+                                matTooltip="Add 10">
+                            <mat-icon>add_circle</mat-icon>
+                        </button>
+                        <button mat-icon-button color="accent" 
+                                (click)="updateQuantity(i, -10)"
+                                [disabled]="item.quantity < 10"
+                                matTooltip="Remove 10">
+                            <mat-icon>remove_circle</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="editItem(i)" matTooltip="Edit">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" 
+                                (click)="deleteItem(i)"
+                                matTooltip="Delete">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
                 </td>
             </ng-container>
 
@@ -64,4 +107,31 @@
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
     </mat-card>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" *ngIf="!isLoading && inventory.length > 0">
+        <mat-card class="summary-card">
+            <mat-icon class="summary-icon food">inventory_2</mat-icon>
+            <div class="summary-content">
+                <h3>Total Packages</h3>
+                <p class="summary-value">{{ getTotalPackages() }}</p>
+            </div>
+        </mat-card>
+
+        <mat-card class="summary-card">
+            <mat-icon class="summary-icon medical">category</mat-icon>
+            <div class="summary-content">
+                <h3>Package Types</h3>
+                <p class="summary-value">{{ inventory.length }}</p>
+            </div>
+        </mat-card>
+
+        <mat-card class="summary-card">
+            <mat-icon class="summary-icon shelter">warning</mat-icon>
+            <div class="summary-content">
+                <h3>Low Stock Items</h3>
+                <p class="summary-value">{{ getLowStockCount() }}</p>
+            </div>
+        </mat-card>
+    </div>
 </div>

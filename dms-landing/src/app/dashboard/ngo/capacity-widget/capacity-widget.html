@@ -1,0 +1,136 @@
+<mat-card class="capacity-card">
+  <div class="card-header">
+    <h3>
+      <mat-icon>analytics</mat-icon>
+      Capacity Overview
+    </h3>
+  </div>
+  
+  <div *ngIf="capacity && !loading" class="capacity-content">
+    <!-- Capacity Breakdown -->
+    <div class="capacity-section">
+      <div class="capacity-row">
+        <div class="capacity-label">
+          <mat-icon class="icon-volunteers">group</mat-icon>
+          <span>Human Capacity</span>
+        </div>
+        <div class="capacity-value">
+          <span class="value">{{ capacity.overall.humanCapacity }}</span>
+          <span class="sub-value">({{ capacity.overall.volunteers }} volunteers)</span>
+        </div>
+      </div>
+
+      <div class="capacity-row">
+        <div class="capacity-label">
+          <mat-icon class="icon-resources">inventory_2</mat-icon>
+          <span>Resource Capacity</span>
+        </div>
+        <div class="capacity-value">
+          <span class="value">{{ capacity.overall.resourceCapacity }}</span>
+          <span class="sub-value">items</span>
+        </div>
+      </div>
+
+      <div class="capacity-row">
+        <div class="capacity-label">
+          <mat-icon class="icon-operational">settings</mat-icon>
+          <span>Operational Limit</span>
+        </div>
+        <div class="capacity-value">
+          <span class="value">{{ capacity.overall.operationalCapacity }}</span>
+          <span class="sub-value">per day</span>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Effective Capacity -->
+    <div class="effective-capacity">
+      <div class="effective-header">
+        <mat-icon>check_circle</mat-icon>
+        <span>Effective Capacity</span>
+      </div>
+      <div class="effective-value">{{ capacity.overall.effectiveCapacity }}</div>
+      <div class="effective-subtitle">victims per day</div>
+    </div>
+
+    <!-- Limiting Factor -->
+    <div class="limiting-factor">
+      <mat-icon [class]="'icon-' + capacity.overall.limitingFactor">
+        {{ getLimitingFactorIcon(capacity.overall.limitingFactor) }}
+      </mat-icon>
+      <div class="limiting-content">
+        <span class="limiting-label">Limiting Factor</span>
+        <span class="limiting-value">{{ getLimitingFactorLabel(capacity.overall.limitingFactor) }}</span>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Workload Section -->
+    <div class="workload-section">
+      <div class="workload-header">
+        <div class="workload-title">
+          <mat-icon>trending_up</mat-icon>
+          <span>Current Workload</span>
+        </div>
+        <div class="workload-percentage" [class]="'status-' + getWorkloadStatus(capacity.workload).toLowerCase()">
+          {{ capacity.workload }}%
+        </div>
+      </div>
+      
+      <mat-progress-bar 
+        mode="determinate" 
+        [value]="capacity.workload"
+        [color]="getWorkloadColor(capacity.workload)">
+      </mat-progress-bar>
+      
+      <div class="workload-info">
+        <span>{{ capacity.activeDistributions }} / {{ capacity.overall.effectiveCapacity }} active distributions</span>
+        <span class="workload-status" [class]="'status-' + getWorkloadStatus(capacity.workload).toLowerCase()">
+          {{ getWorkloadStatus(capacity.workload) }} Load
+        </span>
+      </div>
+    </div>
+
+    <!-- Category Breakdown (Optional) -->
+    <div *ngIf="capacity.byCategory && capacity.byCategory.length > 0" class="category-section">
+      <h4>
+        <mat-icon>category</mat-icon>
+        Capacity by Category
+      </h4>
+      <div class="category-list">
+        <div *ngFor="let cat of capacity.byCategory" class="category-item">
+          <div class="category-name">{{ cat.category | titlecase }}</div>
+          <div class="category-stats">
+            <span class="stat">
+              <mat-icon>group</mat-icon>
+              {{ cat.volunteers }} volunteers
+            </span>
+            <span class="stat">
+              <mat-icon>inventory</mat-icon>
+              {{ cat.resourceCapacity }} items
+            </span>
+            <span class="stat effective">
+              <mat-icon>check</mat-icon>
+              {{ cat.effectiveCapacity }} capacity
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <mat-icon class="spinning">hourglass_empty</mat-icon>
+    <p>Loading capacity data...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!capacity && !loading" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <p>Unable to load capacity data</p>
+  </div>
+</mat-card>

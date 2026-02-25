@@ -45,6 +45,64 @@ exports.signup = async (req, res) => {
             region
         });
 
+        // Auto-create Organization record if role is 'ngo'
+        if (role === 'ngo') {
+            const Organization = require('../models/Organization');
+            
+            try {
+                await Organization.create({
+                    name: name, // Use user's name as organization name initially
+                    type: 'ngo',
+                    contact: {
+                        email: email,
+                        phone: phone,
+                        address: region || 'Not specified' // Use region as address or default
+                    },
+                    adminUser: user._id,
+                    
+                    // Operational Limits (defaults)
+                    operationalLimit: {
+                        maxDailyDistributions: 1000,
+                        maxConcurrentRegions: 5
+                    },
+                    
+                    // Service Rate Configuration (defaults)
+                    serviceRateConfig: {
+                        defaultRate: 20,
+                        categoryRates: {
+                            medical: 40,
+                            food_distribution: 25,
+                            shelter_management: 15,
+                            logistics: 30,
+                            general_support: 20
+                        }
+                    },
+                    
+                    // Inventory (empty initially)
+                    inventory: [],
+                    
+                    // Active operations
+                    activeDistributions: 0,
+                    assignedRegions: [],
+                    
+                    // Status
+                    status: 'pending', // Requires admin approval
+                    verificationStatus: 'unverified',
+                    
+                    // Registration details (optional, can be filled later)
+                    registrationNumber: '', // Can be assigned by admin
+                    documents: [],
+                    description: `${name} - Disaster relief organization` // Auto-generated description
+                });
+                
+                console.log(`✅ Auto-created Organization for NGO user: ${name}`);
+            } catch (orgError) {
+                console.error('Error creating organization:', orgError);
+                // Don't fail the signup if organization creation fails
+                // Admin can manually create it later
+            }
+        }
+
         // Generate token
         const token = generateToken(user._id);
 

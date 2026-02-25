@@ -6,12 +6,21 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { NgoService } from '../services/ngo.service';
+import { CapacityWidgetComponent } from '../capacity-widget/capacity-widget';
 import { map } from 'rxjs/operators';
 
 @Component({
     selector: 'app-ngo-overview',
     standalone: true,
-    imports: [CommonModule, MatCardModule, MatIconModule, MatTableModule, MatButtonModule, RouterLink],
+    imports: [
+        CommonModule, 
+        MatCardModule, 
+        MatIconModule, 
+        MatTableModule, 
+        MatButtonModule, 
+        RouterLink,
+        CapacityWidgetComponent
+    ],
     templateUrl: './overview.html',
     styleUrls: ['./overview.css']
 })

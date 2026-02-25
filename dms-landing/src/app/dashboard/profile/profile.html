@@ -67,27 +67,71 @@
         <!-- Volunteer Specific Section -->
         <ng-container *ngIf="user?.role === 'volunteer'">
             <mat-divider></mat-divider>
-            <div class="victim-card-section">
+            <div class="victim-card-section" *ngIf="volunteerProfile; else noVolunteerProfile">
                 <div class="family-stats">
                     <div class="stat-box">
-                        <span class="val">On Duty</span>
+                        <span class="val">{{ volunteerProfile.availabilityStatus || 'N/A' }}</span>
                         <span class="lbl">Current Status</span>
                     </div>
                     <div class="stat-box">
-                        <span class="val">Level 3</span>
-                        <span class="lbl">Clearance</span>
+                        <span class="val">{{ volunteerProfile.verificationStatus || 'Pending' }}</span>
+                        <span class="lbl">Verification</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="val">{{ volunteerProfile.serviceRate || 0 }}</span>
+                        <span class="lbl">Service Rate</span>
                     </div>
                 </div>
 
-                <div class="special-needs-list">
-                    <span class="lbl">Expertise Areas:</span>
+                <div class="detail-item">
+                    <span class="label">CNIC</span>
+                    <span class="value">{{ volunteerProfile.cnic || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Assigned NGO</span>
+                    <span class="value">{{ volunteerProfile.assignedNGO?.name || 'Not Assigned' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Category</span>
+                    <span class="value">{{ volunteerProfile.category || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Skill Level</span>
+                    <span class="value">{{ volunteerProfile.skillLevel || 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Shift Type</span>
+                    <span class="value">{{ volunteerProfile.shiftType || 'N/A' }}</span>
+                </div>
+
+                <div class="special-needs-list" *ngIf="volunteerProfile.preferredWorkingArea">
+                    <span class="lbl">Preferred Working Area:</span>
                     <div class="chips">
-                        <span class="chip">First Aid</span>
-                        <span class="chip">Logistics</span>
-                        <span class="chip">Crowd Control</span>
+                        <span class="chip">{{ volunteerProfile.preferredWorkingArea }}</span>
+                    </div>
+                </div>
+
+                <div class="family-stats" style="margin-top: 16px;">
+                    <div class="stat-box">
+                        <span class="val">{{ volunteerProfile.totalHoursServed || 0 }}</span>
+                        <span class="lbl">Hours Served</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="val">{{ volunteerProfile.totalVictimsServed || 0 }}</span>
+                        <span class="lbl">Victims Served</span>
                     </div>
                 </div>
             </div>
+
+            <ng-template #noVolunteerProfile>
+                <div class="victim-card-section" style="text-align: center; padding: 32px;">
+                    <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #999;">person_add</mat-icon>
+                    <p style="margin-top: 16px; color: #666;">No volunteer profile found</p>
+                    <button mat-raised-button color="primary" (click)="openEditProfile()" style="margin-top: 16px;">
+                        Complete Your Profile
+                    </button>
+                </div>
+            </ng-template>
         </ng-container>
     </mat-card>
 

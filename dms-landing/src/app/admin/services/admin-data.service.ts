@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Observable, of, delay } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable, of, delay, tap } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 import {
     User,
     Organization,
@@ -13,6 +15,13 @@ import {
     providedIn: 'root'
 })
 export class AdminDataService {
+    private http = inject(HttpClient);
+    private apiUrl = 'http://localhost:5000/api';
+
+    private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('dms_token');
+        return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    }
 
     // Mock Users Data
     private users: User[] = [
@@ -377,57 +386,290 @@ export class AdminDataService {
 
     // Users
     getUsers(): Observable<User[]> {
-        return of(this.users);
+        return this.http.get<any>(`${this.apiUrl}/users`, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    return response.data.map((user: any) => ({
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        status: user.status,
+                        joinedDate: new Date(user.createdAt),
+                        lastActive: new Date(user.lastActive || user.createdAt),
+                        phone: user.phone || 'Not provided',
+                        region: user.region || 'Not specified'
+                    }));
+                }
+                return [];
+            })
+        );
     }
 
     updateUserStatus(userId: string, status: 'active' | 'inactive' | 'blocked'): Observable<User> {
-        const user = this.users.find(u => u.id === userId);
-        if (user) {
-            user.status = status;
-            this.addActivityLog('user_status_change', `Changed user ${user.name} status to ${status}`, userId, 'user');
-        }
-        return of(user!);
+        return this.http.put<any>(`${this.apiUrl}/users/${userId}/status`, { status }, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    const user = response.data;
+                    return {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role,
+                        status: user.status,
+                        joinedDate: new Date(user.createdAt),
+                        lastActive: new Date(user.lastActive || user.createdAt),
+                        phone: user.phone || 'Not provided',
+                        region: user.region || 'Not specified'
+                    };
+                }
+                throw new Error('Failed to update user status');
+            })
+        );
     }
 
     // Organizations
     getOrganizations(): Observable<Organization[]> {
-        return of(this.organizations);
+        return this.http.get<any>(`${this.apiUrl}/organizations`, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    return response.data.map((org: any) => ({
+                        id: org._id,
+                        name: org.name,
+                        type: org.type,
+                        contact: {
+                            email: org.contact.email,
+                            phone: org.contact.phone,
+                            address: org.contact.address
+                        },
+                        capacity: {
+                            volunteers: org.capacity?.volunteers || 0,
+                            resources: org.capacity?.resourceCapacity || 0
+                        },
+                        status: org.status,
+                        registeredDate: new Date(org.createdAt),
+                        currentWorkload: org.workload || 0
+                    }));
+                }
+                return [];
+            })
+        );
     }
 
     updateOrganizationStatus(orgId: string, status: 'pending' | 'approved' | 'disabled'): Observable<Organization> {
-        const org = this.organizations.find(o => o.id === orgId);
-        if (org) {
-            org.status = status;
-            const action = status === 'approved' ? 'ngo_approval' : status === 'disabled' ? 'organization_status_change' : 'ngo_rejection';
-            this.addActivityLog(action, `Changed ${org.name} status to ${status}`, orgId, 'organization');
-        }
-        return of(org!);
+        return this.http.put<any>(`${this.apiUrl}/organizations/${orgId}/status`, { status }, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    const org = response.data;
+                    return {
+                        id: org._id,
+                        name: org.name,
+                        type: org.type,
+                        contact: {
+                            email: org.contact.email,
+                            phone: org.contact.phone,
+                            address: org.contact.address
+                        },
+                        capacity: {
+                            volunteers: org.capacity?.volunteers || 0,
+                            resources: org.capacity?.resourceCapacity || 0
+                        },
+                        status: org.status,
+                        registeredDate: new Date(org.createdAt),
+                        currentWorkload: org.workload || 0
+                    };
+                }
+                throw new Error('Failed to update organization status');
+            })
+        );
     }
 
     // Disasters
     getDisasters(): Observable<Disaster[]> {
-        return of(this.disasters);
+        return this.http.get<any>(`${this.apiUrl}/disasters`, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    return response.data.map((disaster: any) => {
+                        // Create a name from location and type
+                        const typeName = disaster.disasterType.charAt(0).toUpperCase() + disaster.disasterType.slice(1);
+                        const name = `${disaster.location} ${typeName}`;
+                        
+                        // Extract regions from location (split by comma)
+                        const regions = disaster.location.split(',').map((r: string) => r.trim());
+                        
+                        // Map backend status to frontend status
+                        let status: 'active' | 'closed' = 'active';
+                        if (disaster.status === 'resolved' || disaster.status === 'contained') {
+                            status = 'closed';
+                        }
+                        
+                        return {
+                            id: disaster._id,
+                            type: disaster.disasterType,
+                            name: name,
+                            affectedRegions: regions,
+                            severity: disaster.severity,
+                            status: status,
+                            reportedDate: new Date(disaster.createdAt),
+                            affectedPopulation: disaster.peopleAffected || 0,
+                            description: disaster.comments || ''
+                        };
+                    });
+                }
+                return [];
+            })
+        );
     }
 
     getActiveDisasters(): Observable<Disaster[]> {
-        return of(this.disasters.filter(d => d.status === 'active'));
+        // Get all disasters and filter for active ones (not resolved or contained)
+        return this.http.get<any>(`${this.apiUrl}/disasters`, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    return response.data
+                        .filter((disaster: any) => 
+                            disaster.status !== 'resolved' && 
+                            disaster.status !== 'contained'
+                        )
+                        .map((disaster: any) => {
+                            const typeName = disaster.disasterType.charAt(0).toUpperCase() + disaster.disasterType.slice(1);
+                            const name = `${disaster.location} ${typeName}`;
+                            const regions = disaster.location.split(',').map((r: string) => r.trim());
+                            
+                            return {
+                                id: disaster._id,
+                                type: disaster.disasterType,
+                                name: name,
+                                affectedRegions: regions,
+                                severity: disaster.severity,
+                                status: 'active' as const,
+                                reportedDate: new Date(disaster.createdAt),
+                                affectedPopulation: disaster.peopleAffected || 0,
+                                description: disaster.comments || ''
+                            };
+                        });
+                }
+                return [];
+            })
+        );
+    }
+
+    updateDisasterStatus(disasterId: string, status: 'reported' | 'verified' | 'active' | 'contained' | 'resolved'): Observable<Disaster> {
+        return this.http.put<any>(`${this.apiUrl}/disasters/${disasterId}/status`, { status }, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    const disaster = response.data;
+                    const typeName = disaster.disasterType.charAt(0).toUpperCase() + disaster.disasterType.slice(1);
+                    const name = `${disaster.location} ${typeName}`;
+                    const regions = disaster.location.split(',').map((r: string) => r.trim());
+                    
+                    let frontendStatus: 'active' | 'closed' = 'active';
+                    if (disaster.status === 'resolved' || disaster.status === 'contained') {
+                        frontendStatus = 'closed';
+                    }
+                    
+                    return {
+                        id: disaster._id,
+                        type: disaster.disasterType,
+                        name: name,
+                        affectedRegions: regions,
+                        severity: disaster.severity,
+                        status: frontendStatus,
+                        reportedDate: new Date(disaster.createdAt),
+                        affectedPopulation: disaster.peopleAffected || 0,
+                        description: disaster.comments || ''
+                    };
+                }
+                throw new Error('Failed to update disaster status');
+            })
+        );
     }
 
     // Assignments
     getAssignments(): Observable<RegionAssignment[]> {
-        return of(this.assignments);
+        return this.http.get<any>(`${this.apiUrl}/region-assignments`, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    return response.data.map((assignment: any) => {
+                        // Extract NGO IDs and names
+                        const ngoData: Array<{id: string, name: string}> = assignment.assignedNGOs.map((ngo: any) => {
+                            if (typeof ngo === 'string') {
+                                return { id: ngo, name: 'Unknown' };
+                            }
+                            return { id: ngo._id, name: ngo.name };
+                        });
+                        
+                        return {
+                            id: assignment._id,
+                            disasterId: assignment.disaster._id || assignment.disaster,
+                            disasterName: assignment.disasterName,
+                            region: assignment.region,
+                            assignedNGOs: ngoData.map((n: {id: string, name: string}) => n.id),
+                            ngoNames: ngoData.map((n: {id: string, name: string}) => n.name), // Add NGO names array
+                            resourceRequirements: assignment.resourceRequirements,
+                            resourceCoverage: assignment.resourceCoverage,
+                            affectedPopulation: assignment.affectedPopulation,
+                            status: assignment.status,
+                            assignedDate: new Date(assignment.createdAt),
+                            assignedBy: assignment.assignedBy?.name || 'Admin User'
+                        };
+                    });
+                }
+                return [];
+            })
+        );
     }
 
     createAssignment(assignment: Omit<RegionAssignment, 'id' | 'assignedDate' | 'assignedBy'>): Observable<RegionAssignment> {
-        const newAssignment: RegionAssignment = {
-            ...assignment,
-            id: `assign${this.assignments.length + 1}`,
-            assignedDate: new Date(),
-            assignedBy: 'Admin User'
-        };
-        this.assignments.push(newAssignment);
-        this.addActivityLog('region_assignment', `Assigned ${assignment.region} to NGO(s) for disaster relief`, newAssignment.id, 'assignment');
-        return of(newAssignment);
+        return this.http.post<any>(`${this.apiUrl}/region-assignments`, assignment, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    const data = response.data;
+                    return {
+                        id: data._id,
+                        disasterId: data.disaster._id || data.disaster,
+                        disasterName: data.disasterName,
+                        region: data.region,
+                        assignedNGOs: data.assignedNGOs.map((ngo: any) => 
+                            typeof ngo === 'string' ? ngo : ngo._id
+                        ),
+                        resourceRequirements: data.resourceRequirements,
+                        resourceCoverage: data.resourceCoverage,
+                        affectedPopulation: data.affectedPopulation,
+                        status: data.status,
+                        assignedDate: new Date(data.createdAt),
+                        assignedBy: data.assignedBy?.name || 'Admin User'
+                    };
+                }
+                throw new Error('Failed to create assignment');
+            })
+        );
+    }
+
+    updateAssignmentStatus(assignmentId: string, status: 'assigned' | 'in-progress' | 'completed'): Observable<RegionAssignment> {
+        return this.http.put<any>(`${this.apiUrl}/region-assignments/${assignmentId}/status`, { status }, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    const data = response.data;
+                    return {
+                        id: data._id,
+                        disasterId: data.disaster._id || data.disaster,
+                        disasterName: data.disasterName,
+                        region: data.region,
+                        assignedNGOs: data.assignedNGOs.map((ngo: any) => 
+                            typeof ngo === 'string' ? ngo : ngo._id
+                        ),
+                        resourceRequirements: data.resourceRequirements,
+                        resourceCoverage: data.resourceCoverage,
+                        affectedPopulation: data.affectedPopulation,
+                        status: data.status,
+                        assignedDate: new Date(data.createdAt),
+                        assignedBy: data.assignedBy?.name || 'Admin User'
+                    };
+                }
+                throw new Error('Failed to update assignment status');
+            })
+        );
     }
 
     // Activity Logs
@@ -458,12 +700,13 @@ export class AdminDataService {
     }
 
     getEligibleNGOsForRegion(disasterId: string, region: string): Observable<Organization[]> {
-        // Filter NGOs that are approved and have capacity
-        const eligible = this.organizations.filter(org =>
-            org.status === 'approved' &&
-            org.currentWorkload < 80 &&
-            org.capacity.volunteers > 0
+        // Get all approved organizations with capacity
+        return this.getOrganizations().pipe(
+            map(orgs => orgs.filter(org =>
+                org.status === 'approved' &&
+                org.currentWorkload < 80 &&
+                org.capacity.volunteers > 0
+            ))
         );
-        return of(eligible);
     }
 }
