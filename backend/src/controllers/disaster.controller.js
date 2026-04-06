@@ -5,18 +5,20 @@ const Disaster = require('../models/Disaster');
 // @access  Public (anyone can report) or Private (if you want auth)
 exports.reportDisaster = async (req, res) => {
     try {
-        console.log('=== REPORT DISASTER ===');
-        console.log('Request Body:', JSON.stringify(req.body, null, 2));
-        console.log('User ID:', req.user?.id);
-
         // Add reporter if authenticated
         if (req.user) {
             req.body.reportedBy = req.user.id;
         }
 
-        const disaster = await Disaster.create(req.body);
+        // Parse coordinates if sent as string "lat, lng"
+        if (!req.body.coordinates && req.body.location) {
+            const parts = req.body.location.split(',').map((p) => parseFloat(p.trim()));
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                req.body.coordinates = { latitude: parts[0], longitude: parts[1] };
+            }
+        }
 
-        console.log('✅ Disaster Reported Successfully:', disaster._id);
+        const disaster = await Disaster.create(req.body);
 
         res.status(201).json({
             success: true,

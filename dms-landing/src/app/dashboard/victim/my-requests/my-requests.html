@@ -2,69 +2,114 @@
     <div class="page-header">
         <div>
             <h1>My Aid Requests</h1>
-            <p class="subtitle">Manage your aid requests and track their status.</p>
+            <p class="subtitle">Track your requests and find your distribution point.</p>
         </div>
         <button mat-flat-button color="warn" (click)="openRequestDialog()">
-            <mat-icon class="mr-2">add_alert</mat-icon> Request New Aid
+            <mat-icon>add_alert</mat-icon> Request New Aid
         </button>
     </div>
 
-    <!-- Active Requests List -->
-    <div class="requests-list">
-        <div *ngIf="(requests$ | async)?.length === 0" class="empty-state">
-            <mat-icon>inbox</mat-icon>
-            <p>No active requests found.</p>
-        </div>
+    <div *ngIf="loading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading your requests...</p>
+    </div>
 
-        <mat-card *ngFor="let req of requests$ | async" class="request-card">
+    <div *ngIf="!loading && requests.length === 0" class="empty-state">
+        <mat-icon>inbox</mat-icon>
+        <p>No requests found. Submit your first aid request.</p>
+        <button mat-raised-button color="primary" (click)="openRequestDialog()">Request Aid</button>
+    </div>
+
+    <div class="requests-list">
+        <mat-card *ngFor="let req of requests" class="request-card">
+
+            <!-- Header -->
             <div class="card-header-row">
-                <div class="req-type">
-                    <h3>{{ req.type }} Aid</h3>
-                    <span class="urgency-badge" [class]="req.urgency.toLowerCase()">{{ req.urgency }} Priority</span>
+                <div class="req-info">
+                    <h3>{{ req.type }}</h3>
+                    <span class="urgency-badge" [style.background]="getStatusColor(req.urgency)">
+                        {{ req.urgency }} Priority
+                    </span>
                 </div>
-                <span class="date">{{ req.createdAt | date:'short' }}</span>
+                <span class="date">{{ formatDate(req.createdAt) }}</span>
             </div>
 
             <mat-divider></mat-divider>
 
+            <!-- Status Pipeline -->
             <div class="status-section">
-                <h4>Status Check</h4>
-                <!-- Simple Progress Indicator -->
                 <div class="pipeline">
-                    <div class="stage" [class.active]="getStatusStep(req.status) >= 0">Submitted</div>
+                    <div class="stage" [class.active]="getStatusStep(req.status) >= 0">
+                        <mat-icon>send</mat-icon>
+                        <span>Submitted</span>
+                    </div>
                     <div class="line" [class.active]="getStatusStep(req.status) >= 1"></div>
-                    <div class="stage" [class.active]="getStatusStep(req.status) >= 1">Approved</div>
+                    <div class="stage" [class.active]="getStatusStep(req.status) >= 1">
+                        <mat-icon>check_circle</mat-icon>
+                        <span>Approved</span>
+                    </div>
                     <div class="line" [class.active]="getStatusStep(req.status) >= 2"></div>
-                    <div class="stage" [class.active]="getStatusStep(req.status) >= 2">Ready</div>
+                    <div class="stage" [class.active]="getStatusStep(req.status) >= 2">
+                        <mat-icon>local_shipping</mat-icon>
+                        <span>In Progress</span>
+                    </div>
                     <div class="line" [class.active]="getStatusStep(req.status) >= 3"></div>
-                    <div class="stage" [class.active]="getStatusStep(req.status) >= 3">Fulfilled</div>
+                    <div class="stage" [class.active]="getStatusStep(req.status) >= 3">
+                        <mat-icon>volunteer_activism</mat-icon>
+                        <span>Fulfilled</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Post-Allocation Details -->
+            <!-- Assigned NGO Info -->
             <div *ngIf="req.allocatedNGO" class="allocation-box">
                 <div class="box-row">
-                    <mat-icon class="icon">business</mat-icon>
+                    <mat-icon>business</mat-icon>
                     <div>
                         <span class="label">Assigned NGO</span>
                         <p>{{ req.allocatedNGO }}</p>
                     </div>
                 </div>
-                <div class="box-row" *ngIf="req.allocatedPoint">
-                    <mat-icon class="icon">location_on</mat-icon>
+                <div class="box-row" *ngIf="req.ngoContact">
+                    <mat-icon>phone</mat-icon>
                     <div>
-                        <span class="label">Collection Point</span>
-                        <p>{{ req.allocatedPoint }}</p>
-                    </div>
-                </div>
-                <div class="box-row" *ngIf="req.validUntil">
-                    <mat-icon class="icon">timer</mat-icon>
-                    <div>
-                        <span class="label">Valid Until</span>
-                        <p class="text-red-500">{{ req.validUntil | date:'medium' }}</p>
+                        <span class="label">NGO Contact</span>
+                        <p>{{ req.ngoContact }}</p>
                     </div>
                 </div>
             </div>
+
+            <!-- Distribution Points - nearest shift to victim -->
+            <div *ngIf="req.nearestShift" class="distribution-points">
+                <h4><mat-icon>store</mat-icon> Your Distribution Point</h4>
+                <div class="point-card">
+                    <div class="point-row">
+                        <mat-icon>location_on</mat-icon>
+                        <strong>{{ req.nearestShift.location }}</strong>
+                        <button mat-icon-button color="primary" (click)="openOnMap(req.nearestShift)"
+                                matTooltip="View on Map" style="margin-left:auto;">
+                            <mat-icon>map</mat-icon>
+                        </button>
+                    </div>
+                    <div class="point-row">
+                        <mat-icon>schedule</mat-icon>
+                        <span>{{ formatDate(req.nearestShift.shiftStart) }} — {{ formatDate(req.nearestShift.shiftEnd) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No distribution point yet -->
+            <div *ngIf="req.allocatedNGO && !req.nearestShift" class="no-point-info">
+                <mat-icon>info</mat-icon>
+                <span>Distribution point will be announced by the NGO soon.</span>
+            </div>
+
+            <!-- Pending state -->
+            <div *ngIf="!req.allocatedNGO" class="pending-info">
+                <mat-icon>hourglass_empty</mat-icon>
+                <span>Your request is being reviewed. An NGO will be assigned shortly.</span>
+            </div>
+
         </mat-card>
     </div>
 </div>

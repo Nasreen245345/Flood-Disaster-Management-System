@@ -32,143 +32,108 @@ function parseLocation(locationString) {
 }
 
 // Helper function to find best NGO for aid request
+// Criteria: 1) Nearest active disaster to victim  2) NGO assigned to that disaster  3) Has capacity
 async function findBestNGO(aidRequest) {
     try {
         console.log('🔍 Finding best NGO for aid request...');
-        
-        // Parse victim's location
+
         const victimCoords = parseLocation(aidRequest.location);
         if (!victimCoords) {
             console.log('⚠️  Could not parse victim location');
             return null;
         }
-        
+
         console.log('📍 Victim location:', victimCoords);
-        
-        // Get all approved NGOs
-        const ngos = await Organization.find({ 
-            status: 'approved',
-            verificationStatus: 'verified'
+
+        const Disaster = require('../models/Disaster');
+
+        // Step 1: Find nearest active disaster to victim
+        const activeDiasters = await Disaster.find({
+            status: { $in: ['active', 'verified'] },
+            'coordinates.latitude': { $exists: true },
+            'coordinates.longitude': { $exists: true }
         });
-        
-        console.log(`📊 Found ${ngos.length} approved NGOs`);
-        
-        if (ngos.length === 0) {
-            console.log('⚠️  No approved NGOs available');
+
+        if (activeDiasters.length === 0) {
+            console.log('⚠️  No active disasters with coordinates found');
             return null;
         }
-        
-        // Get all active region assignments
-        const assignments = await RegionAssignment.find({ 
+
+        // Sort disasters by distance to victim
+        const disastersWithDistance = activeDiasters.map(d => ({
+            disaster: d,
+            distance: calculateDistance(
+                victimCoords.latitude, victimCoords.longitude,
+                d.coordinates.latitude, d.coordinates.longitude
+            )
+        })).sort((a, b) => a.distance - b.distance);
+
+        console.log('📊 Nearest disasters:');
+        disastersWithDistance.slice(0, 3).forEach(d =>
+            console.log(`  - ${d.disaster.disasterType} at ${d.disaster.location}: ${d.distance.toFixed(1)}km`)
+        );
+
+        // Step 2: Find NGOs assigned to the nearest disasters (within 200km)
+        const nearbyDisasterIds = disastersWithDistance
+            .filter(d => d.distance <= 200)
+            .map(d => d.disaster._id);
+
+        if (nearbyDisasterIds.length === 0) {
+            console.log('⚠️  No disasters within 200km of victim');
+            return null;
+        }
+
+        const assignments = await RegionAssignment.find({
+            disaster: { $in: nearbyDisasterIds },
             status: { $in: ['assigned', 'in-progress'] }
         }).populate('assignedNGOs');
-        
-        console.log(`📋 Found ${assignments.length} active region assignments`);
-        
-        // Score each NGO based on multiple factors
-        const ngoScores = [];
-        
-        for (const ngo of ngos) {
-            let score = 0;
-            let reasons = [];
-            
-            // Factor 1: Check if NGO is assigned to nearby regions (proximity)
-            let isNearby = false;
-            let minDistance = Infinity;
-            
-            for (const assignment of assignments) {
-                if (assignment.assignedNGOs.some(n => n._id.toString() === ngo._id.toString())) {
-                    // NGO is assigned to this region
-                    // For simplicity, we'll consider region name matching or proximity
-                    // In a real system, regions would have coordinates
-                    isNearby = true;
-                    reasons.push(`Assigned to region: ${assignment.region}`);
-                    score += 30; // High score for being assigned to a region
-                }
-            }
-            
-            // Factor 2: Check NGO capacity
-            const capacity = await ngo.calculateEffectiveCapacity();
-            const availableCapacity = capacity.effectiveCapacity - ngo.activeDistributions;
-            
-            console.log(`NGO: ${ngo.name}, Capacity: ${capacity.effectiveCapacity}, Active: ${ngo.activeDistributions}, Available: ${availableCapacity}`);
-            
-            if (availableCapacity >= aidRequest.peopleCount) {
-                score += 40; // High score for having enough capacity
-                reasons.push(`Has capacity for ${aidRequest.peopleCount} people`);
-            } else if (availableCapacity > 0) {
-                score += 20; // Partial score for some capacity
-                reasons.push(`Partial capacity: ${availableCapacity} people`);
-            } else {
-                reasons.push('No available capacity');
-            }
-            
-            // Factor 3: Check inventory for required packages
-            let hasRequiredItems = true;
-            if (aidRequest.packagesNeeded && aidRequest.packagesNeeded.length > 0) {
-                for (const needed of aidRequest.packagesNeeded) {
-                    const inventoryItem = ngo.inventory.find(
-                        item => item.category === needed.category && 
-                                item.quantity >= needed.quantity
-                    );
-                    
-                    if (inventoryItem) {
-                        score += 10; // Score for having required items
-                        reasons.push(`Has ${needed.category} packages`);
-                    } else {
-                        hasRequiredItems = false;
-                        reasons.push(`Missing ${needed.category} packages`);
-                    }
-                }
-            }
-            
-            // Factor 4: Workload (prefer less busy NGOs)
-            const workload = await ngo.calculateWorkload();
-            if (workload < 50) {
-                score += 15; // Good availability
-                reasons.push(`Low workload: ${workload}%`);
-            } else if (workload < 80) {
-                score += 5; // Moderate availability
-                reasons.push(`Moderate workload: ${workload}%`);
-            } else {
-                reasons.push(`High workload: ${workload}%`);
-            }
-            
-            // Factor 5: Number of concurrent regions (prefer NGOs with capacity for more regions)
-            const currentRegions = ngo.assignedRegions.length;
-            const maxRegions = ngo.operationalLimit.maxConcurrentRegions;
-            if (currentRegions < maxRegions) {
-                score += 5;
-                reasons.push(`Can handle more regions: ${currentRegions}/${maxRegions}`);
-            }
-            
-            ngoScores.push({
-                ngo,
-                score,
-                reasons,
-                availableCapacity,
-                workload
-            });
+
+        if (assignments.length === 0) {
+            console.log('⚠️  No NGOs assigned to nearby disasters');
+            return null;
         }
-        
-        // Sort by score (highest first)
-        ngoScores.sort((a, b) => b.score - a.score);
-        
-        console.log('📊 NGO Scores:');
-        ngoScores.forEach(item => {
-            console.log(`  ${item.ngo.name}: ${item.score} points`);
-            item.reasons.forEach(reason => console.log(`    - ${reason}`));
-        });
-        
-        // Return the best NGO (highest score)
-        if (ngoScores.length > 0 && ngoScores[0].score > 0) {
-            console.log(`✅ Best NGO: ${ngoScores[0].ngo.name} (${ngoScores[0].score} points)`);
-            return ngoScores[0].ngo;
+
+        // Step 3: Score NGOs by capacity
+        const candidates = [];
+
+        for (const assignment of assignments) {
+            // Get disaster distance for this assignment
+            const disasterDist = disastersWithDistance.find(
+                d => d.disaster._id.toString() === assignment.disaster.toString()
+            );
+            const distanceKm = disasterDist?.distance || Infinity;
+
+            for (const ngo of assignment.assignedNGOs) {
+                if (!ngo || ngo.status !== 'approved' || ngo.verificationStatus !== 'verified') continue;
+
+                // Capacity check
+                const capacity = await ngo.calculateEffectiveCapacity();
+                const available = capacity.effectiveCapacity - ngo.activeDistributions;
+
+                if (available < aidRequest.peopleCount) {
+                    console.log(`❌ ${ngo.name}: insufficient capacity (${available} < ${aidRequest.peopleCount})`);
+                    continue;
+                }
+
+                // Score: closer disaster = higher score
+                const distanceScore = Math.max(0, 100 - distanceKm);
+                const capacityScore = Math.min(50, (available / Math.max(aidRequest.peopleCount, 1)) * 25);
+                const totalScore = distanceScore + capacityScore;
+
+                console.log(`✅ ${ngo.name}: disaster ${distanceKm.toFixed(1)}km away, capacity=${available}, score=${totalScore.toFixed(1)}`);
+                candidates.push({ ngo, totalScore, distanceKm, available });
+            }
         }
-        
-        console.log('⚠️  No suitable NGO found');
-        return null;
-        
+
+        if (candidates.length === 0) {
+            console.log('⚠️  No eligible NGO found');
+            return null;
+        }
+
+        candidates.sort((a, b) => b.totalScore - a.totalScore);
+        console.log(`✅ Best NGO: ${candidates[0].ngo.name} (score: ${candidates[0].totalScore.toFixed(1)}, distance: ${candidates[0].distanceKm.toFixed(1)}km)`);
+        return candidates[0].ngo;
+
     } catch (error) {
         console.error('Error finding best NGO:', error);
         return null;
@@ -181,54 +146,63 @@ async function findBestNGO(aidRequest) {
 exports.createRequest = async (req, res) => {
     try {
         console.log('=== CREATE AID REQUEST ===');
-        console.log('Request Body:', JSON.stringify(req.body, null, 2));
-        console.log('User ID:', req.user?.id);
 
-        // Add user to req.body
-        req.body.requester = req.user.id;
-        
+        // Add user to req.body if logged in
+        if (req.user) {
+            req.body.requester = req.user.id;
+        }
+
         // Parse and store coordinates
         const coords = parseLocation(req.body.location);
         if (coords) {
             req.body.coordinates = coords;
-            console.log('📍 Parsed coordinates:', coords);
+        }
+
+        // Auto-create victim account if not logged in (using CNIC)
+        if (!req.user && req.body.victimCNIC && req.body.victimPhone) {
+            const User = require('../models/User');
+            // Normalize CNIC - strip all dashes and spaces
+            const normalizedCNIC = req.body.victimCNIC.replace(/[-\s]/g, '');
+            req.body.victimCNIC = normalizedCNIC; // Store normalized
+
+            let victimUser = await User.findOne({ cnic: normalizedCNIC });
+
+            if (!victimUser) {
+                victimUser = await User.create({
+                    name: req.body.victimName,
+                    email: `${normalizedCNIC}@victim.dms`,
+                    password: normalizedCNIC,
+                    role: 'victim',
+                    phone: req.body.victimPhone,
+                    cnic: normalizedCNIC
+                });
+                console.log(`✅ Auto-created victim account for CNIC: ${normalizedCNIC}`);
+            }
+            req.body.requester = victimUser._id;
         }
 
         // Find best NGO for this request
         const bestNGO = await findBestNGO(req.body);
-        
+
         if (bestNGO) {
             req.body.assignedNGO = bestNGO._id;
-            req.body.status = 'approved'; // Auto-approve if NGO found
-            console.log(`✅ Auto-assigned to NGO: ${bestNGO.name}`);
+            req.body.status = 'approved';
         } else {
-            req.body.status = 'pending'; // Keep pending if no NGO found
-            console.log('⚠️  No NGO assigned - request will be pending');
+            req.body.status = 'pending';
         }
 
-        console.log('Final payload before save:', JSON.stringify(req.body, null, 2));
-
         const aidRequest = await AidRequest.create(req.body);
-
-        console.log('✅ Aid Request Created Successfully:', aidRequest._id);
-
-        // Populate the assigned NGO for response
         await aidRequest.populate('assignedNGO', 'name contact');
 
         res.status(201).json({
             success: true,
             data: aidRequest,
-            message: bestNGO 
-                ? `Request auto-assigned to ${bestNGO.name}` 
+            message: bestNGO
+                ? `Request auto-assigned to ${bestNGO.name}`
                 : 'Request created - awaiting manual assignment'
         });
     } catch (error) {
         console.error('❌ Create Request Error:', error);
-        console.error('Error Details:', {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-        });
         res.status(500).json({
             success: false,
             message: 'Error creating aid request',
@@ -286,12 +260,79 @@ exports.getNGORequests = async (req, res) => {
     }
 };
 
-// @desc    Get logged in user's requests
+// @desc    Get logged in user's requests (by userId OR by CNIC)
 // @route   GET /api/aid-requests/my-requests
 // @access  Private
 exports.getMyRequests = async (req, res) => {
     try {
-        const requests = await AidRequest.find({ requester: req.user.id });
+        let requests;
+
+        if (req.user.role === 'victim') {
+            const User = require('../models/User');
+            const user = await User.findById(req.user.id);
+            const normalizedCNIC = user?.cnic?.replace(/[-\s]/g, '');
+
+            if (normalizedCNIC) {
+                requests = await AidRequest.find({
+                    $or: [
+                        { requester: req.user.id },
+                        { victimCNIC: normalizedCNIC }
+                    ]
+                }).populate('assignedNGO', 'name contact').sort('-createdAt');
+            } else {
+                requests = await AidRequest.find({ requester: req.user.id })
+                    .populate('assignedNGO', 'name contact').sort('-createdAt');
+            }
+
+            // For each request, find the nearest active distribution shift to the victim
+            const DistributionShift = require('../models/DistributionShift');
+            const now = new Date();
+
+            const requestsWithShifts = await Promise.all(requests.map(async (r) => {
+                const reqObj = r.toObject();
+
+                if (!r.assignedNGO) return reqObj;
+
+                // Get all active shifts for this NGO
+                const shifts = await DistributionShift.find({
+                    organization: r.assignedNGO._id,
+                    status: 'active',
+                    shiftEnd: { $gte: now }
+                }).select('location coordinates shiftStart shiftEnd totalDistributions notes');
+
+                if (shifts.length === 0) return reqObj;
+
+                // Find nearest shift to victim's location
+                let nearestShift = shifts[0];
+                if (r.coordinates?.latitude && shifts.length > 1) {
+                    let minDist = Infinity;
+                    for (const shift of shifts) {
+                        if (shift.coordinates?.latitude && shift.coordinates?.longitude) {
+                            const dist = Math.sqrt(
+                                Math.pow(r.coordinates.latitude - shift.coordinates.latitude, 2) +
+                                Math.pow(r.coordinates.longitude - shift.coordinates.longitude, 2)
+                            );
+                            if (dist < minDist) {
+                                minDist = dist;
+                                nearestShift = shift;
+                            }
+                        }
+                    }
+                }
+
+                reqObj.nearestShift = nearestShift;
+                return reqObj;
+            }));
+
+            return res.status(200).json({
+                success: true,
+                count: requestsWithShifts.length,
+                data: requestsWithShifts
+            });
+        } else {
+            requests = await AidRequest.find({ requester: req.user.id })
+                .populate('assignedNGO', 'name contact').sort('-createdAt');
+        }
 
         res.status(200).json({
             success: true,
@@ -338,7 +379,7 @@ exports.getRequestById = async (req, res) => {
 
 // @desc    Update request status
 // @route   PUT /api/aid-requests/:id/status
-// @access  Private (Admin/NGO only - strictly speaking, but for now we'll allow generic update logic or refine roles later)
+// @access  Private (Admin/NGO/Volunteer)
 exports.updateRequestStatus = async (req, res) => {
     try {
         let request = await AidRequest.findById(req.params.id);
@@ -350,10 +391,18 @@ exports.updateRequestStatus = async (req, res) => {
             });
         }
 
-        // TODO: Add role check here (e.g., only Admin/NGO can approve)
-        // For now, allowing update for simplicity of testing, or restricted to non-requesters?
-        // Let's assume the frontend handles the UI restriction, and backend just validates existence.
-        // In a real app, strict Role Based Access Control (RBAC) is needed.
+        // Role-based access control
+        if (req.user.role === 'volunteer') {
+            // Volunteers can only mark as fulfilled (through task completion)
+            if (req.body.status && req.body.status !== 'fulfilled') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Volunteers can only mark requests as fulfilled'
+                });
+            }
+            req.body.fulfilledBy = req.user.id;
+            req.body.fulfilledDate = Date.now();
+        }
 
         request = await AidRequest.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
@@ -369,6 +418,49 @@ exports.updateRequestStatus = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error updating request status',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get aid request details for volunteer (limited info)
+// @route   GET /api/aid-requests/:id/volunteer-view
+// @access  Private (Volunteer only)
+exports.getRequestForVolunteer = async (req, res) => {
+    try {
+        const request = await AidRequest.findById(req.params.id)
+            .select('victimName location coordinates packagesNeeded urgency peopleCount status')
+            .populate('assignedNGO', 'name contact.phone');
+
+        if (!request) {
+            return res.status(404).json({
+                success: false,
+                message: 'Aid request not found'
+            });
+        }
+
+        // Return limited information (no CNIC, no phone, only first name)
+        const limitedData = {
+            _id: request._id,
+            victimName: request.victimName.split(' ')[0], // Only first name
+            location: request.location,
+            coordinates: request.coordinates,
+            packagesNeeded: request.packagesNeeded,
+            urgency: request.urgency,
+            peopleCount: request.peopleCount,
+            status: request.status,
+            ngoContact: request.assignedNGO?.contact?.phone // For emergencies
+        };
+
+        res.status(200).json({
+            success: true,
+            data: limitedData
+        });
+    } catch (error) {
+        console.error('Get Request For Volunteer Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching request details',
             error: error.message
         });
     }
@@ -407,6 +499,66 @@ exports.deleteRequest = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error deleting request',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Create distribution task from aid request
+// @route   POST /api/aid-requests/:id/create-task
+// @access  Private (NGO/Admin only)
+exports.createDistributionTask = async (req, res) => {
+    try {
+        const aidRequest = await AidRequest.findById(req.params.id)
+            .populate('assignedNGO');
+
+        if (!aidRequest) {
+            return res.status(404).json({
+                success: false,
+                message: 'Aid request not found'
+            });
+        }
+
+        // Verify user has permission (NGO admin or system admin)
+        if (req.user.role !== 'admin' && req.user.role !== 'ngo') {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized to create tasks'
+            });
+        }
+
+        const Task = require('../models/Task');
+
+        // Create a delivery task with limited victim information
+        const task = await Task.create({
+            taskType: 'delivery',
+            title: `Deliver aid to ${aidRequest.victimName.split(' ')[0]}`, // Only first name
+            description: `Deliver ${aidRequest.packagesNeeded.map(p => `${p.quantity}x ${p.packageName}`).join(', ')} to victim at specified location. Contact NGO for any issues.`,
+            organization: aidRequest.assignedNGO._id,
+            relatedAidRequest: aidRequest._id,
+            priority: aidRequest.urgency === 'critical' ? 'critical' : 
+                     aidRequest.urgency === 'high' ? 'high' : 'medium',
+            location: aidRequest.location,
+            dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+            createdBy: req.user.id
+        });
+
+        // Update aid request status to in_progress
+        aidRequest.status = 'in_progress';
+        await aidRequest.save();
+
+        console.log(`✅ Distribution task created for aid request ${aidRequest._id}`);
+
+        res.status(201).json({
+            success: true,
+            data: task,
+            message: 'Distribution task created successfully'
+        });
+    } catch (error) {
+        console.error('Create Distribution Task Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating distribution task',
             error: error.message
         });
     }

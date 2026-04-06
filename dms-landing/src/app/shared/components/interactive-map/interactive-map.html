@@ -2,10 +2,28 @@
     <!-- Control Panel -->
     <div class="control-panel">
         <div class="control-header">
-            <h2><mat-icon>map</mat-icon> Interactive Disaster Map</h2>
-            <button mat-icon-button (click)="resetFilters()" title="Reset Filters">
+            <h2><mat-icon>map</mat-icon> Live Disaster Map</h2>
+            <button mat-icon-button (click)="loadMapData()" title="Refresh">
                 <mat-icon>refresh</mat-icon>
             </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="map-stats">
+            <div class="stat-badge disaster">
+                <mat-icon>warning</mat-icon>
+                <span>{{ disasterCount }} Disasters</span>
+            </div>
+            <div class="stat-badge distribution">
+                <mat-icon>store</mat-icon>
+                <span>{{ distributionCount }} Points</span>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="loading" class="loading-row">
+            <mat-spinner diameter="20"></mat-spinner>
+            <span>Loading live data...</span>
         </div>
 
         <!-- Filters -->
@@ -35,42 +53,35 @@
             </mat-form-field>
         </div>
 
+        <!-- Toggle Distribution Points -->
+        <button mat-stroked-button (click)="toggleDistributionPoints()" class="toggle-btn"
+                [color]="showDistributionPoints ? 'primary' : ''">
+            <mat-icon>{{ showDistributionPoints ? 'visibility' : 'visibility_off' }}</mat-icon>
+            {{ showDistributionPoints ? 'Hide' : 'Show' }} Distribution Points
+        </button>
+
         <!-- Legend -->
         <div class="legend">
             <h3>Legend</h3>
-            <div class="legend-items">
-                <div class="legend-item">
-                    <span class="legend-marker" style="background-color: #3b82f6;"></span>
-                    <span>Flood</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-marker" style="background-color: #ef4444;"></span>
-                    <span>Fire</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-marker" style="background-color: #f97316;"></span>
-                    <span>Earthquake</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-marker" style="background-color: #92400e;"></span>
-                    <span>Landslide</span>
-                </div>
-                <div class="legend-item">
-                    <span class="legend-marker" style="background-color: #a855f7;"></span>
-                    <span>Cyclone</span>
-                </div>
-            </div>
+            <div class="legend-item"><span class="pin" style="background:#3b82f6;"></span> Flood</div>
+            <div class="legend-item"><span class="pin" style="background:#ef4444;"></span> Fire</div>
+            <div class="legend-item"><span class="pin" style="background:#f97316;"></span> Earthquake</div>
+            <div class="legend-item"><span class="pin" style="background:#92400e;"></span> Landslide</div>
+            <div class="legend-item"><span class="pin" style="background:#a855f7;"></span> Cyclone</div>
+            <div class="legend-item"><span class="pin" style="background:#10b981;"></span> Distribution Point</div>
+            <div class="legend-item"><span class="dot" style="background:#3b82f6;"></span> Your Location</div>
         </div>
 
-        <!-- Action Buttons -->
+        <!-- Actions -->
         <div class="action-buttons">
-            <button mat-raised-button color="warn" (click)="openReportDialog()" class="report-btn">
-                <mat-icon>report_problem</mat-icon>
-                Report Disaster
+            <button mat-raised-button color="warn" (click)="openReportDialog()">
+                <mat-icon>report_problem</mat-icon> Report Disaster
             </button>
-            <button mat-stroked-button (click)="locateMe()" class="locate-btn">
-                <mat-icon>my_location</mat-icon>
-                Locate Me
+            <button mat-stroked-button (click)="locateMe()">
+                <mat-icon>my_location</mat-icon> Locate Me
+            </button>
+            <button mat-stroked-button (click)="resetFilters()">
+                <mat-icon>filter_alt_off</mat-icon> Reset
             </button>
         </div>
     </div>

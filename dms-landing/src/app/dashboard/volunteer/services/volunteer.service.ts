@@ -1,15 +1,22 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, map } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, map, Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 export interface VolunteerTask {
-    id: string;
+    _id: string;
+    taskType: 'delivery' | 'warehouse' | 'field_work' | 'other';
     title: string;
     description: string;
-    status: 'Pending' | 'Active' | 'Completed';
-    location: string;
-    startDate: Date;
-    deadline: Date;
-    assignedNGO: string;
+    status: 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+    priority: 'low' | 'medium' | 'high' | 'critical';
+    location?: string;
+    dueDate?: Date;
+    completedAt?: Date;
+    completionNotes?: string;
+    organization?: any;
+    relatedAidRequest?: any;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface VolunteerStats {
@@ -23,41 +30,15 @@ export interface VolunteerStats {
     providedIn: 'root'
 })
 export class VolunteerService {
+    private http = inject(HttpClient);
+    private apiUrl = 'http://localhost:5000/api';
 
-    // Mock Tasks
-    private _tasks = new BehaviorSubject<VolunteerTask[]>([
-        {
-            id: '1',
-            title: 'Distribute Food Rations',
-            description: 'Assist in distributing food packets to 50 families in Sector F-10.',
-            status: 'Active',
-            location: 'Sector F-10 Relief Camp',
-            startDate: new Date(),
-            deadline: new Date(Date.now() + 86400000), // +1 day
-            assignedNGO: 'Edhi Foundation'
-        },
-        {
-            id: '2',
-            title: 'Medical Camp Setup',
-            description: 'Help set up tents and tables for the upcoming medical camp.',
-            status: 'Pending',
-            location: 'Blue Area Park',
-            startDate: new Date(Date.now() + 172800000), // +2 days
-            deadline: new Date(Date.now() + 259200000), // +3 days
-            assignedNGO: 'Red Crescent'
-        },
-        {
-            id: '3',
-            title: 'Logistics Support',
-            description: 'Load and unload medical supplies from trucks.',
-            status: 'Completed',
-            location: 'Central Warehouse',
-            startDate: new Date(Date.now() - 172800000), // -2 days
-            deadline: new Date(Date.now() - 86400000), // -1 day
-            assignedNGO: 'Al-Khidmat'
-        }
-    ]);
+    private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('dms_token');
+        return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    }
 
+    private _tasks = new BehaviorSubject<VolunteerTask[]>([]);
     tasks$ = this._tasks.asObservable();
 
     // Mock Stats
@@ -76,28 +57,80 @@ export class VolunteerService {
 
     constructor() { }
 
-    // Actions
-    startTask(taskId: string) {
-        const tasks = this._tasks.value.map(t => {
-            if (t.id === taskId) return { ...t, status: 'Active' as const };
-            return t;
-        });
-        this._tasks.next(tasks);
+    // ========== API METHODS ==========
+
+    // Get volunteer's tasks
+    getMyTasks(volunteerId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/tasks/volunteer/${volunteerId}`, {
+            headers: this.getHeaders()
+        }).pipe(
+            map(response => {
+                if (response.success) {
+                    this._tasks.next(response.data);
+                    return response.data;
+                }
+                return [];
+            })
+        );
     }
 
-    completeTask(taskId: string) {
-        const tasks = this._tasks.value.map(t => {
-            if (t.id === taskId) return { ...t, status: 'Completed' as const };
-            return t;
+    // Update task status
+    updateTaskStatus(taskId: string, status: string, completionNotes?: string): Observable<any> {
+        const body: any = { status };
+        if (completionNotes) {
+            body.completionNotes = completionNotes;
+        }
+        
+        return this.http.put<any>(`${this.apiUrl}/tasks/${taskId}/status`, body, {
+            headers: this.getHeaders()
         });
-        this._tasks.next(tasks);
+    }
 
-        // Update stats
-        const currentStats = this._stats.value;
-        this._stats.next({
-            ...currentStats,
-            tasksCompleted: currentStats.tasksCompleted + 1,
-            hoursServed: currentStats.hoursServed + 4 // Mock hours
+    // Get single task details
+    getTask(taskId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/tasks/${taskId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Actions (for backward compatibility)
+    startTask(taskId: string) {
+        return this.updateTaskStatus(taskId, 'in_progress');
+    }
+
+    completeTask(taskId: string, notes?: string) {
+        return this.updateTaskStatus(taskId, 'completed', notes);
+    }
+
+    // ========== DISTRIBUTION SHIFT METHODS ==========
+
+    // Get volunteer's active shift
+    getMyActiveShift(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/distribution/my-active-shift`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Verify victim by CNIC
+    verifyVictim(cnic: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/distribution/verify-victim`, 
+            { cnic }, 
+            { headers: this.getHeaders() }
+        );
+    }
+
+    // Mark aid as distributed
+    markDistributed(aidRequestId: string, cnic: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/distribution/mark-distributed`,
+            { aidRequestId, cnic },
+            { headers: this.getHeaders() }
+        );
+    }
+
+    // Get volunteer's shifts
+    getMyShifts(volunteerId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/distribution/shifts/volunteer/${volunteerId}`, {
+            headers: this.getHeaders()
         });
     }
 

@@ -30,6 +30,10 @@ export interface VictimRequest {
     status: string;
     allocatedNGO?: string;
     allocatedPoint?: string;
+    ngoContact?: string;
+    ngoId?: string;
+    nearestShift?: any;
+    location?: string;
     validUntil?: Date;
     createdAt: Date;
     requiredAmount?: number;
@@ -99,7 +103,6 @@ export class VictimService {
     }
 
     loadMyRequests() {
-        // Need token in headers? AuthService usually handles interceptor, but if not:
         const token = localStorage.getItem('dms_token');
         const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
@@ -108,12 +111,18 @@ export class VictimService {
                 if (res.success) {
                     const mappedRequests: VictimRequest[] = res.data.map((r: any) => ({
                         id: r._id,
-                        type: this.capitalize(r.category),
+                        type: r.packagesNeeded?.map((p: any) => p.packageName).join(', ') || 'Aid',
                         urgency: this.capitalize(r.urgency),
-                        note: r.description,
+                        note: r.additionalNotes,
                         status: this.capitalize(r.status),
                         createdAt: new Date(r.createdAt),
-                        requiredAmount: r.requiredAmount
+                        requiredAmount: r.peopleCount,
+                        allocatedNGO: r.assignedNGO?.name,
+                        allocatedPoint: r.distributionPoint || null,
+                        ngoContact: r.assignedNGO?.contact?.phone,
+                        ngoId: r.assignedNGO?._id,
+                        nearestShift: r.nearestShift || null,
+                        location: r.location
                     }));
                     this._requests.next(mappedRequests);
                 }
@@ -131,36 +140,35 @@ export class VictimService {
         const token = localStorage.getItem('dms_token');
         const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-        console.log('Form Data Received:', formData);
-        console.log('Items array:', formData.items);
-        console.log('First item:', formData.items[0]);
+        // Map packages - form has {category} but backend needs {category, packageName, quantity}
+        const packageLabels: Record<string, string> = {
+            food: 'Food Package',
+            medical: 'Medical Kit',
+            shelter: 'Shelter Kit',
+            clothing: 'Clothing Package'
+        };
 
-        // The form has an array of items. We create one request per item.
-        const requests = formData.items.map((item: any, index: number) => {
-            console.log(`Item ${index}:`, item);
-            console.log(`Item ${index} quantity:`, item.quantity);
-            const payload = {
-                title: `Request for ${item.category || 'aid'}`,
-                description: formData.notes || '',
-                category: item.category ? item.category.toLowerCase() : 'other',
-                urgency: formData.urgency ? formData.urgency.toLowerCase() : 'medium',
-                location: formData.location,
-                requiredAmount: item.quantity || 'Not specified',
-                peopleCount: formData.peopleCount || 1
-            };
-            console.log('Payload to send:', payload);
-            return payload;
-        });
+        const packagesNeeded = (formData.packagesNeeded || []).map((p: any) => ({
+            category: p.category,
+            packageName: packageLabels[p.category] || p.category,
+            quantity: formData.peopleCount || 1
+        }));
 
-        const observables = requests.map((req: any) =>
-            this.http.post<any>(this.apiUrl, req, { headers })
-        );
+        const payload = {
+            victimName: formData.victimName,
+            victimCNIC: formData.victimCNIC,
+            victimPhone: formData.victimPhone,
+            location: formData.location,
+            packagesNeeded,
+            urgency: formData.urgency?.toLowerCase() || 'medium',
+            peopleCount: formData.peopleCount || 1,
+            additionalNotes: formData.additionalNotes || ''
+        };
 
-        return forkJoin(observables).pipe(
-            tap(() => {
-                // Refresh list
-                this.loadMyRequests();
-            })
+        console.log('Submitting aid request:', payload);
+
+        return this.http.post<any>(this.apiUrl, payload, { headers }).pipe(
+            tap(() => this.loadMyRequests())
         );
     }
 }

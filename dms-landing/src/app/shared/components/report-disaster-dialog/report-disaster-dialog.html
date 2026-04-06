@@ -11,12 +11,23 @@
     <mat-dialog-content class="!flex-1">
 
         <!-- Location (Critical) -->
-        <mat-form-field appearance="outline" class="w-full mt-2">
-            <mat-label>Location of Incident</mat-label>
-            <input matInput formControlName="location" placeholder="e.g., Highway A1, Near Bridge" required>
-            <mat-icon matSuffix class="text-neutral-400">add_location</mat-icon>
-            <mat-error *ngIf="reportForm.get('location')?.hasError('required')">Location is required.</mat-error>
-        </mat-form-field>
+        <div class="location-row">
+            <mat-form-field appearance="outline" class="w-full mt-2">
+                <mat-label>Location of Incident</mat-label>
+                <input matInput formControlName="location" placeholder="e.g., Nowshera, KPK or use GPS" required>
+                <mat-icon matSuffix class="text-neutral-400">add_location</mat-icon>
+                <mat-error *ngIf="reportForm.get('location')?.hasError('required')">Location is required.</mat-error>
+            </mat-form-field>
+            <button type="button" mat-raised-button color="primary" (click)="detectLocation()"
+                    [disabled]="isDetectingLocation" class="detect-btn">
+                <mat-icon>{{ isDetectingLocation ? 'hourglass_empty' : 'my_location' }}</mat-icon>
+                {{ isDetectingLocation ? 'Detecting...' : 'Use GPS' }}
+            </button>
+        </div>
+        <div *ngIf="locationDetected" class="location-success">
+            <mat-icon>check_circle</mat-icon>
+            GPS coordinates captured — disaster will appear on map
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Disaster Type -->

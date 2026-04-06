@@ -58,26 +58,26 @@
                 <mat-icon>priority_high</mat-icon>
             </div>
             <mat-card-title>Current Priority: {{ task.title }}</mat-card-title>
-            <mat-card-subtitle>{{ task.assignedNGO }} • Due {{ task.deadline | date:'shortDate' }}</mat-card-subtitle>
+            <mat-card-subtitle>{{ task.organization?.name || 'NGO' }}<span *ngIf="task.dueDate"> • Due {{ task.dueDate | date:'shortDate' }}</span></mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
             <p class="task-desc">{{ task.description }}</p>
             <div class="task-meta">
-                <div class="meta-item">
+                <div class="meta-item" *ngIf="task.location">
                     <mat-icon>location_on</mat-icon>
                     {{ task.location }}
                 </div>
                 <div class="meta-item">
                     <mat-icon>schedule</mat-icon>
-                    Start: {{ task.startDate | date:'shortTime' }}
+                    Priority: {{ task.priority | uppercase }}
                 </div>
             </div>
         </mat-card-content>
         <mat-card-actions align="end">
             <button mat-button (click)="viewAllTasks()">View Details</button>
-            <button mat-flat-button color="primary" *ngIf="task.status === 'Pending'" (click)="viewAllTasks()">Start
+            <button mat-flat-button color="primary" *ngIf="task.status === 'pending' || task.status === 'assigned'" (click)="viewAllTasks()">Start
                 Task</button>
-            <button mat-flat-button color="accent" *ngIf="task.status === 'Active'" (click)="viewAllTasks()">Mark
+            <button mat-flat-button color="accent" *ngIf="task.status === 'in_progress'" (click)="viewAllTasks()">Mark
                 Complete</button>
         </mat-card-actions>
     </mat-card>

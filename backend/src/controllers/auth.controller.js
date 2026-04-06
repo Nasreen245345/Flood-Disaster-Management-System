@@ -179,6 +179,98 @@ exports.login = async (req, res) => {
         // Generate token
         const token = generateToken(user._id);
 
+        // Prepare user response
+        const userResponse = {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            phone: user.phone,
+            region: user.region,
+            status: user.status
+        };
+
+        // If user is a volunteer, fetch and include volunteer ID
+        if (user.role === 'volunteer') {
+            const Volunteer = require('../models/Volunteer');
+            const volunteer = await Volunteer.findOne({ userId: user._id });
+            if (volunteer) {
+                userResponse.volunteerId = volunteer._id;
+            }
+        }
+
+        // If user is NGO, fetch and include organization ID
+        if (user.role === 'ngo') {
+            const Organization = require('../models/Organization');
+            const organization = await Organization.findOne({ adminUser: user._id });
+            if (organization) {
+                userResponse.organizationId = organization._id;
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            token,
+            user: userResponse
+        });
+    } catch (error) {
+        console.error('Login Error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error logging in',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Login with CNIC (for victims who submitted without account)
+// @route   POST /api/auth/cnic-login
+// @access  Public
+exports.cnicLogin = async (req, res) => {
+    try {
+        const { cnic, phone } = req.body;
+
+        if (!cnic || !phone) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide CNIC and phone number'
+            });
+        }
+
+        // Normalize CNIC - strip dashes and spaces
+        const normalizedCNIC = cnic.replace(/[-\s]/g, '');
+
+        // Find user by CNIC
+        const user = await User.findOne({ cnic: normalizedCNIC, role: 'victim' }).select('+password');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'No account found with this CNIC. Please submit an aid request first.'
+            });
+        }
+
+        // Verify phone matches
+        if (user.phone !== phone.trim()) {
+            return res.status(401).json({
+                success: false,
+                message: 'Phone number does not match our records'
+            });
+        }
+
+        if (user.status === 'blocked') {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has been blocked. Please contact support.'
+            });
+        }
+
+        user.lastActive = Date.now();
+        await user.save();
+
+        const token = generateToken(user._id);
+
         res.status(200).json({
             success: true,
             message: 'Login successful',
@@ -189,12 +281,12 @@ exports.login = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 phone: user.phone,
-                region: user.region,
-                status: user.status
+                cnic: user.cnic,
+                region: user.region
             }
         });
     } catch (error) {
-        console.error('Login Error:', error);
+        console.error('CNIC Login Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error logging in',

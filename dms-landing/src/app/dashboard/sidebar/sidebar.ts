@@ -50,6 +50,8 @@ export class SidebarComponent implements OnInit {
     { label: 'Assigned Regions', icon: 'map', route: '/dashboard/ngo/assigned-regions', roles: ['ngo'] },
     { label: 'Inventory Management', icon: 'inventory_2', route: '/dashboard/ngo/inventory', roles: ['ngo'] },
     { label: 'Aid Requests', icon: 'medical_services', route: '/dashboard/ngo/aid-requests', roles: ['ngo'] },
+    { label: 'Task Management', icon: 'assignment', route: '/dashboard/ngo/tasks', roles: ['ngo'] },
+    { label: 'Distribution Shifts', icon: 'schedule', route: '/dashboard/ngo/distribution-shifts', roles: ['ngo'] },
     { label: 'Scan & Distribute', icon: 'qr_code_scanner', route: '/dashboard/ngo/scan-distribute', roles: ['ngo'] },
     { label: 'Volunteers', icon: 'groups', route: '/dashboard/ngo/volunteers', roles: ['ngo'] },
     { label: 'Distribution Logs', icon: 'history', route: '/dashboard/ngo/logs', roles: ['ngo'] },
@@ -57,6 +59,7 @@ export class SidebarComponent implements OnInit {
     // Volunteer Menu Items
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard/volunteer/home', roles: ['volunteer'] },
     { label: 'My Tasks', icon: 'assignment_turned_in', route: '/dashboard/volunteer/tasks', roles: ['volunteer'] },
+    { label: 'Distribution Point', icon: 'store', route: '/dashboard/volunteer/distribution', roles: ['volunteer'] },
     { label: 'Assigned Region', icon: 'map', route: '/dashboard/volunteer/region', roles: ['volunteer'] },
     { label: 'Activity Log', icon: 'history', route: '/dashboard/volunteer/history', roles: ['volunteer'] },
     { label: 'Availability', icon: 'event_available', route: '/dashboard/volunteer/availability', roles: ['volunteer'] },

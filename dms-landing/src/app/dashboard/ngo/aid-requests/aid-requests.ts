@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgoService } from '../services/ngo.service';
 
@@ -40,7 +41,8 @@ interface AidRequest {
         MatButtonModule, 
         MatIconModule, 
         MatChipsModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        MatTooltipModule
     ],
     templateUrl: './aid-requests.html',
     styleUrls: ['./aid-requests.css']
@@ -146,6 +148,25 @@ export class AidRequestsComponent implements OnInit {
                 this.snackBar.open('Error updating status', 'Close', { duration: 3000 });
             }
         });
+    }
+
+    createDistributionTask(request: AidRequest) {
+        if (!request._id) return;
+        
+        if (confirm(`Create a distribution task for ${request.victimName}?\n\nThis will create a delivery task that can be assigned to a volunteer.`)) {
+            this.ngoService.createDistributionTask(request._id).subscribe({
+                next: (response) => {
+                    if (response.success) {
+                        request.status = 'in_progress';
+                        this.snackBar.open('Distribution task created! You can now assign it to a volunteer.', 'Close', { duration: 4000 });
+                    }
+                },
+                error: (err) => {
+                    console.error('Error creating task:', err);
+                    this.snackBar.open('Error creating distribution task', 'Close', { duration: 3000 });
+                }
+            });
+        }
     }
 
     markFulfilled(request: AidRequest) {

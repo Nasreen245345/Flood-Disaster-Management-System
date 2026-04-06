@@ -4,10 +4,17 @@
     margin: 0 auto;
 }
 
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
 .page-header h1 {
     font-size: 1.5rem;
     color: #1e293b;
-    margin-bottom: 24px;
+    margin: 0;
 }
 
 .tasks-tabs {
@@ -37,6 +44,11 @@
     box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
 }
 
+.task-type-icon {
+    margin-right: 12px;
+    color: #64748b;
+}
+
 .status-strip {
     background: #3b82f6;
     color: white;
@@ -49,10 +61,12 @@
 
 .meta-row {
     display: flex;
-    gap: 24px;
+    gap: 16px;
     margin-top: 16px;
     color: #64748b;
     font-size: 0.9rem;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 .meta-row span {
@@ -86,12 +100,30 @@
     color: #94a3b8;
 }
 
+.completion-notes {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px;
+    background: #f1f5f9;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.completion-notes mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+}
+
 .completed-stamp {
     position: absolute;
     right: 16px;
     top: 16px;
     color: #84cc16;
-    /* Lime green */
     opacity: 0.3;
 }
 
@@ -109,4 +141,12 @@
     background: #f8fafc;
     border-radius: 12px;
     border: 2px dashed #e2e8f0;
+}
+
+.empty-state mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
 }

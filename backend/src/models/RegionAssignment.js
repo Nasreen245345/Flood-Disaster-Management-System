@@ -15,6 +15,10 @@ const regionAssignmentSchema = new mongoose.Schema({
         required: [true, 'Please provide region name'],
         trim: true
     },
+    coordinates: {
+        latitude: { type: Number },
+        longitude: { type: Number }
+    },
     assignedNGOs: [{
         type: mongoose.Schema.ObjectId,
         ref: 'Organization'

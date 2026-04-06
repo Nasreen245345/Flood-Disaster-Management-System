@@ -1,0 +1,201 @@
+<div class="distribution-page">
+    <div class="page-header">
+        <h1>Distribution Point</h1>
+        <p class="subtitle">Verify victims and distribute aid during your shift</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingShift" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Checking shift status...</p>
+    </div>
+
+    <!-- No Active Shift -->
+    <mat-card *ngIf="!loadingShift && !hasActiveShift" class="no-shift-card">
+        <mat-card-content>
+            <div class="no-shift-content">
+                <mat-icon class="large-icon">schedule</mat-icon>
+                <h2>No Active Shift</h2>
+                <p>You do not have an active distribution shift at this time.</p>
+                <p class="hint">Contact your NGO to get assigned to a distribution shift.</p>
+                <button mat-raised-button color="primary" (click)="checkActiveShift()">
+                    <mat-icon>refresh</mat-icon>
+                    Refresh Status
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Active Shift -->
+    <div *ngIf="!loadingShift && hasActiveShift && activeShift">
+        <!-- Shift Info Card -->
+        <mat-card class="shift-info-card">
+            <mat-card-content>
+                <div class="shift-header">
+                    <div class="shift-status">
+                        <mat-icon class="active-icon">check_circle</mat-icon>
+                        <span class="status-text">Active Shift</span>
+                    </div>
+                    <mat-chip color="accent" selected>
+                        <mat-icon>schedule</mat-icon>
+                        {{ shiftTimeRemaining }}
+                    </mat-chip>
+                </div>
+
+                <div class="shift-details">
+                    <div class="detail-item">
+                        <mat-icon>location_on</mat-icon>
+                        <div>
+                            <span class="label">Location</span>
+                            <span class="value">{{ activeShift.location }}</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <mat-icon>business</mat-icon>
+                        <div>
+                            <span class="label">Organization</span>
+                            <span class="value">{{ activeShift.organization.name }}</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-item">
+                        <mat-icon>people</mat-icon>
+                        <div>
+                            <span class="label">Distributions Today</span>
+                            <span class="value">{{ activeShift.totalDistributions }}</span>
+                        </div>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Verification Card -->
+        <mat-card class="verification-card">
+            <mat-card-header>
+                <mat-card-title>
+                    <mat-icon>verified_user</mat-icon>
+                    Verify Victim
+                </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="verification-form">
+                    <mat-form-field appearance="outline" class="cnic-input">
+                        <mat-label>Enter Victim CNIC</mat-label>
+                        <input matInput 
+                               [(ngModel)]="cnicInput" 
+                               placeholder="XXXXX-XXXXXXX-X"
+                               maxlength="15"
+                               (keyup.enter)="verifyVictim()"
+                               [disabled]="verifying">
+                        <mat-icon matPrefix>badge</mat-icon>
+                        <mat-hint>Enter 13-digit CNIC number</mat-hint>
+                    </mat-form-field>
+
+                    <div class="action-buttons">
+                        <button mat-raised-button 
+                                color="primary" 
+                                (click)="verifyVictim()"
+                                [disabled]="verifying || !cnicInput.trim()">
+                            <mat-spinner *ngIf="verifying" diameter="20"></mat-spinner>
+                            <mat-icon *ngIf="!verifying">search</mat-icon>
+                            {{ verifying ? 'Verifying...' : 'Verify' }}
+                        </button>
+
+                        <button mat-button 
+                                (click)="clearForm()"
+                                [disabled]="verifying">
+                            <mat-icon>clear</mat-icon>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Victim Details Card -->
+        <mat-card *ngIf="victimDetails" class="victim-details-card">
+            <mat-card-header>
+                <mat-card-title>
+                    <mat-icon>person</mat-icon>
+                    Victim Details
+                </mat-card-title>
+                <mat-chip [color]="getUrgencyColor(victimDetails.aidRequest.urgency)" selected>
+                    {{ victimDetails.aidRequest.urgency | uppercase }}
+                </mat-chip>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="victim-info-grid">
+                    <!-- Personal Information -->
+                    <div class="info-section">
+                        <h3>Personal Information</h3>
+                        <div class="info-row">
+                            <span class="info-label">Full Name:</span>
+                            <span class="info-value">{{ victimDetails.aidRequest.victimName }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">CNIC:</span>
+                            <span class="info-value cnic">{{ formatCNIC(victimDetails.aidRequest.victimCNIC) }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Phone:</span>
+                            <span class="info-value">{{ victimDetails.aidRequest.victimPhone }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">People Count:</span>
+                            <span class="info-value">{{ victimDetails.aidRequest.peopleCount }} people</span>
+                        </div>
+                    </div>
+
+                    <mat-divider></mat-divider>
+
+                    <!-- Packages to Distribute -->
+                    <div class="info-section">
+                        <h3>Packages to Distribute</h3>
+                        <div class="packages-list">
+                            <div *ngFor="let pkg of victimDetails.aidRequest.packagesNeeded" class="package-item">
+                                <mat-icon [class]="'category-icon ' + pkg.category">inventory_2</mat-icon>
+                                <div class="package-details">
+                                    <span class="package-name">{{ pkg.packageName }}</span>
+                                    <span class="package-quantity">Quantity: {{ pkg.quantity }}</span>
+                                    <span class="package-category">{{ pkg.category | titlecase }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <mat-divider></mat-divider>
+
+                    <!-- Location -->
+                    <div class="info-section">
+                        <h3>Location</h3>
+                        <div class="info-row">
+                            <mat-icon>location_on</mat-icon>
+                            <span class="info-value">{{ victimDetails.aidRequest.location }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distribution Action -->
+                <div class="distribution-action">
+                    <mat-divider></mat-divider>
+                    <div class="action-section">
+                        <div class="warning-message">
+                            <mat-icon>warning</mat-icon>
+                            <span>Please verify victim identity before distributing aid</span>
+                        </div>
+                        <button mat-raised-button 
+                                color="accent" 
+                                class="distribute-button"
+                                (click)="markAsDistributed()"
+                                [disabled]="distributing">
+                            <mat-spinner *ngIf="distributing" diameter="20"></mat-spinner>
+                            <mat-icon *ngIf="!distributing">check_circle</mat-icon>
+                            {{ distributing ? 'Processing...' : 'Mark as Distributed' }}
+                        </button>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

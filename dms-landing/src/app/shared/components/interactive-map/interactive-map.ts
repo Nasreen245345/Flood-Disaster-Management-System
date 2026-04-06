@@ -1,360 +1,150 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatChipsModule } from '@angular/material/chips';
-import { FormsModule } from '@angular/forms';
-import * as L from 'leaflet';
-import { MatDialog } from '@angular/material/dialog';
-import { ReportDisasterDialogComponent } from '../report-disaster-dialog/report-disaster-dialog';
-
-interface DisasterMarker {
-  id: string;
-  type: 'flood' | 'fire' | 'earthquake' | 'landslide' | 'cyclone' | 'accident';
-  location: [number, number];
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  peopleAffected: number;
-  needs: string[];
-  description: string;
-  timestamp: Date;
-}
-
-interface ReliefResource {
-  id: string;
-  type: 'shelter' | 'hospital' | 'aid_center' | 'rescue_team';
-  name: string;
-  location: [number, number];
-  capacity?: number;
-  contact?: string;
-}
+﻿import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { ActivatedRoute } from "@angular/router";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
+import { MatSelectModule } from "@angular/material/select";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatChipsModule } from "@angular/material/chips";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatSnackBar, MatSnackBarModule } from "@angular/material/snack-bar";
+import { FormsModule } from "@angular/forms";
+import { HttpClient } from "@angular/common/http";
+import * as L from "leaflet";
+import { MatDialog } from "@angular/material/dialog";
+import { ReportDisasterDialogComponent } from "../report-disaster-dialog/report-disaster-dialog";
 
 @Component({
-  selector: 'app-interactive-map',
+  selector: "app-interactive-map",
   standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatChipsModule,
-    FormsModule
-  ],
-  templateUrl: './interactive-map.html',
-  styleUrls: ['./interactive-map.css']
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule, MatInputModule, MatChipsModule, MatProgressSpinnerModule, MatSnackBarModule, FormsModule],
+  templateUrl: "./interactive-map.html",
+  styleUrls: ["./interactive-map.css"]
 })
 export class InteractiveMapComponent implements OnInit, OnDestroy {
   private map!: L.Map;
   private dialog = inject(MatDialog);
-
-  selectedDisasterType: string = 'all';
-  selectedSeverity: string = 'all';
-  searchQuery: string = '';
-
-  disasterTypes = ['all', 'flood', 'fire', 'earthquake', 'landslide', 'cyclone', 'accident'];
-  severityLevels = ['all', 'low', 'medium', 'high', 'critical'];
-
-  // Mock data - replace with API calls
-  private disasters: DisasterMarker[] = [
-    {
-      id: '1',
-      type: 'flood',
-      location: [24.8607, 67.0011], // Karachi
-      severity: 'high',
-      peopleAffected: 5000,
-      needs: ['Food', 'Water', 'Boats'],
-      description: 'Urban flooding in Clifton and DHA areas',
-      timestamp: new Date()
-    },
-    {
-      id: '2',
-      type: 'fire',
-      location: [31.5204, 74.3587], // Lahore
-      severity: 'critical',
-      peopleAffected: 200,
-      needs: ['Rescue', 'Medical'],
-      description: 'Factory fire in industrial estate',
-      timestamp: new Date()
-    },
-    {
-      id: '3',
-      type: 'landslide',
-      location: [34.3313, 73.5025], // Muzaffarabad
-      severity: 'medium',
-      peopleAffected: 50,
-      needs: ['Shelter', 'Food'],
-      description: 'Landslide blocking Neelum Valley Road',
-      timestamp: new Date()
-    },
-    {
-      id: '4',
-      type: 'earthquake',
-      location: [30.1798, 66.9750], // Quetta
-      severity: 'high',
-      peopleAffected: 1000,
-      needs: ['Shelter', 'Medical', 'Blankets'],
-      description: 'Magnitude 5.4 earthquake tremors',
-      timestamp: new Date()
-    }
-  ];
-
-  private reliefResources: ReliefResource[] = [
-    {
-      id: 'r1',
-      type: 'hospital',
-      name: 'Jinnah Hospital',
-      location: [24.8568, 67.0435], // Karachi
-      capacity: 800,
-      contact: '+92 21 99201300'
-    },
-    {
-      id: 'r2',
-      type: 'shelter',
-      name: 'Edhi Home - Islamabad',
-      location: [33.6844, 73.0479], // Islamabad
-      capacity: 300
-    },
-    {
-      id: 'r3',
-      type: 'aid_center',
-      name: 'Al-Khidmat Center Peshawar',
-      location: [34.0151, 71.5249], // Peshawar
-      capacity: 1000,
-      contact: '+92 91 1234567'
-    }
-  ];
-
-  private markerLayers: L.LayerGroup[] = [];
-
+  private http = inject(HttpClient);
+  private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
+  selectedDisasterType = "all";
+  selectedSeverity = "all";
+  showDistributionPoints = true;
+  loading = true;
+  private allDisasters: any[] = [];
+  private allDistributionPoints: any[] = [];
+  private disasterLayer = L.layerGroup();
+  private distributionLayer = L.layerGroup();
+  private userMarker: L.Marker | null = null;
+  private apiUrl = "http://localhost:5000/api";
 
   ngOnInit() {
     this.initMap();
-    this.addDisasterMarkers();
-    this.addReliefResources();
-
-    // Check for query params to center map
+    this.loadMapData();
     this.route.queryParams.subscribe(params => {
-      const lat = parseFloat(params['lat']);
-      const lng = parseFloat(params['lng']);
+      const lat = parseFloat(params["lat"]);
+      const lng = parseFloat(params["lng"]);
+      const highlight = params["highlight"];
       if (!isNaN(lat) && !isNaN(lng)) {
         setTimeout(() => {
-          this.map.setView([lat, lng], 15);
-          L.marker([lat, lng]).addTo(this.map).bindPopup('Destination').openPopup();
-        }, 500); // Small delay to ensure map init
+          this.map.setView([lat, lng], 16);
+          // If coming from victim request, add a pulsing marker at the exact point
+          if (highlight === "distribution") {
+            const pulseIcon = L.divIcon({
+              className: "",
+              html: `<div style="position:relative;">
+                <div style="width:60px;height:60px;border-radius:50%;background:rgba(16,185,129,0.2);
+                  border:3px solid #10b981;animation:pulse 1.5s infinite;position:absolute;top:-30px;left:-30px;"></div>
+                <div style="background:#10b981;width:40px;height:40px;border-radius:50% 50% 50% 0;
+                  transform:rotate(-45deg);border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);
+                  display:flex;align-items:center;justify-content:center;position:absolute;top:-20px;left:-20px;">
+                  <span style="transform:rotate(45deg);font-size:18px;">🏪</span></div>
+              </div>`,
+              iconSize: [0, 0], iconAnchor: [0, 0]
+            });
+            L.marker([lat, lng], { icon: pulseIcon })
+              .bindPopup("<strong>🏪 Your Distribution Point</strong><br><small>This is where you collect your aid</small>")
+              .addTo(this.map)
+              .openPopup();
+          }
+        }, 500);
       }
     });
   }
 
-  ngOnDestroy() {
-    if (this.map) {
-      this.map.remove();
-    }
-  }
+  ngOnDestroy() { if (this.map) this.map.remove(); }
 
   private initMap() {
-    // Center on Pakistan
-    this.map = L.map('map', {
-      center: [30.3753, 69.3451], // Pakistan Center
-      zoom: 6,
-      zoomControl: false
-    });
-
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(this.map);
-
-    // Add custom zoom control
-    L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+    this.map = L.map("map", { center: [30.3753, 69.3451], zoom: 6, zoomControl: false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors", maxZoom: 19 }).addTo(this.map);
+    L.control.zoom({ position: "bottomright" }).addTo(this.map);
+    this.disasterLayer.addTo(this.map);
+    this.distributionLayer.addTo(this.map);
   }
 
-  private getDisasterColor(type: string): string {
-    const colors: Record<string, string> = {
-      flood: '#3b82f6',      // blue
-      fire: '#ef4444',       // red
-      earthquake: '#f97316', // orange
-      landslide: '#92400e',  // brown
-      cyclone: '#a855f7',    // purple
-      accident: '#eab308'    // yellow
-    };
-    return colors[type] || '#6b7280';
-  }
-
-  private getMarkerSize(severity: string): number {
-    const sizes: Record<string, number> = {
-      low: 8,
-      medium: 12,
-      high: 16,
-      critical: 20
-    };
-    return sizes[severity] || 12;
-  }
-
-  private addDisasterMarkers() {
-    const layerGroup = L.layerGroup().addTo(this.map);
-    this.markerLayers.push(layerGroup);
-
-    this.disasters.forEach(disaster => {
-      const icon = L.divIcon({
-        className: 'custom-disaster-marker',
-        html: `<div style="
-          background-color: ${this.getDisasterColor(disaster.type)};
-          width: ${this.getMarkerSize(disaster.severity)}px;
-          height: ${this.getMarkerSize(disaster.severity)}px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        "></div>`,
-        iconSize: [this.getMarkerSize(disaster.severity), this.getMarkerSize(disaster.severity)]
-      });
-
-      const marker = L.marker(disaster.location, { icon })
-        .bindPopup(`
-          <div class="disaster-popup">
-            <h3 style="margin: 0 0 8px 0; color: ${this.getDisasterColor(disaster.type)}; text-transform: capitalize;">
-              ${disaster.type} - ${disaster.severity.toUpperCase()}
-            </h3>
-            <p style="margin: 4px 0;"><strong>People Affected:</strong> ${disaster.peopleAffected}</p>
-            <p style="margin: 4px 0;"><strong>Needs:</strong> ${disaster.needs.join(', ')}</p>
-            <p style="margin: 4px 0;">${disaster.description}</p>
-          </div>
-        `)
-        .addTo(layerGroup);
-
-      // Hover tooltip
-      marker.bindTooltip(`${disaster.type.toUpperCase()} - ${disaster.severity}`, {
-        permanent: false,
-        direction: 'top'
-      });
+  loadMapData() {
+    this.loading = true;
+    this.http.get<any>(this.apiUrl + "/map/data").subscribe({
+      next: (res) => {
+        if (res.success) { this.allDisasters = res.data.disasters; this.allDistributionPoints = res.data.distributionPoints; this.renderMarkers(); }
+        this.loading = false; this.cdr.detectChanges();
+      },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
-  private addReliefResources() {
-    const layerGroup = L.layerGroup().addTo(this.map);
-    this.markerLayers.push(layerGroup);
-
-    this.reliefResources.forEach(resource => {
-      const iconHtml = this.getResourceIcon(resource.type);
-
-      const icon = L.divIcon({
-        className: 'custom-resource-marker',
-        html: iconHtml,
-        iconSize: [32, 32]
-      });
-
-      L.marker(resource.location, { icon })
-        .bindPopup(`
-          <div class="resource-popup">
-            <h3 style="margin: 0 0 8px 0; color: #059669;">${resource.name}</h3>
-            <p style="margin: 4px 0;"><strong>Type:</strong> ${resource.type.replace('_', ' ').toUpperCase()}</p>
-            ${resource.capacity ? `<p style="margin: 4px 0;"><strong>Capacity:</strong> ${resource.capacity}</p>` : ''}
-            ${resource.contact ? `<p style="margin: 4px 0;"><strong>Contact:</strong> ${resource.contact}</p>` : ''}
-          </div>
-        `)
-        .addTo(layerGroup);
-    });
+  private renderMarkers() {
+    this.disasterLayer.clearLayers();
+    this.distributionLayer.clearLayers();
+    this.allDisasters.filter(d => (this.selectedDisasterType === "all" || d.disasterType === this.selectedDisasterType) && (this.selectedSeverity === "all" || d.severity === this.selectedSeverity)).forEach(d => this.addDisasterMarker(d));
+    if (this.showDistributionPoints) this.allDistributionPoints.forEach(p => this.addDistributionMarker(p));
   }
 
-  private getResourceIcon(type: string): string {
-    const icons: Record<string, string> = {
-      hospital: '🏥',
-      shelter: '⛺',
-      aid_center: '🏢',
-      rescue_team: '🚁'
-    };
-    const emoji = icons[type] || '📍';
-    return `<div style="font-size: 24px; text-align: center;">${emoji}</div>`;
+  private addDisasterMarker(d: any) {
+    const color = this.getDisasterColor(d.disasterType);
+    const size = this.getSeveritySize(d.severity);
+    const emoji = this.getDisasterEmoji(d.disasterType);
+    const icon = L.divIcon({ className: "", html: "<div style='position:relative;width:" + (size+16) + "px;height:" + (size+20) + "px;'><div style='background:" + color + ";width:" + (size+16) + "px;height:" + (size+16) + "px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;'><span style='transform:rotate(45deg);font-size:" + (size*0.7) + "px;line-height:1;'>" + emoji + "</span></div></div>", iconSize: [size+16, size+20], iconAnchor: [(size+16)/2, size+20] });
+    const needsList = d.needs ? Object.entries(d.needs).filter(([,v]) => v).map(([k]) => k).join(", ") : "";
+    L.marker(d.location, { icon }).bindPopup("<div style='min-width:200px;font-family:sans-serif;'><div style='background:" + color + ";color:white;padding:8px 12px;margin:-12px -12px 10px;border-radius:4px 4px 0 0;'><strong>" + emoji + " " + (d.disasterType||"").toUpperCase() + "</strong><span style='float:right;background:rgba(0,0,0,0.2);padding:2px 6px;border-radius:10px;font-size:11px;'>" + (d.severity||"").toUpperCase() + "</span></div><p style='margin:4px 0;'><strong>Location:</strong> " + (d.address||"Unknown") + "</p><p style='margin:4px 0;'><strong>Affected:</strong> " + (d.peopleAffected||0).toLocaleString() + "</p>" + (needsList ? "<p style='margin:4px 0;'><strong>Needs:</strong> " + needsList + "</p>" : "") + (d.description ? "<p style='margin:6px 0;color:#555;font-size:12px;'>" + d.description + "</p>" : "") + "<p style='margin:4px 0;font-size:11px;color:#888;'>Status: " + d.status + "</p></div>", { maxWidth: 280 }).bindTooltip(d.disasterType + " - " + d.severity, { direction: "top" }).addTo(this.disasterLayer);
   }
 
-  applyFilters() {
-    // Clear existing markers
-    this.markerLayers.forEach(layer => layer.clearLayers());
-    this.markerLayers = [];
-
-    // Filter disasters
-    const filtered = this.disasters.filter(d => {
-      const typeMatch = this.selectedDisasterType === 'all' || d.type === this.selectedDisasterType;
-      const severityMatch = this.selectedSeverity === 'all' || d.severity === this.selectedSeverity;
-      return typeMatch && severityMatch;
-    });
-
-    // Re-add filtered markers
-    const layerGroup = L.layerGroup().addTo(this.map);
-    this.markerLayers.push(layerGroup);
-
-    filtered.forEach(disaster => {
-      const icon = L.divIcon({
-        className: 'custom-disaster-marker',
-        html: `<div style="
-          background-color: ${this.getDisasterColor(disaster.type)};
-          width: ${this.getMarkerSize(disaster.severity)}px;
-          height: ${this.getMarkerSize(disaster.severity)}px;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        "></div>`,
-        iconSize: [this.getMarkerSize(disaster.severity), this.getMarkerSize(disaster.severity)]
-      });
-
-      L.marker(disaster.location, { icon })
-        .bindPopup(`
-          <div class="disaster-popup">
-            <h3 style="margin: 0 0 8px 0; color: ${this.getDisasterColor(disaster.type)}; text-transform: capitalize;">
-              ${disaster.type} - ${disaster.severity.toUpperCase()}
-            </h3>
-            <p style="margin: 4px 0;"><strong>People Affected:</strong> ${disaster.peopleAffected}</p>
-            <p style="margin: 4px 0;"><strong>Needs:</strong> ${disaster.needs.join(', ')}</p>
-            <p style="margin: 4px 0;">${disaster.description}</p>
-          </div>
-        `)
-        .addTo(layerGroup);
-    });
-
-    // Re-add relief resources
-    this.addReliefResources();
+  private addDistributionMarker(p: any) {
+    const icon = L.divIcon({ className: "", html: "<div style='background:#10b981;width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 3px 10px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;'><span style='transform:rotate(45deg);font-size:16px;'>🏪</span></div>", iconSize: [36, 40], iconAnchor: [18, 40] });
+    const hoursLeft = Math.max(0, Math.floor((new Date(p.shiftEnd).getTime() - Date.now()) / 3600000));
+    L.marker(p.location, { icon }).bindPopup("<div style='min-width:200px;font-family:sans-serif;'><div style='background:#10b981;color:white;padding:8px 12px;margin:-12px -12px 10px;border-radius:4px 4px 0 0;'><strong>🏪 Distribution Point</strong></div><p style='margin:4px 0;'><strong>Location:</strong> " + p.address + "</p><p style='margin:4px 0;'><strong>NGO:</strong> " + p.ngoName + "</p>" + (p.ngoContact ? "<p style='margin:4px 0;'><strong>Contact:</strong> " + p.ngoContact + "</p>" : "") + "<p style='margin:4px 0;'><strong>Time left:</strong> " + hoursLeft + "h</p><p style='margin:4px 0;'><strong>Distributed:</strong> " + p.totalDistributions + "</p></div>", { maxWidth: 280 }).bindTooltip("Distribution: " + p.address, { direction: "top" }).addTo(this.distributionLayer);
   }
 
   locateMe() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          this.map.setView([lat, lng], 13);
-
-          // Add user location marker
-          L.marker([lat, lng])
-            .bindPopup('You are here')
-            .addTo(this.map);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-        }
-      );
-    }
+    if (!navigator.geolocation) { this.snackBar.open("Geolocation not supported", "Close", { duration: 3000 }); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+        if (this.userMarker) this.map.removeLayer(this.userMarker);
+        const icon = L.divIcon({ className: "", html: "<div style='width:16px;height:16px;background:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 0 0 4px rgba(59,130,246,0.3);'></div>", iconSize: [16, 16], iconAnchor: [8, 8] });
+        this.userMarker = L.marker([lat, lng], { icon }).bindPopup("<strong>Your Location</strong>").addTo(this.map);
+        this.map.setView([lat, lng], 12);
+        this.snackBar.open("Location found!", "Close", { duration: 2000 });
+      },
+      () => this.snackBar.open("Could not get location", "Close", { duration: 3000 })
+    );
   }
 
-  openReportDialog() {
-    this.dialog.open(ReportDisasterDialogComponent, {
-      width: '600px',
-      maxWidth: '95vw',
-      panelClass: 'glass-dialog',
-      enterAnimationDuration: '300ms',
-      exitAnimationDuration: '200ms',
-    });
+  applyFilters() { this.renderMarkers(); }
+  toggleDistributionPoints() { this.showDistributionPoints = !this.showDistributionPoints; this.renderMarkers(); }
+  resetFilters() { this.selectedDisasterType = "all"; this.selectedSeverity = "all"; this.showDistributionPoints = true; this.renderMarkers(); }
+  openReportDialog() { 
+    const ref = this.dialog.open(ReportDisasterDialogComponent, { width: "600px", maxWidth: "95vw", panelClass: "glass-dialog" });
+    ref.afterClosed().subscribe(result => { if (result) { setTimeout(() => this.loadMapData(), 500); } });
   }
-
-  resetFilters() {
-    this.selectedDisasterType = 'all';
-    this.selectedSeverity = 'all';
-    this.searchQuery = '';
-    this.applyFilters();
-  }
+  get disasterCount() { return this.allDisasters.length; }
+  get distributionCount() { return this.allDistributionPoints.length; }
+  private getDisasterColor(t: string): string { return ({flood:"#3b82f6",fire:"#ef4444",earthquake:"#f97316",landslide:"#92400e",cyclone:"#a855f7",accident:"#eab308"} as any)[t]||"#6b7280"; }
+  private getSeveritySize(s: string): number { return ({low:10,medium:14,high:18,critical:22} as any)[s]||14; }
+  private getDisasterEmoji(t: string): string { return ({flood:"🌊",fire:"🔥",earthquake:"🏚",landslide:"⛰",cyclone:"🌪",accident:"🚑"} as any)[t]||"⚠️"; }
 }
+
+
+

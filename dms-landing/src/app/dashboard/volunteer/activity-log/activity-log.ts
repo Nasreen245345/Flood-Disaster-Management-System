@@ -19,6 +19,6 @@ export class ActivityLogComponent {
 
     stats$ = this.volunteerService.stats$;
     completedTasks$ = this.volunteerService.tasks$.pipe(
-        map(tasks => tasks.filter(t => t.status === 'Completed'))
+        map(tasks => tasks.filter(t => t.status === 'completed'))
     );
 }

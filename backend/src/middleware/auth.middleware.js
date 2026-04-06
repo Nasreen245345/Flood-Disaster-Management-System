@@ -53,6 +53,29 @@ exports.protect = async (req, res, next) => {
     }
 };
 
+// Optional auth - sets req.user if token present, but doesn't block if missing
+exports.optionalAuth = async (req, res, next) => {
+    let token;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+        req.user = null;
+        return next(); // Allow unauthenticated
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = await User.findById(decoded.id);
+        next();
+    } catch (error) {
+        req.user = null;
+        next(); // Still allow even if token is invalid
+    }
+};
+
 // Grant access to specific roles
 exports.authorize = (...roles) => {
     return (req, res, next) => {

@@ -66,3 +66,40 @@ a:hover {
    We might need deep selectors or global override if the component encapsulates styles.
    For now, we try to target projected content or use the host context if possible. 
 */
+
+.tab-form {
+    padding: 20px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cnic-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.cnic-info mat-icon {
+    color: #1976d2;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.cnic-info p {
+    margin: 0;
+    font-size: 13px;
+    color: #1565c0;
+    line-height: 1.5;
+}
+
+.login-card {
+    max-width: 440px;
+}

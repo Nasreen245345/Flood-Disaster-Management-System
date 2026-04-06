@@ -2,7 +2,9 @@
     <div class="page-header">
         <h1>My Assignments</h1>
         <div class="header-actions">
-            <!-- Filters happen via Tabs -->
+            <button mat-icon-button (click)="loadTasks()" [disabled]="loading">
+                <mat-icon>refresh</mat-icon>
+            </button>
         </div>
     </div>
 
@@ -16,6 +18,7 @@
             </ng-template>
             <div class="tasks-list">
                 <div *ngIf="(activeTasks$ | async)?.length === 0" class="empty-state">
+                    <mat-icon>assignment_turned_in</mat-icon>
                     <p>No task currently in progress.</p>
                     <button mat-button color="primary">Check Pending Tasks</button>
                 </div>
@@ -23,19 +26,28 @@
                 <mat-card *ngFor="let task of activeTasks$ | async" class="task-card active-border">
                     <div class="status-strip">IN PROGRESS</div>
                     <mat-card-header>
+                        <mat-icon [matTooltip]="task.taskType" class="task-type-icon">
+                            {{ getTaskTypeIcon(task.taskType) }}
+                        </mat-icon>
                         <mat-card-title>{{ task.title }}</mat-card-title>
-                        <mat-card-subtitle>{{ task.assignedNGO }}</mat-card-subtitle>
+                        <mat-card-subtitle>{{ task.organization?.name || 'NGO' }}</mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
                         <p>{{ task.description }}</p>
                         <div class="meta-row">
-                            <span><mat-icon>location_on</mat-icon> {{ task.location }}</span>
-                            <span class="text-red-600"><mat-icon>timer</mat-icon> Due: {{ task.deadline |
-                                date:'shortTime' }}</span>
+                            <span *ngIf="task.location">
+                                <mat-icon>location_on</mat-icon> {{ task.location }}
+                            </span>
+                            <span *ngIf="task.dueDate" class="text-red-600">
+                                <mat-icon>timer</mat-icon> Due: {{ task.dueDate | date:'short' }}
+                            </span>
+                            <mat-chip [color]="getPriorityColor(task.priority)">
+                                {{ task.priority | uppercase }}
+                            </mat-chip>
                         </div>
                     </mat-card-content>
                     <mat-card-actions align="end">
-                        <button mat-flat-button color="accent" (click)="completeTask(task.id)">
+                        <button mat-flat-button color="accent" (click)="completeTask(task._id)">
                             <mat-icon>check</mat-icon> Mark Completed
                         </button>
                     </mat-card-actions>
@@ -52,25 +64,39 @@
             <div class="tasks-list">
                 <mat-card *ngFor="let task of pendingTasks$ | async" class="task-card">
                     <mat-card-header>
+                        <mat-icon [matTooltip]="task.taskType" class="task-type-icon">
+                            {{ getTaskTypeIcon(task.taskType) }}
+                        </mat-icon>
                         <mat-card-title>{{ task.title }}</mat-card-title>
-                        <mat-card-subtitle>Starts: {{ task.startDate | date:'shortDate' }}</mat-card-subtitle>
+                        <mat-card-subtitle>
+                            {{ task.status === 'assigned' ? 'Assigned' : 'Pending' }} | 
+                            {{ task.organization?.name || 'NGO' }}
+                        </mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
                         <p>{{ task.description }}</p>
                         <div class="meta-row">
-                            <span><mat-icon>business</mat-icon> {{ task.assignedNGO }}</span>
-                            <span><mat-icon>location_on</mat-icon> {{ task.location }}</span>
+                            <span *ngIf="task.location">
+                                <mat-icon>location_on</mat-icon> {{ task.location }}
+                            </span>
+                            <span *ngIf="task.dueDate">
+                                <mat-icon>event</mat-icon> Due: {{ task.dueDate | date:'short' }}
+                            </span>
+                            <mat-chip [color]="getPriorityColor(task.priority)">
+                                {{ task.priority | uppercase }}
+                            </mat-chip>
                         </div>
                     </mat-card-content>
                     <mat-card-actions align="end">
-                        <button mat-stroked-button color="primary" (click)="startTask(task.id)">
-                            Start Task
+                        <button mat-stroked-button color="primary" (click)="startTask(task._id)">
+                            <mat-icon>play_arrow</mat-icon> Start Task
                         </button>
                     </mat-card-actions>
                 </mat-card>
 
                 <div *ngIf="(pendingTasks$ | async)?.length === 0" class="empty-state">
-                    <p>No upcomming tasks.</p>
+                    <mat-icon>inbox</mat-icon>
+                    <p>No upcoming tasks.</p>
                 </div>
             </div>
         </mat-tab>
@@ -84,16 +110,29 @@
             <div class="tasks-list">
                 <mat-card *ngFor="let task of completedTasks$ | async" class="task-card completed">
                     <mat-card-header>
+                        <mat-icon [matTooltip]="task.taskType" class="task-type-icon">
+                            {{ getTaskTypeIcon(task.taskType) }}
+                        </mat-icon>
                         <mat-card-title class="strike-through">{{ task.title }}</mat-card-title>
-                        <mat-card-subtitle>Finished on {{ task.deadline | date:'shortDate' }}</mat-card-subtitle>
+                        <mat-card-subtitle>
+                            Finished on {{ task.completedAt | date:'short' }}
+                        </mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
                         <p class="text-muted">{{ task.description }}</p>
+                        <p *ngIf="task.completionNotes" class="completion-notes">
+                            <mat-icon>note</mat-icon> {{ task.completionNotes }}
+                        </p>
                     </mat-card-content>
                     <div class="completed-stamp">
                         <mat-icon>verified</mat-icon>
                     </div>
                 </mat-card>
+
+                <div *ngIf="(completedTasks$ | async)?.length === 0" class="empty-state">
+                    <mat-icon>history</mat-icon>
+                    <p>No completed tasks yet.</p>
+                </div>
             </div>
         </mat-tab>
 

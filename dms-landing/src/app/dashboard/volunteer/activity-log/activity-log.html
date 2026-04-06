@@ -29,7 +29,7 @@
                 <mat-icon matListItemIcon class="text-green">check_circle</mat-icon>
                 <div matListItemTitle>{{ task.title }}</div>
                 <div matListItemLine>{{ task.description }}</div>
-                <div matListItemMeta>{{ task.deadline | date:'shortDate' }}</div>
+                <div matListItemMeta *ngIf="task.completedAt">{{ task.completedAt | date:'shortDate' }}</div>
             </mat-list-item>
 
             <div *ngIf="(completedTasks$ | async)?.length === 0" class="empty-msg">

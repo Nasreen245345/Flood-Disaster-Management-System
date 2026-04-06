@@ -6,6 +6,10 @@ const disasterSchema = new mongoose.Schema({
         required: [true, 'Please provide the location of the disaster'],
         trim: true
     },
+    coordinates: {
+        latitude: { type: Number },
+        longitude: { type: Number }
+    },
     disasterType: {
         type: String,
         enum: ['flood', 'fire', 'earthquake', 'landslide', 'cyclone', 'accident', 'other'],
@@ -65,5 +69,6 @@ const disasterSchema = new mongoose.Schema({
 // Index for location-based queries
 disasterSchema.index({ location: 'text' });
 disasterSchema.index({ status: 1, severity: -1 });
+disasterSchema.index({ 'coordinates.latitude': 1, 'coordinates.longitude': 1 });
 
 module.exports = mongoose.model('Disaster', disasterSchema);

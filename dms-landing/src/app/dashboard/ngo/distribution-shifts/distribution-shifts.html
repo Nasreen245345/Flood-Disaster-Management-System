@@ -1,0 +1,237 @@
+<div class="shifts-page">
+    <div class="page-header">
+        <div>
+            <h1>Distribution Shifts</h1>
+            <p class="subtitle">Manage volunteer shifts at distribution points</p>
+        </div>
+        <button mat-raised-button color="primary" (click)="openCreateShiftDialog()">
+            <mat-icon>add</mat-icon>
+            Create Shift
+        </button>
+    </div>
+
+    <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading shifts...</p>
+    </div>
+
+    <mat-tab-group *ngIf="!loading" class="shifts-tabs">
+        <!-- Scheduled Shifts -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon>schedule</mat-icon>
+                Scheduled ({{ scheduledShifts.length }})
+            </ng-template>
+            
+            <div class="shifts-grid">
+                <mat-card *ngFor="let shift of scheduledShifts" class="shift-card">
+                    <mat-card-header>
+                        <mat-card-title>
+                            <mat-icon>store</mat-icon>
+                            {{ shift.location }}
+                        </mat-card-title>
+                        <mat-chip [color]="getStatusColor(shift.status)" selected>
+                            {{ shift.status | titlecase }}
+                        </mat-chip>
+                    </mat-card-header>
+                    
+                    <mat-card-content>
+                        <div class="shift-details">
+                            <div class="detail-row">
+                                <mat-icon>schedule</mat-icon>
+                                <div>
+                                    <span class="label">Start:</span>
+                                    <span class="value">{{ formatDate(shift.shiftStart) }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <mat-icon>schedule</mat-icon>
+                                <div>
+                                    <span class="label">End:</span>
+                                    <span class="value">{{ formatDate(shift.shiftEnd) }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <mat-icon>timer</mat-icon>
+                                <div>
+                                    <span class="label">Duration:</span>
+                                    <span class="value">{{ getShiftDuration(shift.shiftStart, shift.shiftEnd) }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row" *ngIf="shift.assignedVolunteer">
+                                <mat-icon>person</mat-icon>
+                                <div>
+                                    <span class="label">Volunteer:</span>
+                                    <span class="value">{{ shift.assignedVolunteer.fullName }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row" *ngIf="!shift.assignedVolunteer">
+                                <mat-icon>person_off</mat-icon>
+                                <div>
+                                    <span class="label">Volunteer:</span>
+                                    <span class="value unassigned">Not assigned</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row" *ngIf="shift.notes">
+                                <mat-icon>note</mat-icon>
+                                <div>
+                                    <span class="label">Notes:</span>
+                                    <span class="value">{{ shift.notes }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </mat-card-content>
+                    
+                    <mat-card-actions>
+                        <button mat-button color="primary" 
+                                (click)="openAssignVolunteerDialog(shift)"
+                                *ngIf="!shift.assignedVolunteer">
+                            <mat-icon>person_add</mat-icon>
+                            Assign Volunteer
+                        </button>
+                        <button mat-button color="accent" 
+                                (click)="updateShiftStatus(shift._id, 'active')"
+                                *ngIf="shift.assignedVolunteer">
+                            <mat-icon>play_arrow</mat-icon>
+                            Start Shift
+                        </button>
+                        <button mat-button color="warn" (click)="deleteShift(shift._id)">
+                            <mat-icon>delete</mat-icon>
+                            Delete
+                        </button>
+                    </mat-card-actions>
+                </mat-card>
+                
+                <div *ngIf="scheduledShifts.length === 0" class="no-data">
+                    <mat-icon>schedule</mat-icon>
+                    <p>No scheduled shifts</p>
+                    <button mat-raised-button color="primary" (click)="openCreateShiftDialog()">
+                        Create First Shift
+                    </button>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- Active Shifts -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon>play_circle</mat-icon>
+                Active ({{ activeShifts.length }})
+            </ng-template>
+            
+            <div class="shifts-grid">
+                <mat-card *ngFor="let shift of activeShifts" class="shift-card active">
+                    <mat-card-header>
+                        <mat-card-title>
+                            <mat-icon>store</mat-icon>
+                            {{ shift.location }}
+                        </mat-card-title>
+                        <mat-chip [color]="getStatusColor(shift.status)" selected>
+                            {{ shift.status | titlecase }}
+                        </mat-chip>
+                    </mat-card-header>
+                    
+                    <mat-card-content>
+                        <div class="shift-details">
+                            <div class="detail-row">
+                                <mat-icon>person</mat-icon>
+                                <div>
+                                    <span class="label">Volunteer:</span>
+                                    <span class="value">{{ shift.assignedVolunteer?.fullName || 'Not assigned' }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <mat-icon>schedule</mat-icon>
+                                <div>
+                                    <span class="label">Ends:</span>
+                                    <span class="value">{{ formatDate(shift.shiftEnd) }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <mat-icon>check_circle</mat-icon>
+                                <div>
+                                    <span class="label">Distributions:</span>
+                                    <span class="value">{{ shift.totalDistributions }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </mat-card-content>
+                    
+                    <mat-card-actions>
+                        <button mat-button color="accent" (click)="updateShiftStatus(shift._id, 'completed')">
+                            <mat-icon>stop</mat-icon>
+                            End Shift
+                        </button>
+                    </mat-card-actions>
+                </mat-card>
+                
+                <div *ngIf="activeShifts.length === 0" class="no-data">
+                    <mat-icon>play_circle</mat-icon>
+                    <p>No active shifts</p>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- Completed Shifts -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon>check_circle</mat-icon>
+                Completed ({{ completedShifts.length }})
+            </ng-template>
+            
+            <div class="shifts-grid">
+                <mat-card *ngFor="let shift of completedShifts" class="shift-card completed">
+                    <mat-card-header>
+                        <mat-card-title>
+                            <mat-icon>store</mat-icon>
+                            {{ shift.location }}
+                        </mat-card-title>
+                        <mat-chip [color]="getStatusColor(shift.status)" selected>
+                            {{ shift.status | titlecase }}
+                        </mat-chip>
+                    </mat-card-header>
+                    
+                    <mat-card-content>
+                        <div class="shift-details">
+                            <div class="detail-row">
+                                <mat-icon>person</mat-icon>
+                                <div>
+                                    <span class="label">Volunteer:</span>
+                                    <span class="value">{{ shift.assignedVolunteer?.fullName || 'Not assigned' }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <mat-icon>date_range</mat-icon>
+                                <div>
+                                    <span class="label">Date:</span>
+                                    <span class="value">{{ formatDate(shift.shiftStart) }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <mat-icon>check_circle</mat-icon>
+                                <div>
+                                    <span class="label">Total Distributions:</span>
+                                    <span class="value highlight">{{ shift.totalDistributions }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+                
+                <div *ngIf="completedShifts.length === 0" class="no-data">
+                    <mat-icon>check_circle</mat-icon>
+                    <p>No completed shifts</p>
+                </div>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

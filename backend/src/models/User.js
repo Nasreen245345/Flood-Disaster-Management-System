@@ -30,6 +30,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    cnic: {
+        type: String,
+        trim: true,
+        sparse: true  // allows multiple null values but unique when set
+    },
     region: {
         type: String,
         trim: true

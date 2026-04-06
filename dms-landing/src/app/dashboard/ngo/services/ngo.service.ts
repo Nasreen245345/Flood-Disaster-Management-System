@@ -285,4 +285,96 @@ export class NgoService {
             status
         }, { headers: this.getHeaders() });
     }
+
+    // Create distribution task from aid request
+    createDistributionTask(requestId: string): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/aid-requests/${requestId}/create-task`, {}, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // ========== TASK MANAGEMENT METHODS ==========
+
+    // Get tasks for NGO
+    getTasks(organizationId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/tasks/organization/${organizationId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Create task
+    createTask(taskData: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/tasks`, taskData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Assign task to volunteer
+    assignTask(taskId: string, volunteerId: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/tasks/${taskId}/assign`, {
+            volunteerId
+        }, { headers: this.getHeaders() });
+    }
+
+    // Get available volunteers for task
+    getAvailableVolunteers(taskId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/tasks/${taskId}/available-volunteers`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Update task status
+    updateTaskStatus(taskId: string, status: string, completionNotes?: string): Observable<any> {
+        const body: any = { status };
+        if (completionNotes) {
+            body.completionNotes = completionNotes;
+        }
+        return this.http.put<any>(`${this.apiUrl}/tasks/${taskId}/status`, body, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Delete task
+    deleteTask(taskId: string): Observable<any> {
+        return this.http.delete<any>(`${this.apiUrl}/tasks/${taskId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // ========== DISTRIBUTION SHIFT METHODS ==========
+
+    // Get distribution shifts for NGO
+    getDistributionShifts(organizationId: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/distribution/shifts/organization/${organizationId}`, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Create distribution shift
+    createShift(shiftData: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/distribution/shifts`, shiftData, {
+            headers: this.getHeaders()
+        });
+    }
+
+    // Assign volunteer to shift
+    assignVolunteerToShift(shiftId: string, volunteerId: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/distribution/shifts/${shiftId}/assign`, {
+            volunteerId
+        }, { headers: this.getHeaders() });
+    }
+
+    // Update shift status
+    updateShiftStatus(shiftId: string, status: string): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/distribution/shifts/${shiftId}/status`, {
+            status
+        }, { headers: this.getHeaders() });
+    }
+
+    // Delete shift
+    deleteShift(shiftId: string): Observable<any> {
+        return this.http.delete<any>(`${this.apiUrl}/distribution/shifts/${shiftId}`, {
+            headers: this.getHeaders()
+        });
+    }
 }

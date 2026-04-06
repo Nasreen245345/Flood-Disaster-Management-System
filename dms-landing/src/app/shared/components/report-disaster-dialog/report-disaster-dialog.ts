@@ -37,11 +37,15 @@ export class ReportDisasterDialogComponent {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:5000/api/disasters';
 
+  coordinates: { latitude: number; longitude: number } | null = null;
+  isDetectingLocation = false;
+  locationDetected = false;
+
   reportForm: FormGroup = this.fb.group({
     location: ['', Validators.required],
     disasterType: ['', Validators.required],
     severity: ['medium', Validators.required],
-    peopleAffected: [null], // Optional
+    peopleAffected: [null],
     needs: this.fb.group({
       food: [false],
       water: [false],
@@ -57,27 +61,53 @@ export class ReportDisasterDialogComponent {
 
   isSubmitting = false;
 
+  detectLocation() {
+    if (!navigator.geolocation) {
+      this.snackBar.open('Geolocation not supported by your browser', 'Close', { duration: 3000 });
+      return;
+    }
+    this.isDetectingLocation = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        this.coordinates = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        };
+        this.locationDetected = true;
+        this.isDetectingLocation = false;
+        // Auto-fill location field with coordinates
+        this.reportForm.patchValue({
+          location: `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`
+        });
+        this.snackBar.open('Location detected successfully!', 'Close', { duration: 2000 });
+      },
+      () => {
+        this.isDetectingLocation = false;
+        this.snackBar.open('Could not detect location. Please enter manually.', 'Close', { duration: 3000 });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
   onSubmit() {
     if (this.reportForm.invalid) return;
-
     this.isSubmitting = true;
 
-    // Submit to backend
-    this.http.post<any>(this.apiUrl, this.reportForm.value).subscribe({
+    const payload = {
+      ...this.reportForm.value,
+      coordinates: this.coordinates  // Include GPS coordinates
+    };
+
+    this.http.post<any>(this.apiUrl, payload).subscribe({
       next: (response) => {
         this.isSubmitting = false;
-        this.snackBar.open('Disaster report submitted. Monitoring team alerted.', 'OK', {
-          duration: 5000,
-          panelClass: ['bg-red-600', 'text-white']
-        });
+        this.snackBar.open('Disaster report submitted. Monitoring team alerted.', 'OK', { duration: 5000 });
         this.dialogRef.close(response.data);
       },
       error: (err) => {
         this.isSubmitting = false;
         console.error('Disaster Report Error:', err);
-        this.snackBar.open('Failed to submit disaster report. Please try again.', 'Close', {
-          duration: 5000
-        });
+        this.snackBar.open('Failed to submit disaster report. Please try again.', 'Close', { duration: 5000 });
       }
     });
   }

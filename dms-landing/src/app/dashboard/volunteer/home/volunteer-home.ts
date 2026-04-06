@@ -28,7 +28,7 @@ export class VolunteerHomeComponent implements OnInit {
 
     // Get only the first active task for the "Current Task" card
     currentTask$ = this.tasks$.pipe(
-        map(tasks => tasks.find(t => t.status === 'Active') || tasks.find(t => t.status === 'Pending'))
+        map(tasks => tasks.find(t => t.status === 'in_progress') || tasks.find(t => t.status === 'pending' || t.status === 'assigned'))
     );
 
     ngOnInit() {

@@ -4,34 +4,68 @@
         <p class="subtext">Secure Access Portal</p>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <mat-tab-group animationDuration="200ms">
 
-        <app-input-field label="Email Address" type="email" icon="email" placeholder="admin@gov.lk"
-            [control]="emailControl">
-        </app-input-field>
+        <!-- Email Login Tab -->
+        <mat-tab label="Email Login">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="tab-form">
 
-        <app-input-field label="Password" type="password" icon="lock" placeholder="••••••••"
-            [control]="passwordControl">
-        </app-input-field>
+                <app-input-field label="Email Address" type="email" icon="email" placeholder="admin@gov.pk"
+                    [control]="emailControl">
+                </app-input-field>
 
-        <div class="flex justify-end mb-6">
-            <a routerLink="/auth/forgot-password" class="text-sm">
-                Forgot Password?
-            </a>
-        </div>
+                <app-input-field label="Password" type="password" icon="lock" placeholder="••••••••"
+                    [control]="passwordControl">
+                </app-input-field>
 
-        <mat-progress-bar *ngIf="isLoading" mode="indeterminate" class="mb-4 rounded-full"></mat-progress-bar>
+                <mat-progress-bar *ngIf="isLoading" mode="indeterminate" class="mb-4 rounded-full"></mat-progress-bar>
 
-        <button mat-flat-button color="primary"
-            class="w-full py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5"
-            [disabled]="loginForm.invalid || isLoading">
-            Access Dashboard
-        </button>
+                <button mat-flat-button color="primary" type="submit"
+                    class="w-full py-6 text-lg rounded-xl"
+                    [disabled]="loginForm.invalid || isLoading">
+                    Access Dashboard
+                </button>
 
-        <div class="mt-6 text-center text-sm text-neutral-600">
-            Don't have an account?
-            <a routerLink="/auth/signup">Sign Up</a>
-        </div>
+                <div class="mt-6 text-center text-sm text-neutral-600">
+                    Don't have an account?
+                    <a routerLink="/auth/signup">Sign Up</a>
+                </div>
 
-    </form>
+            </form>
+        </mat-tab>
+
+        <!-- CNIC Login Tab (for victims) -->
+        <mat-tab label="Login with CNIC">
+            <form [formGroup]="cnicForm" (ngSubmit)="onCnicLogin()" class="tab-form">
+
+                <div class="cnic-info">
+                    <mat-icon>info</mat-icon>
+                    <p>If you submitted an aid request without creating an account, you can login using your CNIC and phone number to track your request.</p>
+                </div>
+
+                <app-input-field label="CNIC (with or without dashes)" type="text" icon="badge"
+                    placeholder="38302-1184421-8" [control]="cnicControl">
+                </app-input-field>
+
+                <app-input-field label="Phone Number" type="text" icon="phone"
+                    placeholder="03001234567" [control]="phoneControl">
+                </app-input-field>
+
+                <mat-progress-bar *ngIf="isLoading" mode="indeterminate" class="mb-4 rounded-full"></mat-progress-bar>
+
+                <button mat-flat-button color="accent" type="submit"
+                    class="w-full py-6 text-lg rounded-xl"
+                    [disabled]="cnicForm.invalid || isLoading">
+                    Track My Request
+                </button>
+
+                <div class="mt-6 text-center text-sm text-neutral-600">
+                    Don't have an account?
+                    <a routerLink="/auth/signup">Sign Up</a>
+                </div>
+
+            </form>
+        </mat-tab>
+
+    </mat-tab-group>
 </div>

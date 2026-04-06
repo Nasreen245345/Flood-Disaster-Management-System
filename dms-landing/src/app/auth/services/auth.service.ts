@@ -69,9 +69,25 @@ export class AuthService {
         catchError(error => {
           console.error('Login error:', error);
           return throwError(() => error);
+        })
+      ) as any;
+  }
+
+  // CNIC Login for victims
+  cnicLogin(cnic: string, phone: string): Observable<User> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/cnic-login`, { cnic, phone })
+      .pipe(
+        tap(response => {
+          if (response.success) {
+            this.currentUser.set(response.user);
+            localStorage.setItem('dms_user', JSON.stringify(response.user));
+            localStorage.setItem('dms_token', response.token);
+            this.redirectBasedOnRole(response.user.role);
+          }
         }),
-        tap(() => { }, () => { }, () => {
-          // Map to just return user for component compatibility
+        catchError(error => {
+          console.error('CNIC Login error:', error);
+          return throwError(() => error);
         })
       ) as any;
   }

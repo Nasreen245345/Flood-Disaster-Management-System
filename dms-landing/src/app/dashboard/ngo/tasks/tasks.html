@@ -1,0 +1,224 @@
+<div class="tasks-page">
+    <div class="page-header">
+        <div>
+            <h1>Task Management</h1>
+            <p class="subtitle">Create and assign operational tasks to volunteers</p>
+        </div>
+        <div class="header-actions">
+            <button mat-icon-button (click)="loadTasks()" [disabled]="loading" matTooltip="Refresh">
+                <mat-icon>refresh</mat-icon>
+            </button>
+            <button mat-raised-button color="primary" (click)="openCreateTaskDialog()">
+                <mat-icon>add</mat-icon> Create Task
+            </button>
+        </div>
+    </div>
+
+    <mat-tab-group animationDuration="0ms" class="tasks-tabs">
+
+        <!-- Pending Tasks -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">schedule</mat-icon>
+                Pending ({{ pendingTasks.length }})
+            </ng-template>
+            <div class="tasks-list">
+                <mat-card *ngFor="let task of pendingTasks" class="task-card">
+                    <div class="task-header">
+                        <div class="task-title-row">
+                            <mat-icon [matTooltip]="task.taskType" class="task-type-icon">
+                                {{ getTaskTypeIcon(task.taskType) }}
+                            </mat-icon>
+                            <div>
+                                <h3>{{ task.title }}</h3>
+                                <p class="task-meta">Created {{ task.createdAt | date:'short' }}</p>
+                            </div>
+                        </div>
+                        <mat-chip [style.background-color]="getPriorityColor(task.priority)" class="priority-chip">
+                            {{ task.priority | uppercase }}
+                        </mat-chip>
+                    </div>
+
+                    <mat-card-content>
+                        <p class="task-description">{{ task.description }}</p>
+                        
+                        <div class="task-details">
+                            <div *ngIf="task.location" class="detail-item">
+                                <mat-icon>location_on</mat-icon>
+                                <span>{{ task.location }}</span>
+                            </div>
+                            <div *ngIf="task.dueDate" class="detail-item">
+                                <mat-icon>event</mat-icon>
+                                <span>Due: {{ task.dueDate | date:'short' }}</span>
+                            </div>
+                            <div *ngIf="task.relatedAidRequest" class="detail-item">
+                                <mat-icon>help_outline</mat-icon>
+                                <span>Linked to Aid Request</span>
+                            </div>
+                        </div>
+                    </mat-card-content>
+
+                    <mat-card-actions align="end">
+                        <button mat-button color="warn" (click)="deleteTask(task._id)">
+                            <mat-icon>delete</mat-icon> Delete
+                        </button>
+                        <button mat-raised-button color="primary" (click)="openAssignDialog(task)">
+                            <mat-icon>person_add</mat-icon> Assign Volunteer
+                        </button>
+                    </mat-card-actions>
+                </mat-card>
+
+                <div *ngIf="pendingTasks.length === 0" class="empty-state">
+                    <mat-icon>inbox</mat-icon>
+                    <p>No pending tasks</p>
+                    <button mat-button color="primary" (click)="openCreateTaskDialog()">Create First Task</button>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- Assigned Tasks -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">assignment_ind</mat-icon>
+                Assigned ({{ assignedTasks.length }})
+            </ng-template>
+            <div class="tasks-list">
+                <mat-card *ngFor="let task of assignedTasks" class="task-card assigned-card">
+                    <div class="task-header">
+                        <div class="task-title-row">
+                            <mat-icon [matTooltip]="task.taskType" class="task-type-icon">
+                                {{ getTaskTypeIcon(task.taskType) }}
+                            </mat-icon>
+                            <div>
+                                <h3>{{ task.title }}</h3>
+                                <p class="task-meta">
+                                    Assigned to: <strong>{{ task.assignedVolunteer?.fullName || 'Unknown' }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                        <mat-chip [style.background-color]="getPriorityColor(task.priority)" class="priority-chip">
+                            {{ task.priority | uppercase }}
+                        </mat-chip>
+                    </div>
+
+                    <mat-card-content>
+                        <p class="task-description">{{ task.description }}</p>
+                        
+                        <div class="task-details">
+                            <div *ngIf="task.location" class="detail-item">
+                                <mat-icon>location_on</mat-icon>
+                                <span>{{ task.location }}</span>
+                            </div>
+                            <div *ngIf="task.dueDate" class="detail-item">
+                                <mat-icon>event</mat-icon>
+                                <span>Due: {{ task.dueDate | date:'short' }}</span>
+                            </div>
+                            <div *ngIf="task.assignedVolunteer?.phone" class="detail-item">
+                                <mat-icon>phone</mat-icon>
+                                <span>{{ task.assignedVolunteer.phone }}</span>
+                            </div>
+                        </div>
+                    </mat-card-content>
+
+                    <mat-card-actions align="end">
+                        <button mat-button (click)="openAssignDialog(task)">
+                            <mat-icon>swap_horiz</mat-icon> Reassign
+                        </button>
+                    </mat-card-actions>
+                </mat-card>
+
+                <div *ngIf="assignedTasks.length === 0" class="empty-state">
+                    <mat-icon>assignment_ind</mat-icon>
+                    <p>No assigned tasks</p>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- In Progress Tasks -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">play_circle</mat-icon>
+                In Progress ({{ inProgressTasks.length }})
+            </ng-template>
+            <div class="tasks-list">
+                <mat-card *ngFor="let task of inProgressTasks" class="task-card progress-card">
+                    <div class="status-strip">IN PROGRESS</div>
+                    <div class="task-header">
+                        <div class="task-title-row">
+                            <mat-icon [matTooltip]="task.taskType" class="task-type-icon">
+                                {{ getTaskTypeIcon(task.taskType) }}
+                            </mat-icon>
+                            <div>
+                                <h3>{{ task.title }}</h3>
+                                <p class="task-meta">
+                                    By: <strong>{{ task.assignedVolunteer?.fullName || 'Unknown' }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                        <mat-chip [style.background-color]="getPriorityColor(task.priority)" class="priority-chip">
+                            {{ task.priority | uppercase }}
+                        </mat-chip>
+                    </div>
+
+                    <mat-card-content>
+                        <p class="task-description">{{ task.description }}</p>
+                        
+                        <div class="task-details">
+                            <div *ngIf="task.location" class="detail-item">
+                                <mat-icon>location_on</mat-icon>
+                                <span>{{ task.location }}</span>
+                            </div>
+                            <div *ngIf="task.assignedVolunteer?.phone" class="detail-item">
+                                <mat-icon>phone</mat-icon>
+                                <span>{{ task.assignedVolunteer.phone }}</span>
+                            </div>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+
+                <div *ngIf="inProgressTasks.length === 0" class="empty-state">
+                    <mat-icon>hourglass_empty</mat-icon>
+                    <p>No tasks in progress</p>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- Completed Tasks -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">check_circle</mat-icon>
+                Completed ({{ completedTasks.length }})
+            </ng-template>
+            <div class="tasks-list">
+                <mat-card *ngFor="let task of completedTasks" class="task-card completed-card">
+                    <div class="completed-stamp">
+                        <mat-icon>verified</mat-icon>
+                    </div>
+                    <div class="task-header">
+                        <div class="task-title-row">
+                            <mat-icon [matTooltip]="task.taskType" class="task-type-icon">
+                                {{ getTaskTypeIcon(task.taskType) }}
+                            </mat-icon>
+                            <div>
+                                <h3 class="strike-through">{{ task.title }}</h3>
+                                <p class="task-meta">
+                                    Completed by: <strong>{{ task.assignedVolunteer?.fullName || 'Unknown' }}</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <mat-card-content>
+                        <p class="task-description text-muted">{{ task.description }}</p>
+                    </mat-card-content>
+                </mat-card>
+
+                <div *ngIf="completedTasks.length === 0" class="empty-state">
+                    <mat-icon>history</mat-icon>
+                    <p>No completed tasks</p>
+                </div>
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+</div>

@@ -92,15 +92,17 @@
                     <div class="action-buttons">
                         <button mat-raised-button color="primary" 
                                 *ngIf="req.status === 'approved'"
-                                (click)="markInProgress(req)">
-                            <mat-icon>play_arrow</mat-icon>
-                            Start
+                                (click)="createDistributionTask(req)"
+                                matTooltip="Create delivery task for volunteer">
+                            <mat-icon>assignment</mat-icon>
+                            Create Task
                         </button>
                         <button mat-raised-button color="accent" 
                                 *ngIf="req.status === 'in_progress'"
-                                (click)="markFulfilled(req)">
-                            <mat-icon>check_circle</mat-icon>
-                            Fulfill
+                                disabled
+                                matTooltip="Task assigned to volunteer">
+                            <mat-icon>schedule</mat-icon>
+                            In Progress
                         </button>
                         <span *ngIf="req.status === 'fulfilled'" class="fulfilled-badge">
                             <mat-icon>check_circle</mat-icon>

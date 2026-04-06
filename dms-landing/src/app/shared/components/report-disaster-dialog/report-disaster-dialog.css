@@ -85,3 +85,38 @@
         gap: 0.5rem;
     }
 }
+
+.location-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.location-row mat-form-field {
+    flex: 1;
+}
+
+.detect-btn {
+    margin-top: 4px;
+    white-space: nowrap;
+    height: 56px;
+}
+
+.location-success {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #16a34a;
+    font-size: 13px;
+    margin: -8px 0 12px 0;
+    padding: 6px 10px;
+    background: #f0fdf4;
+    border-radius: 6px;
+}
+
+.location-success mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
