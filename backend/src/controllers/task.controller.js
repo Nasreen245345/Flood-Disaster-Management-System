@@ -2,9 +2,6 @@ const Task = require('../models/Task');
 const Volunteer = require('../models/Volunteer');
 const Organization = require('../models/Organization');
 
-// @desc    Create new task
-// @route   POST /api/tasks
-// @access  Private (NGO/Admin)
 exports.createTask = async (req, res) => {
     try {
         console.log('=== CREATE TASK ===');
@@ -14,7 +11,7 @@ exports.createTask = async (req, res) => {
         
         const task = await Task.create(req.body);
         
-        console.log('✅ Task Created:', task._id);
+        console.log('Task Created:', task._id);
         
         res.status(201).json({
             success: true,
@@ -30,9 +27,6 @@ exports.createTask = async (req, res) => {
     }
 };
 
-// @desc    Get all tasks for an organization
-// @route   GET /api/tasks/organization/:orgId
-// @access  Private (NGO/Admin)
 exports.getOrganizationTasks = async (req, res) => {
     try {
         const { status, priority } = req.query;

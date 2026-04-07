@@ -1,10 +1,6 @@
 const DistributionShift = require('../models/DistributionShift');
 const AidRequest = require('../models/AidRequest');
 const Volunteer = require('../models/Volunteer');
-
-// @desc    Get active distribution shifts for an NGO (for victims to see pickup points)
-// @route   GET /api/distribution/shifts/public/:orgId
-// @access  Public
 exports.getPublicShifts = async (req, res) => {
     try {
         const now = new Date();
@@ -36,7 +32,7 @@ exports.createShift = async (req, res) => {
         
         const shift = await DistributionShift.create(req.body);
         
-        console.log('✅ Distribution Shift Created:', shift._id);
+        console.log(' Distribution Shift Created:', shift._id);
         
         res.status(201).json({
             success: true,
@@ -148,7 +144,7 @@ exports.assignVolunteer = async (req, res) => {
         
         await shift.populate('assignedVolunteer', 'fullName phone category');
         
-        console.log(`✅ Shift ${shift._id} assigned to volunteer ${volunteer.fullName}`);
+        console.log(`Shift ${shift._id} assigned to volunteer ${volunteer.fullName}`);
         
         res.status(200).json({
             success: true,
@@ -254,7 +250,7 @@ exports.verifyVictim = async (req, res) => {
             });
         }
         
-        console.log('✅ Volunteer has active shift:', activeShift._id);
+        console.log('Volunteer has active shift:', activeShift._id);
         
         // Find aid request by CNIC
         const aidRequest = await AidRequest.findOne({
@@ -271,7 +267,7 @@ exports.verifyVictim = async (req, res) => {
             });
         }
         
-        console.log('✅ Aid Request Found:', aidRequest._id);
+        console.log('Aid Request Found:', aidRequest._id);
         
         // Return full victim details (authorized during active shift)
         res.status(200).json({

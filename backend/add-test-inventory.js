@@ -17,7 +17,7 @@ async function addTestInventory() {
         const organizations = await Organization.find({ type: 'ngo' });
 
         if (organizations.length === 0) {
-            console.log('❌ No NGO organizations found');
+            console.log('No NGO organizations found');
             process.exit(1);
         }
 
