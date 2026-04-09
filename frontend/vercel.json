@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/dms-landing/browser",
+  "outputDirectory": "dist/dms-landing",
   "routes": [
     {
       "src": "/(.*)",
