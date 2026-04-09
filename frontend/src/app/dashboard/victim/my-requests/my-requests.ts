@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -59,7 +60,7 @@ export class MyRequestsComponent implements OnInit {
     requests: VictimRequest[] = [];
     loading = true;
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     ngOnInit() {
         this.victimService.requests$.subscribe(reqs => {
@@ -139,3 +140,5 @@ export class MyRequestsComponent implements OnInit {
         });
     }
 }
+
+

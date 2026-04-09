@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -26,7 +27,7 @@ export class ProfileComponent implements OnInit {
     private http = inject(HttpClient);
     private router = inject(Router);
     private snackBar = inject(MatSnackBar);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     victimProfile$ = this.victimService.profile$;
     volunteerProfile: any = null;
@@ -101,3 +102,5 @@ export class ProfileComponent implements OnInit {
         });
     }
 }
+
+

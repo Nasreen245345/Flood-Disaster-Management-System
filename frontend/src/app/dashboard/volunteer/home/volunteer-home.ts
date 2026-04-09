@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -20,7 +21,7 @@ export class VolunteerHomeComponent implements OnInit {
     volunteerService = inject(VolunteerService);
     private router = inject(Router);
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     tasks$ = this.volunteerService.tasks$;
     stats$ = this.volunteerService.stats$;
@@ -64,3 +65,5 @@ export class VolunteerHomeComponent implements OnInit {
         this.router.navigate(['/dashboard/volunteer/tasks']);
     }
 }
+
+

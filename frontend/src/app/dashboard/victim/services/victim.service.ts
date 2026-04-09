@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Injectable, inject, effect } from '@angular/core';
 import { BehaviorSubject, forkJoin, Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
@@ -57,7 +58,7 @@ export interface VictimProfile {
 export class VictimService {
     private http = inject(HttpClient);
     private authService = inject(AuthService);
-    private apiUrl = 'http://localhost:5000/api/aid-requests';
+    private apiUrl = environment.apiUrl + '/aid-requests';
 
     // State
     private _history = new BehaviorSubject<AidHistory[]>([]);
@@ -172,3 +173,5 @@ export class VictimService {
         );
     }
 }
+
+

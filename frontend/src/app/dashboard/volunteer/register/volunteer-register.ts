@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -50,7 +51,7 @@ export class VolunteerRegisterComponent implements OnInit {
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
 
   approvedNGOs: NGO[] = [];
   loading = false;
@@ -237,3 +238,5 @@ export class VolunteerRegisterComponent implements OnInit {
     }
   }
 }
+
+

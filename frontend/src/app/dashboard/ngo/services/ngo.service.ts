@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, of, Observable } from 'rxjs';
 import { delay, map, tap } from 'rxjs/operators';
@@ -59,7 +60,7 @@ export interface DistributionLog {
 })
 export class NgoService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     private getHeaders(): HttpHeaders {
         const token = localStorage.getItem('dms_token');
@@ -378,3 +379,5 @@ export class NgoService {
         });
     }
 }
+
+

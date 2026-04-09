@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -23,7 +24,7 @@ export class HeroComponent {
   private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
-  private apiUrl = 'http://localhost:5000/api/aid-requests';
+  private apiUrl = environment.apiUrl + '/aid-requests';
 
   openHelpDialog() {
     const dialogRef = this.dialog.open(HelpRequestDialogComponent, {
@@ -106,6 +107,8 @@ export class HeroComponent {
     });
   }
 }
+
+
 
 
 
