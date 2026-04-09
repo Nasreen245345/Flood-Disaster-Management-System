@@ -1,13 +1,6 @@
 {
-  "builds": [
-    {
-      "src": "angular.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist/dms-landing/browser"
-      }
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/dms-landing/browser",
   "routes": [
     {
       "src": "/(.*)",
