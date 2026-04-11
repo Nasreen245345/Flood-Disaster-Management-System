@@ -3,13 +3,13 @@
         <h2 class="text-3xl md:text-5xl font-bold mb-12 text-center text-blue-900">Frequently Asked Questions</h2>
 
         <mat-accordion multi>
-            <mat-expansion-panel *ngFor="let faq of faqs" class="mb-4 !rounded-xl overflow-hidden !bg-white !shadow-sm">
+            <mat-expansion-panel *ngFor="let faq of faqs" class="mb-6 !rounded-xl overflow-hidden !shadow-sm">
                 <mat-expansion-panel-header class="py-6">
-                    <mat-panel-title class="text-lg font-bold text-slate-800">
+                    <mat-panel-title class="text-lg font-bold text-white">
                         {{faq.q}}
                     </mat-panel-title>
                 </mat-expansion-panel-header>
-                <div class="text-slate-600 py-4 text-lg">
+                <div class="text-blue-100 py-4 text-lg">
                     {{faq.a}}
                 </div>
             </mat-expansion-panel>

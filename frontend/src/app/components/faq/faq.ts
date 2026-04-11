@@ -9,16 +9,16 @@ import { MatExpansionModule } from '@angular/material/expansion';
     templateUrl: './faq.html',
     styles: [`
     :host ::ng-deep .mat-expansion-panel {
-        background-color: #18181b !important; /* zinc-900 */
-        color: #e4e4e7 !important; /* zinc-200 */
-        border: 1px solid #27272a; /* zinc-800 */
+        background-color: #1e3a8a !important; /* blue-900 */
+        color: #e0e7ff !important; /* blue-100 */
+        border: 1px solid #1e40af; /* blue-800 */
     }
     :host ::ng-deep .mat-expansion-panel-header-title,
     :host ::ng-deep .mat-expansion-panel-header-description {
-        color: #fff !important;
+        color: #ffffff !important;
     }
     :host ::ng-deep .mat-expansion-indicator::after {
-        color: #fff !important;
+        color: #ffffff !important;
     }
   `]
 })
