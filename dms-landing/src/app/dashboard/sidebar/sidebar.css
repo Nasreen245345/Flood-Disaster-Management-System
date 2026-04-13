@@ -158,3 +158,23 @@
         transform: translateX(0);
     }
 }
+
+.logout-btn {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
+    color: #ef4444;
+    font-size: 14px;
+    border-radius: 8px;
+    margin: 8px 0;
+    transition: background 0.2s;
+}
+
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.logout-btn mat-icon {
+    color: #ef4444;
+}

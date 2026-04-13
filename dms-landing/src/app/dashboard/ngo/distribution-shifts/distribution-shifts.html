@@ -95,8 +95,7 @@
                             Assign Volunteer
                         </button>
                         <button mat-button color="accent" 
-                                (click)="updateShiftStatus(shift._id, 'active')"
-                                *ngIf="shift.assignedVolunteer">
+                                (click)="updateShiftStatus(shift._id, 'active')">
                             <mat-icon>play_arrow</mat-icon>
                             Start Shift
                         </button>
@@ -165,9 +164,16 @@
                     </mat-card-content>
                     
                     <mat-card-actions>
-                        <button mat-button color="accent" (click)="updateShiftStatus(shift._id, 'completed')">
+                        <button mat-button color="accent" 
+                                (click)="updateShiftStatus(shift._id, 'completed')">
                             <mat-icon>stop</mat-icon>
                             End Shift
+                        </button>
+                        <button mat-button color="primary"
+                                (click)="openAssignVolunteerDialog(shift)"
+                                *ngIf="!shift.assignedVolunteer">
+                            <mat-icon>person_add</mat-icon>
+                            Assign Volunteer
                         </button>
                     </mat-card-actions>
                 </mat-card>

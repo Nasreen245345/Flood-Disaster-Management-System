@@ -1,67 +1,78 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, interval } from 'rxjs';
+import { tap } from 'rxjs/operators';
 
 export interface Notification {
-    id: string;
+    _id: string;
     title: string;
     message: string;
-    time: Date;
-    read: boolean;
-    type: 'info' | 'warning' | 'error' | 'success';
+    type: string;
+    icon: string;
+    priority: string;
+    isRead: boolean;
+    link?: string;
+    createdAt: Date;
 }
 
-@Injectable({
-    providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class NotificationService {
-    private _notifications = new BehaviorSubject<Notification[]>([
-        {
-            id: '1',
-            title: 'New Disaster Reported',
-            message: 'Flood reported in Swat Valley. 300+ Affected.',
-            time: new Date(),
-            read: false,
-            type: 'error'
-        },
-        {
-            id: '2',
-            title: 'Resource Request',
-            message: 'Edhi Foundation requested 500 Food Packs.',
-            time: new Date(Date.now() - 3600000), // 1 hour ago
-            read: false,
-            type: 'warning'
-        },
-        {
-            id: '3',
-            title: 'System Update',
-            message: 'Dashboard maintenance scheduled for 2 AM.',
-            time: new Date(Date.now() - 86400000), // 1 day ago
-            read: true,
-            type: 'info'
-        }
-    ]);
+    private http = inject(HttpClient);
+    private apiUrl = 'http://localhost:5000/api/notifications';
+
+    private _notifications = new BehaviorSubject<Notification[]>([]);
+    private _unreadCount = new BehaviorSubject<number>(0);
 
     readonly notifications$ = this._notifications.asObservable();
+    readonly unreadCount$ = this._unreadCount.asObservable();
 
-    get unreadCount() {
-        return this._notifications.value.filter(n => !n.read).length;
+    private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('dms_token');
+        return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    }
+
+    load() {
+        if (!localStorage.getItem('dms_token')) return;
+        this.http.get<any>(this.apiUrl, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                if (res.success) {
+                    this._notifications.next(res.data);
+                    this._unreadCount.next(res.unreadCount);
+                }
+            },
+            error: () => {}
+        });
+    }
+
+    // Poll every 30 seconds for new notifications
+    startPolling() {
+        this.load();
+        interval(30000).subscribe(() => this.load());
     }
 
     markAsRead(id: string) {
-        const current = this._notifications.value;
-        const index = current.findIndex(n => n.id === id);
-        if (index !== -1) {
-            current[index] = { ...current[index], read: true }; // New object reference
-            this._notifications.next([...current]); // New array reference
-        }
+        this.http.put<any>(`${this.apiUrl}/${id}/read`, {}, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+                const updated = this._notifications.value.map(n =>
+                    n._id === id ? { ...n, isRead: true } : n
+                );
+                this._notifications.next(updated);
+                this._unreadCount.next(updated.filter(n => !n.isRead).length);
+            }
+        });
     }
 
     markAllAsRead() {
-        const current = this._notifications.value.map(n => ({ ...n, read: true }));
-        this._notifications.next(current);
+        this.http.put<any>(`${this.apiUrl}/read-all`, {}, { headers: this.getHeaders() }).subscribe({
+            next: () => {
+                const updated = this._notifications.value.map(n => ({ ...n, isRead: true }));
+                this._notifications.next(updated);
+                this._unreadCount.next(0);
+            }
+        });
     }
 
-    clearAll() {
-        this._notifications.next([]);
+    get unreadCount(): number {
+        return this._unreadCount.value;
     }
 }

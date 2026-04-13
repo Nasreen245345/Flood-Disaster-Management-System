@@ -9,7 +9,9 @@ const {
     updateAvailability,
     updateVolunteer,
     getNGOCapacity,
-    deleteVolunteer
+    deleteVolunteer,
+    assignRegion,
+    getMyRegion
 } = require('../controllers/volunteer.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
@@ -19,6 +21,7 @@ router.use(protect);
 // Public volunteer routes (authenticated users)
 router.post('/', registerVolunteer);
 router.get('/me', getMyVolunteerProfile);
+router.get('/my-region', getMyRegion);
 
 // NGO/Admin routes
 router.get('/', authorize('admin', 'ngo'), getAllVolunteers);
@@ -27,6 +30,7 @@ router.get('/capacity/:ngoId', authorize('admin', 'ngo'), getNGOCapacity);
 
 // Update routes
 router.put('/:id/verify', authorize('admin', 'ngo'), verifyVolunteer);
+router.put('/:id/assign-region', authorize('admin', 'ngo'), assignRegion);
 router.put('/:id/availability', updateAvailability);
 router.put('/:id', updateVolunteer);
 

@@ -160,9 +160,21 @@ exports.assignTask = async (req, res) => {
         task.assignedVolunteer = volunteerId;
         task.status = 'assigned';
         await task.save();
-        
+
         await task.populate('assignedVolunteer', 'fullName phone category');
-        
+
+        // Notify the volunteer
+        const notif = require('../services/notification.service');
+        if (volunteer.userId) {
+            await notif.notifyUser(
+                volunteer.userId,
+                'New Task Assigned',
+                `You have been assigned a new task: "${task.title}". Priority: ${task.priority}.`,
+                'task_assigned',
+                { icon: 'assignment', priority: task.priority === 'critical' ? 'critical' : 'high', link: '/dashboard/volunteer/tasks' }
+            );
+        }
+
         console.log(`✅ Task ${task._id} assigned to volunteer ${volunteer.fullName}`);
         
         res.status(200).json({

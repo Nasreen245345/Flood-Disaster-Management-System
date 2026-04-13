@@ -6,12 +6,16 @@ const {
     updateUserStatus,
     updateUser,
     deleteUser,
-    getUserStats
+    getUserStats,
+    updateMyProfile
 } = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
-// All routes require authentication and admin role
+// Self-update (any logged-in user)
 router.use(protect);
+router.put('/me', updateMyProfile);
+
+// Admin-only routes
 router.use(authorize('admin'));
 
 router.get('/stats', getUserStats);

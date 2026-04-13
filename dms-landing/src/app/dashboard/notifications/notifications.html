@@ -1,34 +1,51 @@
-<div class="notifications-container">
+<div class="notifications-page">
     <div class="page-header">
-        <h1>Notifications</h1>
-        <div class="actions">
-            <button mat-stroked-button color="primary" (click)="markAllAsRead()">Mark all read</button>
-            <button mat-stroked-button color="warn" (click)="clearAll()">Clear all</button>
+        <div>
+            <h1>Notifications</h1>
+            <p class="subtitle">Stay updated on important events</p>
         </div>
+        <button mat-stroked-button (click)="markAllAsRead()" [disabled]="!notificationService.unreadCount">
+            <mat-icon>done_all</mat-icon>
+            Mark All Read
+        </button>
     </div>
 
-    <mat-card class="notifications-card">
-        <mat-list>
-            <div *ngFor="let note of notifications$ | async" class="notification-item" [class.unread]="!note.read"
-                (click)="markAsRead(note.id)">
-                <div class="icon-container" [class]="note.type">
-                    <mat-icon>{{ note.type === 'error' ? 'warning' : note.type === 'warning' ? 'error_outline' : 'info'
-                        }}</mat-icon>
-                </div>
-                <div class="content">
-                    <div class="header">
-                        <span class="title">{{ note.title }}</span>
-                        <span class="time">{{ note.time | date:'medium' }}</span>
-                    </div>
-                    <p class="message">{{ note.message }}</p>
-                </div>
-                <div class="status-indicator" *ngIf="!note.read"></div>
-            </div>
+    <div *ngIf="loading" class="loading-state">
+        <mat-icon>hourglass_empty</mat-icon>
+        <p>Loading notifications...</p>
+    </div>
 
-            <div *ngIf="(notifications$ | async)?.length === 0" class="empty-state">
-                <mat-icon>notifications_off</mat-icon>
-                <p>No notifications to display</p>
+    <div *ngIf="!loading && notifications.length === 0" class="empty-state">
+        <mat-icon>notifications_none</mat-icon>
+        <p>No notifications yet</p>
+    </div>
+
+    <div class="notifications-list">
+        <mat-card *ngFor="let n of notifications"
+                  class="notification-card"
+                  [class.unread]="!n.isRead"
+                  (click)="markAsRead(n._id)">
+            <div class="notif-content">
+                <div class="notif-icon" [style.background]="getIconColor(n.type) + '20'">
+                    <mat-icon [style.color]="getIconColor(n.type)">{{ n.icon || 'notifications' }}</mat-icon>
+                </div>
+                <div class="notif-body">
+                    <div class="notif-header">
+                        <strong>{{ n.title }}</strong>
+                        <span class="notif-time">{{ timeAgo(n.createdAt) }}</span>
+                    </div>
+                    <p class="notif-message">{{ n.message }}</p>
+                    <div class="notif-footer">
+                        <mat-chip [color]="getPriorityColor(n.priority)" *ngIf="n.priority !== 'medium'">
+                            {{ n.priority }}
+                        </mat-chip>
+                        <a *ngIf="n.link" [routerLink]="n.link" class="notif-link" (click)="$event.stopPropagation()">
+                            View →
+                        </a>
+                    </div>
+                </div>
+                <div class="unread-dot" *ngIf="!n.isRead"></div>
             </div>
-        </mat-list>
-    </mat-card>
+        </mat-card>
+    </div>
 </div>

@@ -1,24 +1,40 @@
 <div class="history-page">
     <div class="page-header">
         <h1>Aid History</h1>
-        <p class="subtitle">Track all aid resources you have received.</p>
+        <p class="subtitle">All aid you have received.</p>
     </div>
 
-    <mat-card class="table-card">
-        <table mat-table [dataSource]="history$" class="w-full">
+    <div *ngIf="loading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading history...</p>
+    </div>
+
+    <div *ngIf="!loading && history.length === 0" class="empty-state">
+        <mat-icon>history</mat-icon>
+        <p>No aid received yet</p>
+        <small>Fulfilled requests will appear here</small>
+    </div>
+
+    <mat-card *ngIf="!loading && history.length > 0" class="table-card">
+        <table mat-table [dataSource]="history" class="w-full">
 
             <!-- Date -->
             <ng-container matColumnDef="date">
-                <th mat-header-cell *matHeaderCellDef> Date Received </th>
-                <td mat-cell *matCellDef="let item"> {{ item.date | date:'mediumDate' }} </td>
+                <th mat-header-cell *matHeaderCellDef>Date Received</th>
+                <td mat-cell *matCellDef="let item">
+                    <div class="date-cell">
+                        <mat-icon>event</mat-icon>
+                        {{ item.date | date:'mediumDate' }}
+                    </div>
+                </td>
             </ng-container>
 
             <!-- Type -->
             <ng-container matColumnDef="type">
-                <th mat-header-cell *matHeaderCellDef> Resource Type </th>
+                <th mat-header-cell *matHeaderCellDef>Aid Type</th>
                 <td mat-cell *matCellDef="let item">
-                    <div class="resource-type">
-                        <mat-icon class="text-blue-500">inventory_2</mat-icon>
+                    <div class="type-cell">
+                        <mat-icon>inventory_2</mat-icon>
                         {{ item.type }}
                     </div>
                 </td>
@@ -26,24 +42,36 @@
 
             <!-- NGO -->
             <ng-container matColumnDef="ngo">
-                <th mat-header-cell *matHeaderCellDef> Provided By </th>
-                <td mat-cell *matCellDef="let item"> {{ item.ngoName }} </td>
+                <th mat-header-cell *matHeaderCellDef>Provided By</th>
+                <td mat-cell *matCellDef="let item">
+                    <div class="ngo-cell">
+                        <mat-icon>business</mat-icon>
+                        {{ item.ngoName }}
+                    </div>
+                </td>
             </ng-container>
 
             <!-- Point -->
             <ng-container matColumnDef="point">
-                <th mat-header-cell *matHeaderCellDef> Distribution Point </th>
-                <td mat-cell *matCellDef="let item"> {{ item.pointName }} </td>
+                <th mat-header-cell *matHeaderCellDef>Distribution Point</th>
+                <td mat-cell *matCellDef="let item">
+                    <div class="point-cell">
+                        <mat-icon>store</mat-icon>
+                        {{ item.pointName }}
+                    </div>
+                </td>
             </ng-container>
 
             <!-- Quantity -->
             <ng-container matColumnDef="quantity">
-                <th mat-header-cell *matHeaderCellDef> Quantity </th>
-                <td mat-cell *matCellDef="let item"> {{ item.quantity }} </td>
+                <th mat-header-cell *matHeaderCellDef>Quantity</th>
+                <td mat-cell *matCellDef="let item">
+                    <span class="quantity-badge">{{ item.quantity }}</span>
+                </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="history-row"></tr>
         </table>
     </mat-card>
 </div>

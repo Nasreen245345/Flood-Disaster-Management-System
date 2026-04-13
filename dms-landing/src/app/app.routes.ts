@@ -60,7 +60,6 @@ export const routes: Routes = [
                     { path: 'aid-requests', loadComponent: () => import('./dashboard/ngo/aid-requests/aid-requests').then(m => m.AidRequestsComponent) },
                     { path: 'tasks', loadComponent: () => import('./dashboard/ngo/tasks/tasks').then(m => m.NgoTasksComponent) },
                     { path: 'distribution-shifts', loadComponent: () => import('./dashboard/ngo/distribution-shifts/distribution-shifts').then(m => m.DistributionShiftsComponent) },
-                    { path: 'scan-distribute', loadComponent: () => import('./dashboard/ngo/scan-distribute/scan-distribute').then(m => m.ScanDistributeComponent) },
                     { path: 'volunteers', loadComponent: () => import('./dashboard/ngo/volunteers/volunteers').then(m => m.VolunteersComponent) },
                     { path: 'logs', loadComponent: () => import('./dashboard/ngo/distribution-logs/distribution-logs').then(m => m.DistributionLogsComponent) },
                 ]
@@ -73,7 +72,6 @@ export const routes: Routes = [
                     { path: 'overview', loadComponent: () => import('./dashboard/victim/overview/overview').then(m => m.VictimOverviewComponent) },
                     { path: 'requests', loadComponent: () => import('./dashboard/victim/my-requests/my-requests').then(m => m.MyRequestsComponent) },
                     { path: 'history', loadComponent: () => import('./dashboard/victim/aid-history/aid-history').then(m => m.AidHistoryComponent) },
-                    { path: 'points', loadComponent: () => import('./dashboard/victim/distribution-points/distribution-points').then(m => m.DistributionPointsComponent) },
                 ]
             },
 
@@ -87,7 +85,6 @@ export const routes: Routes = [
                     { path: 'distribution', loadComponent: () => import('./dashboard/volunteer/distribution/distribution').then(m => m.VolunteerDistributionComponent) },
                     { path: 'region', loadComponent: () => import('./dashboard/volunteer/region/assigned-region').then(m => m.AssignedRegionComponent) },
                     { path: 'history', loadComponent: () => import('./dashboard/volunteer/activity-log/activity-log').then(m => m.ActivityLogComponent) },
-                    { path: 'availability', loadComponent: () => import('./dashboard/volunteer/availability/availability').then(m => m.AvailabilityComponent) },
                 ]
             },
         ]

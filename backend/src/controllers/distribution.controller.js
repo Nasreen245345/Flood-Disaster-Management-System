@@ -2,6 +2,48 @@ const DistributionShift = require('../models/DistributionShift');
 const AidRequest = require('../models/AidRequest');
 const Volunteer = require('../models/Volunteer');
 
+// @desc    Get distribution logs for an organization (fulfilled aid requests via shifts)
+// @route   GET /api/distribution/logs/:orgId
+// @access  Private (NGO/Admin)
+exports.getDistributionLogs = async (req, res) => {
+    try {
+        const AidRequest = require('../models/AidRequest');
+
+        // Get all completed/active shifts for this org with handled requests
+        const shifts = await DistributionShift.find({
+            organization: req.params.orgId,
+            'aidRequestsHandled.0': { $exists: true }
+        })
+        .populate('assignedVolunteer', 'fullName')
+        .select('location aidRequestsHandled assignedVolunteer shiftStart');
+
+        const logs = [];
+        for (const shift of shifts) {
+            for (const entry of shift.aidRequestsHandled) {
+                const aidReq = await AidRequest.findById(entry.aidRequest)
+                    .select('victimName victimCNIC packagesNeeded location');
+
+                logs.push({
+                    _id: entry._id,
+                    handledAt: entry.handledAt,
+                    victimName: aidReq?.victimName || 'Unknown',
+                    victimCNIC: entry.victimCNIC,
+                    location: shift.location,
+                    packages: aidReq?.packagesNeeded?.map(p => p.packageName).join(', ') || 'Aid Package',
+                    volunteer: shift.assignedVolunteer?.fullName || 'Unknown'
+                });
+            }
+        }
+
+        // Sort by most recent first
+        logs.sort((a, b) => new Date(b.handledAt).getTime() - new Date(a.handledAt).getTime());
+
+        res.status(200).json({ success: true, count: logs.length, data: logs });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching logs', error: error.message });
+    }
+};
+
 // @desc    Get active distribution shifts for an NGO (for victims to see pickup points)
 // @route   GET /api/distribution/shifts/public/:orgId
 // @access  Public
@@ -145,9 +187,21 @@ exports.assignVolunteer = async (req, res) => {
         
         shift.assignedVolunteer = volunteerId;
         await shift.save();
-        
+
         await shift.populate('assignedVolunteer', 'fullName phone category');
-        
+
+        // Notify the volunteer
+        const notif = require('../services/notification.service');
+        if (volunteer.userId) {
+            await notif.notifyUser(
+                volunteer.userId,
+                'Distribution Shift Assigned',
+                `You have been assigned a distribution shift at "${shift.location}".`,
+                'shift_assigned',
+                { icon: 'store', priority: 'high', link: '/dashboard/volunteer/distribution' }
+            );
+        }
+
         console.log(`✅ Shift ${shift._id} assigned to volunteer ${volunteer.fullName}`);
         
         res.status(200).json({
@@ -368,7 +422,19 @@ exports.markDistributed = async (req, res) => {
         });
         activeShift.totalDistributions += 1;
         await activeShift.save();
-        
+
+        // Notify victim
+        const notif = require('../services/notification.service');
+        if (aidRequest.requester) {
+            await notif.notifyUser(
+                aidRequest.requester,
+                'Aid Distributed Successfully',
+                `Your aid package has been distributed at ${activeShift.location}. Thank you for your patience.`,
+                'aid_request_fulfilled',
+                { icon: 'volunteer_activism', priority: 'high', link: '/dashboard/victim/requests' }
+            );
+        }
+
         console.log('✅ Aid marked as distributed');
         
         res.status(200).json({
@@ -449,5 +515,35 @@ exports.deleteShift = async (req, res) => {
             message: 'Error deleting shift',
             error: error.message
         });
+    }
+};
+
+// @desc    Get active disasters assigned to an NGO (for shift creation)
+// @route   GET /api/distribution/ngo-disasters/:orgId
+// @access  Private (NGO)
+exports.getNGODisasters = async (req, res) => {
+    try {
+        const RegionAssignment = require('../models/RegionAssignment');
+        const Disaster = require('../models/Disaster');
+
+        // Find all active region assignments for this NGO
+        const assignments = await RegionAssignment.find({
+            assignedNGOs: req.params.orgId,
+            status: { $in: ['assigned', 'in-progress'] }
+        }).populate('disaster');
+
+        // Extract unique disasters
+        const disasterMap = new Map();
+        for (const a of assignments) {
+            if (a.disaster && !disasterMap.has(a.disaster._id.toString())) {
+                disasterMap.set(a.disaster._id.toString(), a.disaster);
+            }
+        }
+
+        const disasters = Array.from(disasterMap.values());
+
+        res.status(200).json({ success: true, data: disasters });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching NGO disasters', error: error.message });
     }
 };

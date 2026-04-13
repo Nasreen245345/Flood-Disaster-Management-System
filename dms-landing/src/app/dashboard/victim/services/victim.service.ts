@@ -37,6 +37,8 @@ export interface VictimRequest {
     validUntil?: Date;
     createdAt: Date;
     requiredAmount?: number;
+    fulfilledDate?: Date;
+    packagesNeeded?: any[];
 }
 
 export interface VictimProfile {
@@ -109,12 +111,12 @@ export class VictimService {
         this.http.get<any>(`${this.apiUrl}/my-requests`, { headers }).subscribe({
             next: (res) => {
                 if (res.success) {
-                    const mappedRequests: VictimRequest[] = res.data.map((r: any) => ({
+                    const allRequests = res.data.map((r: any) => ({
                         id: r._id,
                         type: r.packagesNeeded?.map((p: any) => p.packageName).join(', ') || 'Aid',
                         urgency: this.capitalize(r.urgency),
                         note: r.additionalNotes,
-                        status: this.capitalize(r.status),
+                        status: r.status, // keep raw status for filtering
                         createdAt: new Date(r.createdAt),
                         requiredAmount: r.peopleCount,
                         allocatedNGO: r.assignedNGO?.name,
@@ -122,9 +124,29 @@ export class VictimService {
                         ngoContact: r.assignedNGO?.contact?.phone,
                         ngoId: r.assignedNGO?._id,
                         nearestShift: r.nearestShift || null,
-                        location: r.location
+                        location: r.location,
+                        fulfilledDate: r.fulfilledDate || null,
+                        packagesNeeded: r.packagesNeeded || []
                     }));
-                    this._requests.next(mappedRequests);
+
+                    // Active requests: not fulfilled/rejected
+                    const active = allRequests.filter((r: any) =>
+                        !['fulfilled', 'rejected'].includes(r.status)
+                    );
+                    this._requests.next(active);
+
+                    // History: fulfilled requests
+                    const history: AidHistory[] = allRequests
+                        .filter((r: any) => r.status === 'fulfilled')
+                        .map((r: any) => ({
+                            id: r.id,
+                            type: r.type,
+                            date: r.fulfilledDate ? new Date(r.fulfilledDate) : r.createdAt,
+                            ngoName: r.allocatedNGO || 'Unknown NGO',
+                            pointName: r.nearestShift?.location || r.allocatedPoint || 'Distribution Center',
+                            quantity: `${r.requiredAmount || 1} person(s)`
+                        }));
+                    this._history.next(history);
                 }
             },
             error: (err) => console.error('Error loading requests', err)

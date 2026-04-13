@@ -1,9 +1,11 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router } from '@angular/router';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatButtonModule } from '@angular/material/button';
 import { AuthService } from '../../auth/services/auth.service';
 
 interface MenuItem {
@@ -22,13 +24,15 @@ interface MenuItem {
     RouterLinkActive,
     MatListModule,
     MatIconModule,
-    MatDividerModule
+    MatDividerModule,
+    MatButtonModule
   ],
   templateUrl: './sidebar.html',
   styleUrls: ['./sidebar.css']
 })
 export class SidebarComponent implements OnInit {
   authService = inject(AuthService);
+  private router = inject(Router);
 
   userRole: string = '';
   userName: string = '';
@@ -52,7 +56,6 @@ export class SidebarComponent implements OnInit {
     { label: 'Aid Requests', icon: 'medical_services', route: '/dashboard/ngo/aid-requests', roles: ['ngo'] },
     { label: 'Task Management', icon: 'assignment', route: '/dashboard/ngo/tasks', roles: ['ngo'] },
     { label: 'Distribution Shifts', icon: 'schedule', route: '/dashboard/ngo/distribution-shifts', roles: ['ngo'] },
-    { label: 'Scan & Distribute', icon: 'qr_code_scanner', route: '/dashboard/ngo/scan-distribute', roles: ['ngo'] },
     { label: 'Volunteers', icon: 'groups', route: '/dashboard/ngo/volunteers', roles: ['ngo'] },
     { label: 'Distribution Logs', icon: 'history', route: '/dashboard/ngo/logs', roles: ['ngo'] },
 
@@ -62,13 +65,11 @@ export class SidebarComponent implements OnInit {
     { label: 'Distribution Point', icon: 'store', route: '/dashboard/volunteer/distribution', roles: ['volunteer'] },
     { label: 'Assigned Region', icon: 'map', route: '/dashboard/volunteer/region', roles: ['volunteer'] },
     { label: 'Activity Log', icon: 'history', route: '/dashboard/volunteer/history', roles: ['volunteer'] },
-    { label: 'Availability', icon: 'event_available', route: '/dashboard/volunteer/availability', roles: ['volunteer'] },
 
     // Victim Menu Items
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard/victim/overview', roles: ['victim'] },
     { label: 'My Requests', icon: 'help', route: '/dashboard/victim/requests', roles: ['victim'] },
     { label: 'Aid History', icon: 'history', route: '/dashboard/victim/history', roles: ['victim'] },
-    { label: 'Distribution Points', icon: 'location_on', route: '/dashboard/victim/points', roles: ['victim'] },
 
     // Common Menu Items
     { label: 'Interactive Map', icon: 'map', route: '/dashboard/map', roles: ['admin', 'ngo', 'volunteer', 'victim'] },
@@ -101,5 +102,10 @@ export class SidebarComponent implements OnInit {
       victim: 'bg-orange-600'
     };
     return colors[this.userRole] || 'bg-gray-600';
+  }
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
   }
 }

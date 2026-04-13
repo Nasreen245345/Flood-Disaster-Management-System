@@ -8,7 +8,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../auth/services/auth.service';
-import { NotificationService, Notification } from '../../shared/services/notification.service';
+import { NotificationService } from '../../shared/services/notification.service';
 
 @Component({
   selector: 'app-dashboard-navbar',
@@ -33,8 +33,7 @@ export class NavbarComponent {
 
   userName: string = '';
   userEmail: string = '';
-  notifications$ = this.notificationService.notifications$;
-  unreadCount = 0;
+  unreadCount$ = this.notificationService.unreadCount$;
 
   ngOnInit() {
     const user = this.authService.getCurrentUser();
@@ -42,14 +41,8 @@ export class NavbarComponent {
       this.userName = user.name || 'User';
       this.userEmail = user.email;
     }
-
-    this.notifications$.subscribe((notes: Notification[]) => {
-      this.unreadCount = notes.filter(n => !n.read).length;
-    });
-  }
-
-  markAsRead(id: string) {
-    this.notificationService.markAsRead(id);
+    // Start polling for notifications
+    this.notificationService.startPolling();
   }
 
   markAllAsRead() {

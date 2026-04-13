@@ -74,6 +74,11 @@ const volunteerSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    assignedDisaster: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Disaster',
+        default: null
+    },
     preferredWorkingArea: {
         type: String,
         trim: true

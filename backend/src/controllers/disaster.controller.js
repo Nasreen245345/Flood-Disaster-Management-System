@@ -20,6 +20,15 @@ exports.reportDisaster = async (req, res) => {
 
         const disaster = await Disaster.create(req.body);
 
+        // Send notifications
+        const notif = require('../services/notification.service');
+        await notif.broadcast(
+            `🚨 New Disaster Reported: ${disaster.disasterType.toUpperCase()}`,
+            `A ${disaster.severity} severity ${disaster.disasterType} has been reported at ${disaster.location}.`,
+            'disaster_reported',
+            { icon: 'warning', priority: disaster.severity === 'critical' ? 'critical' : 'high', link: '/dashboard/map' }
+        );
+
         res.status(201).json({
             success: true,
             data: disaster,

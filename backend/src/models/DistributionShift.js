@@ -7,6 +7,13 @@ const distributionShiftSchema = new mongoose.Schema({
         ref: 'Organization',
         required: true
     },
+
+    // Associated Disaster
+    disaster: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Disaster',
+        default: null
+    },
     
     // Distribution Point Details
     location: {

@@ -10,7 +10,9 @@ const {
     markDistributed,
     updateShiftStatus,
     deleteShift,
-    getPublicShifts
+    getPublicShifts,
+    getDistributionLogs,
+    getNGODisasters
 } = require('../controllers/distribution.controller');
 const { protect } = require('../middleware/auth.middleware');
 
@@ -19,6 +21,12 @@ router.get('/shifts/public/:orgId', getPublicShifts);
 
 // All other routes are protected
 router.use(protect);
+
+// Distribution logs
+router.get('/logs/:orgId', getDistributionLogs);
+
+// NGO disasters for shift creation
+router.get('/ngo-disasters/:orgId', getNGODisasters);
 
 // Shift management
 router.post('/shifts', createShift);
