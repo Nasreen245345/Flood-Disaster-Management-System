@@ -251,3 +251,71 @@ exports.getUserStats = async (req, res) => {
         });
     }
 };
+
+// @desc    Update own profile
+// @route   PUT /api/users/me
+// @access  Private
+exports.updateMyProfile = async (req, res) => {
+    try {
+        const { name, phone, region } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        if (name) user.name = name;
+        if (phone) user.phone = phone;
+        if (region) user.region = region;
+
+        // Password change
+        if (req.body.newPassword && req.body.currentPassword) {
+            const User2 = require('../models/User');
+            const userWithPw = await User2.findById(req.user.id).select('+password');
+            const match = await userWithPw.comparePassword(req.body.currentPassword);
+            if (!match) return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+            user.password = req.body.newPassword;
+        }
+
+        await user.save();
+        res.status(200).json({ success: true, data: user, message: 'Profile updated successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error updating profile', error: error.message });
+    }
+};
+
+// @desc    Get admin dashboard stats (real data)
+// @route   GET /api/admin/stats
+// @access  Private (Admin)
+exports.getAdminStats = async (req, res) => {
+    try {
+        const Disaster = require('../models/Disaster');
+        const Organization = require('../models/Organization');
+        const Volunteer = require('../models/Volunteer');
+        const RegionAssignment = require('../models/RegionAssignment');
+
+        const [totalUsers, totalNGOs, totalVolunteers, activeDisasters, pendingAssignments, affectedRegions] = await Promise.all([
+            User.countDocuments(),
+            Organization.countDocuments({ type: 'ngo' }),
+            Volunteer.countDocuments({ status: 'active' }),
+            Disaster.countDocuments({ status: { $in: ['active', 'verified'] } }),
+            RegionAssignment.countDocuments({ status: 'assigned' }),
+            RegionAssignment.countDocuments({ status: { $in: ['assigned', 'in-progress'] } })
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalUsers,
+                totalNGOs,
+                totalVolunteers,
+                activeDisasters,
+                affectedRegions,
+                pendingAssignments,
+                userGrowth: 0,
+                ngoGrowth: 0,
+                volunteerGrowth: 0,
+                disasterGrowth: 0
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching stats', error: error.message });
+    }
+};

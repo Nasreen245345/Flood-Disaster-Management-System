@@ -133,6 +133,14 @@ export class MyRequestsComponent implements OnInit {
         }
     }
 
+    getStatusLabel(status: string): string {
+        const labels: Record<string, string> = {
+            pending: 'Pending', approved: 'Approved',
+            in_progress: 'In Progress', fulfilled: 'Fulfilled', rejected: 'Rejected'
+        };
+        return labels[status?.toLowerCase()] || status;
+    }
+
     formatDate(date: Date): string {
         return new Date(date).toLocaleString('en-US', {
             month: 'short', day: 'numeric', year: 'numeric',

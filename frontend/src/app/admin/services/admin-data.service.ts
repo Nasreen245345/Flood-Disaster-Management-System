@@ -368,21 +368,26 @@ export class AdminDataService {
 
     constructor() { }
 
-    // System Stats
+    // System Stats - Real API
     getSystemStats(): Observable<SystemStats> {
-        const stats: SystemStats = {
-            totalUsers: this.users.length,
-            totalNGOs: this.organizations.filter(o => o.type === 'ngo').length,
-            totalVolunteers: this.users.filter(u => u.role === 'volunteer').length,
-            activeDisasters: this.disasters.filter(d => d.status === 'active').length,
-            affectedRegions: [...new Set(this.disasters.flatMap(d => d.affectedRegions))].length,
-            pendingAssignments: this.assignments.filter(a => a.status === 'assigned').length,
-            userGrowth: 12.5,
-            ngoGrowth: 8.3,
-            volunteerGrowth: 15.7,
-            disasterGrowth: -5.2
+        return this.http.get<any>(`${this.apiUrl}/admin/stats`, { headers: this.getHeaders() }).pipe(
+            map(response => {
+                if (response.success) {
+                    return response.data as SystemStats;
+                }
+                return this.getFallbackStats();
+            }),
+            // Fallback to calculated stats if endpoint fails
+            tap({ error: () => {} })
+        );
+    }
+
+    private getFallbackStats(): SystemStats {
+        return {
+            totalUsers: 0, totalNGOs: 0, totalVolunteers: 0,
+            activeDisasters: 0, affectedRegions: 0, pendingAssignments: 0,
+            userGrowth: 0, ngoGrowth: 0, volunteerGrowth: 0, disasterGrowth: 0
         };
-        return of(stats);
     }
 
     // Users

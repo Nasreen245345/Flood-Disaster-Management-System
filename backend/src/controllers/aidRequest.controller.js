@@ -194,6 +194,34 @@ exports.createRequest = async (req, res) => {
         const aidRequest = await AidRequest.create(req.body);
         await aidRequest.populate('assignedNGO', 'name contact');
 
+        // Send notifications
+        const notif = require('../services/notification.service');
+        if (aidRequest.requester) {
+            await notif.notifyUser(
+                aidRequest.requester,
+                'Aid Request Submitted',
+                bestNGO
+                    ? `Your request has been approved and assigned to ${bestNGO.name}.`
+                    : 'Your request has been received and is pending assignment.',
+                'aid_request_assigned',
+                { icon: 'check_circle', priority: 'high', link: '/dashboard/victim/requests' }
+            );
+        }
+        if (bestNGO) {
+            // Notify NGO admin
+            const User = require('../models/User');
+            const ngoAdmin = await User.findOne({ role: 'ngo' });
+            if (ngoAdmin) {
+                await notif.notifyUser(
+                    ngoAdmin._id,
+                    'New Aid Request Assigned',
+                    `A new ${aidRequest.urgency} priority aid request has been assigned to your organization.`,
+                    'aid_request_assigned',
+                    { icon: 'medical_services', priority: aidRequest.urgency === 'critical' ? 'critical' : 'high', link: '/dashboard/ngo/aid-requests' }
+                );
+            }
+        }
+
         res.status(201).json({
             success: true,
             data: aidRequest,

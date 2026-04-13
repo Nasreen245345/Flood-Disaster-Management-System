@@ -1,105 +1,133 @@
 import { environment } from '../../../environments/environment';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService } from '../../auth/services/auth.service';
-import { VictimService } from '../victim/services/victim.service';
-import { EditProfileDialogComponent } from './edit-profile-dialog/edit-profile-dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { AuthService } from '../../auth/services/auth.service';
 
 @Component({
     selector: 'app-profile',
     standalone: true,
-    imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatDividerModule, MatDialogModule],
+    imports: [
+        CommonModule, ReactiveFormsModule, MatCardModule, MatButtonModule,
+        MatIconModule, MatDividerModule, MatFormFieldModule, MatInputModule,
+        MatSnackBarModule, MatChipsModule, MatProgressSpinnerModule
+    ],
     templateUrl: './profile.html',
     styleUrls: ['./profile.css']
 })
 export class ProfileComponent implements OnInit {
-    authService = inject(AuthService);
-    victimService = inject(VictimService);
-    dialog = inject(MatDialog);
+    private authService = inject(AuthService);
     private http = inject(HttpClient);
-    private router = inject(Router);
     private snackBar = inject(MatSnackBar);
+    private fb = inject(FormBuilder);
+    private cdr = inject(ChangeDetectorRef);
+
     private apiUrl = environment.apiUrl;
 
-    victimProfile$ = this.victimService.profile$;
+    user = this.authService.getCurrentUser();
     volunteerProfile: any = null;
-    loadingVolunteerProfile = false;
+    ngoProfile: any = null;
+    loading = false;
+    saving = false;
+    editMode = false;
 
-    get user() {
-        return this.authService.getCurrentUser();
+    profileForm: FormGroup = this.fb.group({
+        name: [this.user?.name || '', Validators.required],
+        phone: [this.user?.phone || ''],
+        region: [this.user?.region || ''],
+        currentPassword: [''],
+        newPassword: ['']
+    });
+
+    private getHeaders(): HttpHeaders {
+        return new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('dms_token')}`);
     }
-
-    // Mock activity
-    activities = [
-        { action: 'Logged in', time: new Date() },
-        { action: 'Updated Settings', time: new Date(Date.now() - 3600000) },
-        { action: 'Viewed Reports', time: new Date(Date.now() - 86400000) }
-    ];
 
     ngOnInit() {
-        // If user is volunteer, fetch volunteer profile
-        if (this.user?.role === 'volunteer') {
-            this.loadVolunteerProfile();
+        if (this.user?.role === 'volunteer') this.loadVolunteerProfile();
+        if (this.user?.role === 'ngo') this.loadNgoProfile();
+    }
+
+    loadVolunteerProfile() {
+        this.loading = true;
+        this.http.get<any>(`${this.apiUrl}/volunteers/me`, { headers: this.getHeaders() }).subscribe({
+            next: (res) => { if (res.success) this.volunteerProfile = res.data; this.loading = false; this.cdr.detectChanges(); },
+            error: () => { this.loading = false; this.cdr.detectChanges(); }
+        });
+    }
+
+    loadNgoProfile() {
+        this.loading = true;
+        this.http.get<any>(`${this.apiUrl}/organizations/me`, { headers: this.getHeaders() }).subscribe({
+            next: (res) => { if (res.success) this.ngoProfile = res.data; this.loading = false; this.cdr.detectChanges(); },
+            error: () => { this.loading = false; this.cdr.detectChanges(); }
+        });
+    }
+
+    toggleEdit() {
+        this.editMode = !this.editMode;
+        if (this.editMode) {
+            this.profileForm.patchValue({
+                name: this.user?.name || '',
+                phone: this.user?.phone || '',
+                region: this.user?.region || '',
+                currentPassword: '',
+                newPassword: ''
+            });
         }
     }
 
-    private loadVolunteerProfile() {
-        this.loadingVolunteerProfile = true;
-        const token = localStorage.getItem('dms_token');
-        if (!token) return;
+    saveProfile() {
+        if (this.profileForm.invalid) return;
+        this.saving = true;
 
-        const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-        
-        this.http.get<any>(`${this.apiUrl}/volunteers/me`, { headers }).subscribe({
-            next: (response) => {
-                if (response.success) {
-                    this.volunteerProfile = response.data;
+        const payload: any = {
+            name: this.profileForm.value.name,
+            phone: this.profileForm.value.phone,
+            region: this.profileForm.value.region
+        };
+        if (this.profileForm.value.newPassword && this.profileForm.value.currentPassword) {
+            payload.currentPassword = this.profileForm.value.currentPassword;
+            payload.newPassword = this.profileForm.value.newPassword;
+        }
+
+        this.http.put<any>(`${this.apiUrl}/users/me`, payload, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                if (res.success) {
+                    // Update local user data
+                    const updated = { ...this.user, name: payload.name, phone: payload.phone, region: payload.region };
+                    localStorage.setItem('dms_user', JSON.stringify(updated));
+                    this.user = updated as any;
+                    this.snackBar.open('Profile updated successfully', 'Close', { duration: 3000 });
+                    this.editMode = false;
                 }
-                this.loadingVolunteerProfile = false;
+                this.saving = false;
+                this.cdr.detectChanges();
             },
             error: (err) => {
-                this.loadingVolunteerProfile = false;
-                if (err.status === 404) {
-                    // No volunteer profile yet
-                    this.volunteerProfile = null;
-                }
+                this.snackBar.open(err.error?.message || 'Error updating profile', 'Close', { duration: 3000 });
+                this.saving = false;
+                this.cdr.detectChanges();
             }
         });
     }
 
-    openEditProfile() {
-        // If volunteer and no profile, redirect to registration
-        if (this.user?.role === 'volunteer' && !this.volunteerProfile) {
-            this.snackBar.open('Please complete your volunteer profile first', 'OK', { duration: 3000 });
-            this.router.navigate(['/dashboard/volunteer/register']);
-            return;
-        }
+    getRoleBadgeColor(): string {
+        return ({ admin: '#dc2626', ngo: '#0891b2', volunteer: '#d97706', victim: '#ea580c' } as Record<string, string>)[this.user?.role || ''] || '#6b7280';
+    }
 
-        // If volunteer with profile, open volunteer edit form
-        if (this.user?.role === 'volunteer' && this.volunteerProfile) {
-            this.router.navigate(['/dashboard/volunteer/register'], {
-                queryParams: { edit: 'true' }
-            });
-            return;
-        }
-
-        // For other roles, open the regular edit dialog
-        this.dialog.open(EditProfileDialogComponent, {
-            width: '500px',
-            data: { user: this.user }
-        }).afterClosed().subscribe(result => {
-            if (result) {
-                console.log('Profile updated:', result);
-            }
-        });
+    capitalize(s: string): string {
+        return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : '';
     }
 }
 

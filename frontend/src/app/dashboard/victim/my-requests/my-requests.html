@@ -28,7 +28,7 @@
                 <div class="req-info">
                     <h3>{{ req.type }}</h3>
                     <span class="urgency-badge" [style.background]="getStatusColor(req.urgency)">
-                        {{ req.urgency }} Priority
+                        {{ req.urgency | titlecase }} Priority
                     </span>
                 </div>
                 <span class="date">{{ formatDate(req.createdAt) }}</span>

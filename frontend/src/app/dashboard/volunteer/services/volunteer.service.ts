@@ -42,21 +42,65 @@ export class VolunteerService {
     private _tasks = new BehaviorSubject<VolunteerTask[]>([]);
     tasks$ = this._tasks.asObservable();
 
-    // Mock Stats
     private _stats = new BehaviorSubject<VolunteerStats>({
-        hoursServed: 42,
-        tasksCompleted: 15,
-        distributionsAssisted: 8,
-        currentStreak: 4
+        hoursServed: 0, tasksCompleted: 0, distributionsAssisted: 0, currentStreak: 0
     });
-
     stats$ = this._stats.asObservable();
 
-    // Mock Check-in State
+    // Check-in state (kept for compatibility)
     private _isCheckedIn = new BehaviorSubject<boolean>(false);
     isCheckedIn$ = this._isCheckedIn.asObservable();
+    private checkInTime: Date | null = null;
 
     constructor() { }
+
+    // Load real stats from API
+    loadStats(volunteerId: string) {
+        // Tasks stats
+        this.http.get<any>(`${this.apiUrl}/tasks/volunteer/${volunteerId}`, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                if (res.success) {
+                    const tasks = res.data;
+                    const completed = tasks.filter((t: any) => t.status === 'completed').length;
+                    this._tasks.next(tasks);
+                    this._stats.next({
+                        ...this._stats.value,
+                        tasksCompleted: completed
+                    });
+                }
+            }
+        });
+
+        // Distribution stats from volunteer profile
+        this.http.get<any>(`${this.apiUrl}/volunteers/me`, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                if (res.success) {
+                    const v = res.data;
+                    this._stats.next({
+                        ...this._stats.value,
+                        hoursServed: v.totalHoursServed || 0,
+                        distributionsAssisted: v.totalVictimsServed || 0
+                    });
+                }
+            }
+        });
+
+        // Distribution count from shifts
+        this.http.get<any>(`${this.apiUrl}/volunteers/me`, { headers: this.getHeaders() }).subscribe({
+            next: (res) => {
+                if (res.success && res.data._id) {
+                    this.http.get<any>(`${this.apiUrl}/distribution/shifts/volunteer/${res.data._id}`, { headers: this.getHeaders() }).subscribe({
+                        next: (shiftRes) => {
+                            if (shiftRes.success) {
+                                const totalDist = shiftRes.data.reduce((sum: number, s: any) => sum + (s.totalDistributions || 0), 0);
+                                this._stats.next({ ...this._stats.value, distributionsAssisted: totalDist });
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
 
     // ========== API METHODS ==========
 
@@ -136,7 +180,38 @@ export class VolunteerService {
     }
 
     toggleCheckIn() {
-        this._isCheckedIn.next(!this._isCheckedIn.value);
+        const current = this._isCheckedIn.value;
+        if (!current) {
+            this.checkInTime = new Date();
+            this._isCheckedIn.next(true);
+        } else {
+            if (this.checkInTime) {
+                const hoursWorked = (new Date().getTime() - this.checkInTime.getTime()) / 3600000;
+                this.checkInTime = null;
+                this._isCheckedIn.next(false);
+                this.http.get<any>(`${this.apiUrl}/volunteers/me`, { headers: this.getHeaders() }).subscribe({
+                    next: (res) => {
+                        if (res.success) {
+                            const currentHours = res.data.totalHoursServed || 0;
+                            this.http.put<any>(
+                                `${this.apiUrl}/volunteers/${res.data._id}`,
+                                { totalHoursServed: Math.round((currentHours + hoursWorked) * 10) / 10 },
+                                { headers: this.getHeaders() }
+                            ).subscribe({
+                                next: () => {
+                                    this._stats.next({
+                                        ...this._stats.value,
+                                        hoursServed: Math.round((this._stats.value.hoursServed + hoursWorked) * 10) / 10
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                this._isCheckedIn.next(false);
+            }
+        }
     }
 
     getAssignedRegion() {

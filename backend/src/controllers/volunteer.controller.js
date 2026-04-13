@@ -375,3 +375,71 @@ exports.deleteVolunteer = async (req, res) => {
         });
     }
 };
+
+// @desc    Assign disaster region to volunteer
+// @route   PUT /api/volunteers/:id/assign-region
+// @access  Private (NGO)
+exports.assignRegion = async (req, res) => {
+    try {
+        const { disasterId, regionName } = req.body;
+        const Disaster = require('../models/Disaster');
+
+        const disaster = await Disaster.findById(disasterId);
+        if (!disaster) {
+            return res.status(404).json({ success: false, message: 'Disaster not found' });
+        }
+
+        const volunteer = await Volunteer.findByIdAndUpdate(
+            req.params.id,
+            {
+                assignedDisaster: disasterId,
+                assignedRegion: regionName || disaster.location
+            },
+            { new: true }
+        ).populate('assignedDisaster', 'location disasterType severity coordinates status');
+
+        if (!volunteer) {
+            return res.status(404).json({ success: false, message: 'Volunteer not found' });
+        }
+
+        // Notify volunteer
+        const notif = require('../services/notification.service');
+        if (volunteer.userId) {
+            await notif.notifyUser(
+                volunteer.userId,
+                'Region Assigned',
+                `You have been assigned to the ${disaster.disasterType} disaster area at ${disaster.location}.`,
+                'region_assigned',
+                { icon: 'location_on', priority: 'high', link: '/dashboard/volunteer/region' }
+            );
+        }
+
+        res.status(200).json({ success: true, data: volunteer, message: 'Region assigned successfully' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error assigning region', error: error.message });
+    }
+};
+
+// @desc    Get volunteer's assigned region/disaster
+// @route   GET /api/volunteers/my-region
+// @access  Private (Volunteer)
+exports.getMyRegion = async (req, res) => {
+    try {
+        const volunteer = await Volunteer.findOne({ userId: req.user.id })
+            .populate('assignedDisaster', 'location disasterType severity coordinates status peopleAffected comments');
+
+        if (!volunteer) {
+            return res.status(404).json({ success: false, message: 'Volunteer profile not found' });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                assignedRegion: volunteer.assignedRegion,
+                assignedDisaster: volunteer.assignedDisaster || null
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error fetching region', error: error.message });
+    }
+};

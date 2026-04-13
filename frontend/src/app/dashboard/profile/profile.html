@@ -1,154 +1,154 @@
 <div class="profile-container">
+
+    <!-- Profile Card -->
     <mat-card class="profile-card">
         <div class="profile-header">
-            <div class="avatar-large">
-                <mat-icon>account_circle</mat-icon>
+            <div class="avatar-circle" [style.background]="getRoleBadgeColor() + '20'">
+                <mat-icon [style.color]="getRoleBadgeColor()">account_circle</mat-icon>
             </div>
             <div class="header-info">
-                <h1>{{ user?.name || 'User Name' }}</h1>
-                <p class="role-badge">{{ user?.role || 'Admin' }}</p>
+                <h1>{{ user?.name }}</h1>
+                <span class="role-badge" [style.background]="getRoleBadgeColor()">
+                    {{ user?.role | uppercase }}
+                </span>
             </div>
-            <button mat-stroked-button color="primary" (click)="openEditProfile()">Edit Profile</button>
+            <button mat-stroked-button (click)="toggleEdit()">
+                <mat-icon>{{ editMode ? 'close' : 'edit' }}</mat-icon>
+                {{ editMode ? 'Cancel' : 'Edit Profile' }}
+            </button>
         </div>
 
         <mat-divider></mat-divider>
 
-        <div class="profile-details">
-            <div class="detail-item">
-                <span class="label">Email</span>
-                <span class="value">{{ user?.email }}</span>
+        <!-- View Mode -->
+        <div class="profile-details" *ngIf="!editMode">
+            <div class="detail-row">
+                <mat-icon>email</mat-icon>
+                <div><span class="label">Email</span><span class="value">{{ user?.email }}</span></div>
             </div>
-            <div class="detail-item">
-                <span class="label">Phone</span>
-                <span class="value">+92 300 1234567 (Mock)</span>
+            <div class="detail-row">
+                <mat-icon>phone</mat-icon>
+                <div><span class="label">Phone</span><span class="value">{{ user?.phone || 'Not provided' }}</span></div>
             </div>
-            <div class="detail-item">
-                <span class="label">Department</span>
-                <span class="value">Disaster Management Unit</span>
-            </div>
-            <div class="detail-item">
-                <span class="label">Location</span>
-                <span class="value">Islamabad, Pakistan</span>
+            <div class="detail-row">
+                <mat-icon>location_on</mat-icon>
+                <div><span class="label">Region</span><span class="value">{{ user?.region || 'Not provided' }}</span></div>
             </div>
         </div>
 
-        <!-- Victim Specific Section -->
-        <ng-container *ngIf="user?.role === 'victim' && (victimProfile$ | async) as vp">
+        <!-- Edit Mode -->
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" *ngIf="editMode" class="edit-form">
+            <mat-form-field appearance="outline">
+                <mat-label>Full Name</mat-label>
+                <input matInput formControlName="name">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Phone</mat-label>
+                <input matInput formControlName="phone">
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+                <mat-label>Region / City</mat-label>
+                <input matInput formControlName="region">
+            </mat-form-field>
+
+            <div class="password-section">
+                <p class="section-label">Change Password (optional)</p>
+                <mat-form-field appearance="outline">
+                    <mat-label>Current Password</mat-label>
+                    <input matInput type="password" formControlName="currentPassword">
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                    <mat-label>New Password</mat-label>
+                    <input matInput type="password" formControlName="newPassword">
+                </mat-form-field>
+            </div>
+
+            <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+                {{ saving ? 'Saving...' : 'Save Changes' }}
+            </button>
+        </form>
+
+        <!-- NGO Specific -->
+        <ng-container *ngIf="user?.role === 'ngo' && ngoProfile">
             <mat-divider></mat-divider>
-            <div class="victim-card-section">
-                <div class="qr-container">
-                    <div class="qr-placeholder">
-                        <mat-icon>qr_code_2</mat-icon>
-                        <span>{{ vp.id || 'N/A' }}</span>
-                    </div>
-                    <p class="qr-hint">Scan for Aid Verification</p>
+            <div class="extra-section">
+                <h3>Organization Details</h3>
+                <div class="detail-row">
+                    <mat-icon>business</mat-icon>
+                    <div><span class="label">Organization</span><span class="value">{{ ngoProfile.name }}</span></div>
                 </div>
-
-                <div class="family-stats">
-                    <div class="stat-box">
-                        <span class="val">{{ vp.familySize || 1 }}</span>
-                        <span class="lbl">Family Members</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="val text-warn">{{ vp.specialNeeds?.length || 0 }}</span>
-                        <span class="lbl">Special Needs</span>
+                <div class="detail-row">
+                    <mat-icon>verified</mat-icon>
+                    <div><span class="label">Status</span>
+                        <span class="value status-chip" [class.approved]="ngoProfile.status === 'approved'">
+                            {{ capitalize(ngoProfile.status) }}
+                        </span>
                     </div>
                 </div>
-
-                <div class="special-needs-list" *ngIf="vp.specialNeeds && vp.specialNeeds.length > 0">
-                    <span class="lbl">Registered Needs:</span>
-                    <div class="chips">
-                        <span *ngFor="let need of vp.specialNeeds" class="chip">{{ need }}</span>
-                    </div>
+                <div class="detail-row">
+                    <mat-icon>inventory_2</mat-icon>
+                    <div><span class="label">Inventory Items</span><span class="value">{{ ngoProfile.inventory?.length || 0 }}</span></div>
+                </div>
+                <div class="detail-row">
+                    <mat-icon>people</mat-icon>
+                    <div><span class="label">Active Distributions</span><span class="value">{{ ngoProfile.activeDistributions || 0 }}</span></div>
                 </div>
             </div>
         </ng-container>
 
-        <!-- Volunteer Specific Section -->
+        <!-- Volunteer Specific -->
         <ng-container *ngIf="user?.role === 'volunteer'">
             <mat-divider></mat-divider>
-            <div class="victim-card-section" *ngIf="volunteerProfile; else noVolunteerProfile">
-                <div class="family-stats">
+            <div *ngIf="loading" class="loading-row"><mat-spinner diameter="24"></mat-spinner><span>Loading profile...</span></div>
+            <div class="extra-section" *ngIf="!loading && volunteerProfile">
+                <h3>Volunteer Details</h3>
+                <div class="stats-row">
                     <div class="stat-box">
-                        <span class="val">{{ volunteerProfile.availabilityStatus || 'N/A' }}</span>
-                        <span class="lbl">Current Status</span>
-                    </div>
-                    <div class="stat-box">
-                        <span class="val">{{ volunteerProfile.verificationStatus || 'Pending' }}</span>
-                        <span class="lbl">Verification</span>
+                        <span class="stat-val">{{ capitalize(volunteerProfile.verificationStatus) }}</span>
+                        <span class="stat-lbl">Verification</span>
                     </div>
                     <div class="stat-box">
-                        <span class="val">{{ volunteerProfile.serviceRate || 0 }}</span>
-                        <span class="lbl">Service Rate</span>
-                    </div>
-                </div>
-
-                <div class="detail-item">
-                    <span class="label">CNIC</span>
-                    <span class="value">{{ volunteerProfile.cnic || 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Assigned NGO</span>
-                    <span class="value">{{ volunteerProfile.assignedNGO?.name || 'Not Assigned' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Category</span>
-                    <span class="value">{{ volunteerProfile.category || 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Skill Level</span>
-                    <span class="value">{{ volunteerProfile.skillLevel || 'N/A' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Shift Type</span>
-                    <span class="value">{{ volunteerProfile.shiftType || 'N/A' }}</span>
-                </div>
-
-                <div class="special-needs-list" *ngIf="volunteerProfile.preferredWorkingArea">
-                    <span class="lbl">Preferred Working Area:</span>
-                    <div class="chips">
-                        <span class="chip">{{ volunteerProfile.preferredWorkingArea }}</span>
-                    </div>
-                </div>
-
-                <div class="family-stats" style="margin-top: 16px;">
-                    <div class="stat-box">
-                        <span class="val">{{ volunteerProfile.totalHoursServed || 0 }}</span>
-                        <span class="lbl">Hours Served</span>
+                        <span class="stat-val">{{ capitalize(volunteerProfile.availabilityStatus) }}</span>
+                        <span class="stat-lbl">Status</span>
                     </div>
                     <div class="stat-box">
-                        <span class="val">{{ volunteerProfile.totalVictimsServed || 0 }}</span>
-                        <span class="lbl">Victims Served</span>
+                        <span class="stat-val">{{ volunteerProfile.totalHoursServed || 0 }}</span>
+                        <span class="stat-lbl">Hours Served</span>
                     </div>
+                </div>
+                <div class="detail-row">
+                    <mat-icon>badge</mat-icon>
+                    <div><span class="label">CNIC</span><span class="value">{{ volunteerProfile.cnic || 'N/A' }}</span></div>
+                </div>
+                <div class="detail-row">
+                    <mat-icon>business</mat-icon>
+                    <div><span class="label">Assigned NGO</span><span class="value">{{ volunteerProfile.assignedNGO?.name || 'Not assigned' }}</span></div>
+                </div>
+                <div class="detail-row">
+                    <mat-icon>category</mat-icon>
+                    <div><span class="label">Category</span><span class="value">{{ capitalize(volunteerProfile.category) }}</span></div>
+                </div>
+                <div class="detail-row">
+                    <mat-icon>star</mat-icon>
+                    <div><span class="label">Skill Level</span><span class="value">{{ capitalize(volunteerProfile.skillLevel) }}</span></div>
                 </div>
             </div>
+            <div class="extra-section" *ngIf="!loading && !volunteerProfile">
+                <p style="color:#64748b;text-align:center;padding:20px;">No volunteer profile found. Please complete registration.</p>
+            </div>
+        </ng-container>
 
-            <ng-template #noVolunteerProfile>
-                <div class="victim-card-section" style="text-align: center; padding: 32px;">
-                    <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: #999;">person_add</mat-icon>
-                    <p style="margin-top: 16px; color: #666;">No volunteer profile found</p>
-                    <button mat-raised-button color="primary" (click)="openEditProfile()" style="margin-top: 16px;">
-                        Complete Your Profile
-                    </button>
+        <!-- Victim Specific -->
+        <ng-container *ngIf="user?.role === 'victim'">
+            <mat-divider></mat-divider>
+            <div class="extra-section">
+                <h3>Account Info</h3>
+                <div class="detail-row">
+                    <mat-icon>info</mat-icon>
+                    <div><span class="label">Account Type</span><span class="value">Disaster Victim</span></div>
                 </div>
-            </ng-template>
+            </div>
         </ng-container>
     </mat-card>
 
-    <mat-card class="activity-card">
-        <mat-card-header>
-            <mat-card-title>Recent Activity</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-            <div class="activity-list">
-                <div *ngFor="let act of activities" class="activity-item">
-                    <mat-icon>history</mat-icon>
-                    <div class="act-info">
-                        <span class="act-details">{{ act.action }}</span>
-                        <span class="act-time">{{ act.time | date:'medium' }}</span>
-                    </div>
-                </div>
-            </div>
-        </mat-card-content>
-    </mat-card>
 </div>

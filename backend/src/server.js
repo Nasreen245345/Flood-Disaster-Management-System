@@ -14,6 +14,11 @@ const regionAssignmentRoutes = require('./routes/regionAssignment.routes');
 const taskRoutes = require('./routes/task.routes');
 const distributionRoutes = require('./routes/distribution.routes');
 const mapRoutes = require('./routes/map.routes');
+const notificationRoutes = require('./routes/notification.routes');
+
+// Admin stats route
+const { getAdminStats } = require('./controllers/user.controller');
+const { protect, authorize } = require('./middleware/auth.middleware');
 
 // Initialize express app
 const app = express();
@@ -49,6 +54,8 @@ app.use('/api/region-assignments', regionAssignmentRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/distribution', distributionRoutes);
 app.use('/api/map', mapRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.get('/api/admin/stats', protect, authorize('admin'), getAdminStats);
 
 // Health check route
 app.get('/api/health', (req, res) => {

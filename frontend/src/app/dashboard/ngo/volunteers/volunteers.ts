@@ -14,6 +14,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AddVolunteerDialogComponent } from './add-volunteer-dialog';
+import { AssignRegionDialogComponent } from './assign-region-dialog';
 
 @Component({
     selector: 'app-volunteers',
@@ -103,6 +104,14 @@ export class VolunteersComponent implements OnInit {
                 console.error('Error verifying volunteer:', err);
                 this.snackBar.open('Failed to verify volunteer', 'Close', { duration: 3000 });
             }
+        });
+    }
+
+    openAssignRegion(volunteer: any) {
+        this.dialog.open(AssignRegionDialogComponent, {
+            data: { volunteerId: volunteer._id, volunteerName: volunteer.fullName }
+        }).afterClosed().subscribe(result => {
+            if (result) this.loadVolunteers();
         });
     }
 

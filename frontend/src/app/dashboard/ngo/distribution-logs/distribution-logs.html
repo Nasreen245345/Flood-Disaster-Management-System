@@ -1,58 +1,79 @@
 <div class="logs-page">
     <div class="page-header">
-        <h1>Distribution History</h1>
+        <h1>Distribution Logs</h1>
+        <p class="subtitle">All aid distributions completed by your organization</p>
     </div>
 
-    <mat-card class="table-card">
-        <table mat-table [dataSource]="logs$" class="w-full">
+    <div *ngIf="loading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading logs...</p>
+    </div>
 
-            <!-- ID -->
-            <ng-container matColumnDef="id">
-                <th mat-header-cell *matHeaderCellDef> Log ID </th>
-                <td mat-cell *matCellDef="let log"> #{{ log.id }} </td>
-            </ng-container>
+    <div *ngIf="!loading && logs.length === 0" class="empty-state">
+        <mat-icon>history</mat-icon>
+        <p>No distributions recorded yet</p>
+    </div>
+
+    <mat-card *ngIf="!loading && logs.length > 0" class="table-card">
+        <div class="table-summary">
+            <span>Total Distributions: <strong>{{ logs.length }}</strong></span>
+        </div>
+        <table mat-table [dataSource]="logs" class="w-full">
 
             <!-- Time -->
             <ng-container matColumnDef="time">
-                <th mat-header-cell *matHeaderCellDef> Timestamp </th>
-                <td mat-cell *matCellDef="let log"> {{ log.timestamp | date:'short' }} </td>
-            </ng-container>
-
-            <!-- Victim -->
-            <ng-container matColumnDef="victim">
-                <th mat-header-cell *matHeaderCellDef> Victim </th>
+                <th mat-header-cell *matHeaderCellDef>Date & Time</th>
                 <td mat-cell *matCellDef="let log">
-                    <div class="victim-cell">
-                        <span>{{ log.victimName || 'Unknown (' + log.victimId + ')' }}</span>
+                    <div class="cell-with-icon">
+                        <mat-icon>schedule</mat-icon>
+                        {{ log.handledAt | date:'medium' }}
                     </div>
                 </td>
             </ng-container>
 
-            <!-- Region -->
-            <ng-container matColumnDef="region">
-                <th mat-header-cell *matHeaderCellDef> Region </th>
-                <td mat-cell *matCellDef="let log"> {{ log.region }} </td>
+            <!-- Victim -->
+            <ng-container matColumnDef="victim">
+                <th mat-header-cell *matHeaderCellDef>Victim</th>
+                <td mat-cell *matCellDef="let log">
+                    <div class="cell-with-icon">
+                        <mat-icon>person</mat-icon>
+                        {{ log.victimName }}
+                    </div>
+                </td>
             </ng-container>
 
-            <!-- Items -->
-            <ng-container matColumnDef="items">
-                <th mat-header-cell *matHeaderCellDef> Items Distributed </th>
-                <td mat-cell *matCellDef="let log"> {{ log.items.join(', ') }} </td>
+            <!-- Location -->
+            <ng-container matColumnDef="location">
+                <th mat-header-cell *matHeaderCellDef>Distribution Point</th>
+                <td mat-cell *matCellDef="let log">
+                    <div class="cell-with-icon">
+                        <mat-icon>store</mat-icon>
+                        {{ log.location }}
+                    </div>
+                </td>
+            </ng-container>
+
+            <!-- Packages -->
+            <ng-container matColumnDef="packages">
+                <th mat-header-cell *matHeaderCellDef>Packages</th>
+                <td mat-cell *matCellDef="let log">
+                    <span class="package-chip">{{ log.packages }}</span>
+                </td>
             </ng-container>
 
             <!-- Volunteer -->
             <ng-container matColumnDef="volunteer">
-                <th mat-header-cell *matHeaderCellDef> Distributed By </th>
+                <th mat-header-cell *matHeaderCellDef>Distributed By</th>
                 <td mat-cell *matCellDef="let log">
-                    <div class="distributor-info">
-                        <mat-icon>person_outline</mat-icon>
-                        {{ log.distributedBy }}
+                    <div class="cell-with-icon">
+                        <mat-icon>badge</mat-icon>
+                        {{ log.volunteer }}
                     </div>
                 </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="log-row"></tr>
         </table>
     </mat-card>
 </div>

@@ -4,8 +4,13 @@
         <p class="subtitle">Your meaningful impact over time.</p>
     </div>
 
+    <div *ngIf="loading" style="display:flex;align-items:center;gap:12px;padding:40px;color:#64748b;">
+        <mat-spinner diameter="28"></mat-spinner>
+        <span>Loading activity...</span>
+    </div>
+
     <!-- Impact Cards -->
-    <div class="stats-row" *ngIf="stats$ | async as stats">
+    <div class="stats-row" *ngIf="!loading">
         <div class="impact-card">
             <span class="number">{{ stats.hoursServed }}</span>
             <span class="label">Hours Contributed</span>
@@ -22,17 +27,17 @@
     </div>
 
     <!-- History List -->
-    <mat-card class="history-list-card">
+    <mat-card class="history-list-card" *ngIf="!loading">
         <h3>Task History</h3>
         <mat-list>
-            <mat-list-item *ngFor="let task of completedTasks$ | async">
+            <mat-list-item *ngFor="let task of completedTasks">
                 <mat-icon matListItemIcon class="text-green">check_circle</mat-icon>
                 <div matListItemTitle>{{ task.title }}</div>
                 <div matListItemLine>{{ task.description }}</div>
                 <div matListItemMeta *ngIf="task.completedAt">{{ task.completedAt | date:'shortDate' }}</div>
             </mat-list-item>
 
-            <div *ngIf="(completedTasks$ | async)?.length === 0" class="empty-msg">
+            <div *ngIf="completedTasks.length === 0" class="empty-msg">
                 No completed tasks yet. Keep going!
             </div>
         </mat-list>

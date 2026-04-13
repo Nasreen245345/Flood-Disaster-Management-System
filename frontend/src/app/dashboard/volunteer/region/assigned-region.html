@@ -1,58 +1,76 @@
 <div class="region-page">
     <div class="page-header">
         <h1>Assigned Region</h1>
-        <p class="subtitle">Your designated area of responsibility.</p>
+        <p class="subtitle">Your designated disaster area</p>
     </div>
 
-    <div class="content-grid">
-        <!-- Main Map / Location Card -->
-        <mat-card class="map-card">
-            <!-- Simulated Map Placeholder -->
-            <!-- Real Map Container -->
-            <!-- Real Map Container -->
-            <div id="region-map" class="map-container"></div>
+    <div *ngIf="loading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading your assignment...</p>
+    </div>
 
-            <mat-card-content class="location-details">
-                <h2>{{ region.name }}</h2>
+    <div *ngIf="!loading && !disaster" class="empty-state">
+        <mat-icon>location_off</mat-icon>
+        <h3>No Region Assigned</h3>
+        <p>Your NGO has not assigned you to a disaster region yet. Please contact your NGO coordinator.</p>
+    </div>
+
+    <div *ngIf="!loading && disaster" class="content">
+
+        <!-- Disaster Info Card -->
+        <mat-card class="disaster-card">
+            <div class="disaster-header" [style.background]="getDisasterColor(disaster.disasterType)">
+                <span class="disaster-emoji">{{ getDisasterEmoji(disaster.disasterType) }}</span>
+                <div>
+                    <h2>{{ disaster.disasterType | titlecase }} Disaster</h2>
+                    <p>{{ disaster.location }}</p>
+                </div>
+                <mat-chip [color]="getSeverityColor(disaster.severity)" selected style="margin-left:auto;">
+                    {{ disaster.severity | uppercase }}
+                </mat-chip>
+            </div>
+
+            <mat-card-content class="disaster-details">
                 <div class="detail-row">
-                    <mat-icon>location_city</mat-icon>
-                    <span>{{ region.city }}</span>
+                    <mat-icon>people</mat-icon>
+                    <div>
+                        <span class="label">People Affected</span>
+                        <span class="value">{{ disaster.peopleAffected | number }}</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <mat-icon>location_on</mat-icon>
+                    <div>
+                        <span class="label">Your Assigned Region</span>
+                        <span class="value">{{ assignedRegion || disaster.location }}</span>
+                    </div>
+                </div>
+                <div class="detail-row" *ngIf="disaster.comments">
+                    <mat-icon>info</mat-icon>
+                    <div>
+                        <span class="label">Situation</span>
+                        <span class="value">{{ disaster.comments }}</span>
+                    </div>
                 </div>
             </mat-card-content>
+
+            <mat-card-actions>
+                <button mat-raised-button color="primary" (click)="openFullMap()">
+                    <mat-icon>open_in_full</mat-icon>
+                    Open Full Map
+                </button>
+            </mat-card-actions>
         </mat-card>
 
-        <!-- Side Info: Supervisor & Reporting Point -->
-        <div class="side-panel">
-            <mat-card class="info-card">
-                <mat-card-header>
-                    <mat-icon mat-card-avatar>person</mat-icon>
-                    <mat-card-title>Field Supervisor</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                    <h3>{{ region.supervisor }}</h3>
-                    <p class="contact-row">
-                        <mat-icon class="small">phone</mat-icon> {{ region.contact }}
-                    </p>
-                </mat-card-content>
-                <mat-card-actions>
-                    <button mat-stroked-button color="primary" class="w-full">Call Supervisor</button>
-                </mat-card-actions>
-            </mat-card>
+        <!-- Embedded Map -->
+        <mat-card class="map-card" *ngIf="disaster.coordinates?.latitude">
+            <div id="region-map" class="map-container"></div>
+        </mat-card>
 
-            <mat-card class="info-card">
-                <mat-card-header>
-                    <mat-icon mat-card-avatar>flag</mat-icon>
-                    <mat-card-title>Reporting Point</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                    <h3>{{ region.reportingPoint }}</h3>
-                    <p class="text-muted">Please report here daily for briefing.</p>
-                </mat-card-content>
-                <mat-card-actions>
-                    <button mat-flat-button color="accent" class="w-full" (click)="getDirections()">Get
-                        Directions</button>
-                </mat-card-actions>
-            </mat-card>
+        <div *ngIf="!disaster.coordinates?.latitude" class="no-coords">
+            <mat-icon>map</mat-icon>
+            <p>Map coordinates not available for this disaster location.</p>
         </div>
+
     </div>
 </div>
