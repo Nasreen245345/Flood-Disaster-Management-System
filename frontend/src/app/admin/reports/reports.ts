@@ -19,7 +19,11 @@ export class ReportsComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
   private geo = inject(GeocodingService);
-    private apiUrl = environment.apiUrl;
+  private apiUrl = environment.apiUrl;
+  
+  loading = true;
+  requestsPerDisaster: { name: string; value: number }[] = [];
+  regionsCoveredPerNGO: { name: string; value: number }[] = [];
   aidDelivered = { delivered: 0, pending: 0, total: 0 };
 
   private getHeaders(): HttpHeaders {
