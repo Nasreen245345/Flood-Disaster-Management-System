@@ -23,7 +23,13 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:4200', 'http://localhost:4201', 'http://localhost:4202', 'http://127.0.0.1:4200'],
+    origin: [
+        'http://localhost:4200', 
+        'http://localhost:4201', 
+        'http://localhost:4202', 
+        'http://127.0.0.1:4200',
+        'https://flood-disaster-management-system.vercel.app'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
