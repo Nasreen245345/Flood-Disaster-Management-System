@@ -8,6 +8,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { VolunteerService, VolunteerStats } from '../services/volunteer.service';
 
+import { environment } from '../../../../../environments/environment';
+
 @Component({
     selector: 'app-activity-log',
     standalone: true,
@@ -19,7 +21,7 @@ export class ActivityLogComponent implements OnInit {
     private volunteerService = inject(VolunteerService);
     private http = inject(HttpClient);
     private cdr = inject(ChangeDetectorRef);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     stats: VolunteerStats = { hoursServed: 0, tasksCompleted: 0, distributionsAssisted: 0, currentStreak: 0 };
     completedTasks: any[] = [];

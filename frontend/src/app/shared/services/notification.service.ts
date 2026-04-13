@@ -15,10 +15,12 @@ export interface Notification {
     createdAt: Date;
 }
 
+import { environment } from '../../../../environments/environment';
+
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5000/api/notifications';
+    private apiUrl = environment.apiUrl + '/notifications';
 
     private _notifications = new BehaviorSubject<Notification[]>([]);
     private _unreadCount = new BehaviorSubject<number>(0);

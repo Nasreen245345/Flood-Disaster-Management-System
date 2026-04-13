@@ -8,7 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-
+import { environment } from '../../../../../environments/environment';
 @Component({
     selector: 'app-assign-region-dialog',
     standalone: true,
@@ -68,7 +68,7 @@ export class AssignRegionDialogComponent implements OnInit {
     loading = true;
     saving = false;
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: { volunteerId: string; volunteerName: string }) {}
 

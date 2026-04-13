@@ -6,6 +6,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { GeocodingService } from '../../shared/services/geocoding.service';
 
+import { environment } from '../../../environments/environment';
+
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -17,11 +19,7 @@ export class ReportsComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
   private geo = inject(GeocodingService);
-  private apiUrl = 'http://localhost:5000/api';
-
-  loading = true;
-  requestsPerDisaster: { name: string; value: number }[] = [];
-  regionsCoveredPerNGO: { name: string; value: number }[] = [];
+    private apiUrl = environment.apiUrl;
   aidDelivered = { delivered: 0, pending: 0, total: 0 };
 
   private getHeaders(): HttpHeaders {

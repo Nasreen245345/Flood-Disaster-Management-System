@@ -8,6 +8,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NgoService } from '../services/ngo.service';
 
+import { environment } from '../../../../../environments/environment';
+
 @Component({
     selector: 'app-distribution-logs',
     standalone: true,
@@ -20,7 +22,7 @@ export class DistributionLogsComponent implements OnInit {
     private http = inject(HttpClient);
     private cdr = inject(ChangeDetectorRef);
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
     logs: any[] = [];
     loading = true;
     displayedColumns = ['time', 'victim', 'location', 'packages', 'volunteer'];
