@@ -14,7 +14,8 @@
             <button mat-icon-button routerLink="/dashboard/notifications" class="notification-btn">
                 <mat-icon [matBadge]="unreadCount$ | async"
                           [matBadgeHidden]="(unreadCount$ | async) === 0"
-                          matBadgeColor="warn">notifications</mat-icon>
+                          matBadgeColor="warn"
+                          aria-hidden="false">notifications</mat-icon>
             </button>
 
             <!-- User Menu -->

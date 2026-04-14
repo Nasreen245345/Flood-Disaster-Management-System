@@ -1,3 +1,4 @@
+
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -23,6 +24,7 @@ interface PackageItem {
     selector: 'app-inventory',
     standalone: true,
     imports: [
+        
         CommonModule,
         MatCardModule,
         MatTableModule,
@@ -241,3 +243,4 @@ export class InventoryComponent implements OnInit {
         return this.inventory.filter(item => item.quantity < 20).length;
     }
 }
+

@@ -48,7 +48,7 @@ export interface VictimProfile {
     familySize?: number;
     specialNeeds?: string[];
     contact?: string;
-    qrCodeData?: string;
+    tokenData?: string;
     location?: string;
     phone?: string;
     email?: string;
@@ -70,7 +70,7 @@ export class VictimService {
         familySize: 1,
         specialNeeds: [],
         contact: '',
-        qrCodeData: '',
+        tokenData: '',
         location: '',
         phone: '',
         email: ''
@@ -93,7 +93,7 @@ export class VictimService {
                     name: user.name,
                     familySize: 1,
                     contact: user.phone || 'Not provided',
-                    qrCodeData: user.id || 'SECURE-TOKEN',
+                    tokenData: user.id || 'SECURE-TOKEN',
                     location: user.region || 'Unknown',
                     phone: user.phone || 'Not provided',
                     email: user.email || 'Not provided'

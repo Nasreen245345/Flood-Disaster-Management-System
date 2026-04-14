@@ -10,9 +10,22 @@
         </button>
     </div>
 
-    <div *ngIf="loading" class="loading-container">
-        <mat-spinner></mat-spinner>
-        <p>Loading shifts...</p>
+    <div *ngIf="loading" class="skeleton-table-wrapper" style="box-shadow: none; background: transparent;">
+        <div class="skeleton-header-row" style="width: 100%;"></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+            <div class="skeleton-table-wrapper" style="height: 250px;">
+                <div class="skeleton-header-row" style="width: 80%;"></div>
+                <div class="skeleton-body-row" style="width: 90%;"></div>
+                <div class="skeleton-body-row" style="width: 70%;"></div>
+                <div class="skeleton-body-row" style="width: 90%;"></div>
+            </div>
+            <div class="skeleton-table-wrapper" style="height: 250px;">
+                <div class="skeleton-header-row" style="width: 80%;"></div>
+                <div class="skeleton-body-row" style="width: 90%;"></div>
+                <div class="skeleton-body-row" style="width: 70%;"></div>
+                <div class="skeleton-body-row" style="width: 90%;"></div>
+            </div>
+        </div>
     </div>
 
     <mat-tab-group *ngIf="!loading" class="shifts-tabs">

@@ -1,3 +1,4 @@
+
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -33,6 +34,7 @@ interface DistributionShift {
     selector: 'app-distribution-shifts',
     standalone: true,
     imports: [
+        
         CommonModule,
         MatCardModule,
         MatButtonModule,
@@ -192,3 +194,4 @@ export class DistributionShiftsComponent implements OnInit {
         return `${hours} hours`;
     }
 }
+

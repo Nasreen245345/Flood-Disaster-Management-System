@@ -93,16 +93,6 @@ export class ScanDistributeComponent {
     });
 
     victimDetails: any = null; // Mock victim profile
-    isScanning = false;
-
-    simulateScan() {
-        this.isScanning = true;
-        setTimeout(() => {
-            this.verificationForm.patchValue({ victimId: 'V123-SCANNED' });
-            this.isScanning = false;
-            this.fetchVictim();
-        }, 1500);
-    }
 
     fetchVictim() {
         const id = this.verificationForm.get('victimId')?.value;

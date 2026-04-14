@@ -28,9 +28,9 @@ export class FeaturesComponent {
       icon: 'group'
     },
     {
-      title: 'QR-based Verification',
-      desc: 'NGOs scan unique QR codes to verify aid delivery. This ensures aid reaches the right people and prevents fraud through one-time token validation.',
-      icon: 'qr_code_scanner'
+      title: 'Digital ID Verification',
+      desc: 'NGOs and volunteers can quickly verify recipient IDs to ensure aid reaches the right people securely and efficiently.',
+      icon: 'verified_user'
     },
     {
       title: 'Role-Based Access Control',

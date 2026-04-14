@@ -1,3 +1,4 @@
+
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -30,6 +31,7 @@ interface Assignment {
     selector: 'app-assigned-regions',
     standalone: true,
     imports: [
+        
         CommonModule, 
         MatCardModule, 
         MatIconModule, 
@@ -164,3 +166,4 @@ export class AssignedRegionsComponent implements OnInit {
         return disaster.severity.toUpperCase();
     }
 }
+

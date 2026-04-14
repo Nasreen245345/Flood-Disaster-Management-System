@@ -1,3 +1,4 @@
+
 import { environment } from '../../../../environments/environment';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -19,7 +20,8 @@ import { AssignRegionDialogComponent } from './assign-region-dialog';
 @Component({
     selector: 'app-volunteers',
     standalone: true,
-    imports: [CommonModule, MatCardModule, MatTableModule, MatButtonModule, MatIconModule, MatMenuModule, MatChipsModule, MatDividerModule, MatDialogModule, MatSnackBarModule],
+    imports: [
+        CommonModule, MatCardModule, MatTableModule, MatButtonModule, MatIconModule, MatMenuModule, MatChipsModule, MatDividerModule, MatDialogModule, MatSnackBarModule],
     templateUrl: './volunteers.html',
     styleUrls: ['./volunteers.css']
 })
@@ -133,5 +135,6 @@ export class VolunteersComponent implements OnInit {
         return colors[status] || 'accent';
     }
 }
+
 
 

@@ -1,6 +1,6 @@
-<div class="scan-page">
+<div class="distribution-page">
     <div class="page-header">
-        <h1>Scan & Distribute</h1>
+        <h1>Verify & Distribute Aid</h1>
     </div>
 
     <mat-stepper [linear]="true" #stepper class="stepper-card">
@@ -18,15 +18,13 @@
                     </mat-select>
                 </mat-form-field>
 
-                <div class="scan-section">
-                    <mat-form-field appearance="outline" class="flex-1">
+                <div class="verify-section" style="display: flex; gap: 16px; align-items: baseline;">
+                    <mat-form-field appearance="outline" style="flex: 1;">
                         <mat-label>Victim ID / CNIC</mat-label>
                         <input matInput formControlName="victimId" placeholder="Enter ID manually">
                     </mat-form-field>
-                    <span class="or-divider">OR</span>
-                    <button mat-raised-button color="accent" (click)="simulateScan()" [disabled]="isScanning">
-                        <mat-icon>qr_code_scanner</mat-icon>
-                        {{ isScanning ? 'Scanning...' : 'Scan QR' }}
+                    <button mat-raised-button color="primary" (click)="fetchVictim()">
+                        Verify ID
                     </button>
                 </div>
 

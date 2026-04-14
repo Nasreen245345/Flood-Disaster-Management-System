@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgoService } from '../services/ngo.service';
 
+
 interface AidRequest {
     _id: string;
     victimName: string;
@@ -42,7 +43,8 @@ interface AidRequest {
         MatIconModule, 
         MatChipsModule,
         MatProgressSpinnerModule,
-        MatTooltipModule
+        MatTooltipModule,
+        
     ],
     templateUrl: './aid-requests.html',
     styleUrls: ['./aid-requests.css']
