@@ -28,7 +28,7 @@
                     <mat-card-header>
                         <mat-card-title>
                             <mat-icon>store</mat-icon>
-                            {{ shift.location }}
+                            {{ shift.location | locationName | async }}
                         </mat-card-title>
                         <mat-chip [color]="getStatusColor(shift.status)" selected>
                             {{ shift.status | titlecase }}
@@ -128,7 +128,7 @@
                     <mat-card-header>
                         <mat-card-title>
                             <mat-icon>store</mat-icon>
-                            {{ shift.location }}
+                            {{ shift.location | locationName | async }}
                         </mat-card-title>
                         <mat-chip [color]="getStatusColor(shift.status)" selected>
                             {{ shift.status | titlecase }}
@@ -197,7 +197,7 @@
                     <mat-card-header>
                         <mat-card-title>
                             <mat-icon>store</mat-icon>
-                            {{ shift.location }}
+                            {{ shift.location | locationName | async }}
                         </mat-card-title>
                         <mat-chip [color]="getStatusColor(shift.status)" selected>
                             {{ shift.status | titlecase }}

@@ -48,7 +48,7 @@
                 <td mat-cell *matCellDef="let log">
                     <div class="cell-with-icon">
                         <mat-icon>store</mat-icon>
-                        {{ log.location }}
+                        {{ log.location | locationName | async }}
                     </div>
                 </td>
             </ng-container>

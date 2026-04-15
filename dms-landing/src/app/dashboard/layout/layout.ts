@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar';
 import { NavbarComponent } from '../navbar/navbar';
+import { OfflineIndicatorComponent } from '../../shared/components/offline-indicator/offline-indicator';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -11,7 +12,8 @@ import { NavbarComponent } from '../navbar/navbar';
     CommonModule,
     RouterOutlet,
     SidebarComponent,
-    NavbarComponent
+    NavbarComponent,
+    OfflineIndicatorComponent
   ],
   templateUrl: './layout.html',
   styleUrls: ['./layout.css']

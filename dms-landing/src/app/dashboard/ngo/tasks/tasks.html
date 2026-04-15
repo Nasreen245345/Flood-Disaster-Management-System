@@ -45,7 +45,7 @@
                         <div class="task-details">
                             <div *ngIf="task.location" class="detail-item">
                                 <mat-icon>location_on</mat-icon>
-                                <span>{{ task.location }}</span>
+                                <span>{{ task.location | locationName | async }}</span>
                             </div>
                             <div *ngIf="task.dueDate" class="detail-item">
                                 <mat-icon>event</mat-icon>
@@ -107,7 +107,7 @@
                         <div class="task-details">
                             <div *ngIf="task.location" class="detail-item">
                                 <mat-icon>location_on</mat-icon>
-                                <span>{{ task.location }}</span>
+                                <span>{{ task.location | locationName | async }}</span>
                             </div>
                             <div *ngIf="task.dueDate" class="detail-item">
                                 <mat-icon>event</mat-icon>
@@ -166,7 +166,7 @@
                         <div class="task-details">
                             <div *ngIf="task.location" class="detail-item">
                                 <mat-icon>location_on</mat-icon>
-                                <span>{{ task.location }}</span>
+                                <span>{{ task.location | locationName | async }}</span>
                             </div>
                             <div *ngIf="task.assignedVolunteer?.phone" class="detail-item">
                                 <mat-icon>phone</mat-icon>

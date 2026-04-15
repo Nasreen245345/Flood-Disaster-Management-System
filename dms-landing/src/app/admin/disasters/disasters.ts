@@ -9,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { AdminDataService } from '../services/admin-data.service';
 import { Disaster } from '../models/admin.models';
+import { LocationNamePipe } from '../../shared/pipes/location.pipe';
 
 @Component({
   selector: 'app-disasters',
@@ -21,7 +22,8 @@ import { Disaster } from '../models/admin.models';
     MatChipsModule,
     MatSelectModule,
     MatFormFieldModule,
-    FormsModule
+    FormsModule,
+    LocationNamePipe
   ],
   templateUrl: './disasters.html',
   styleUrls: ['./disasters.css']

@@ -62,6 +62,7 @@ export const routes: Routes = [
                     { path: 'distribution-shifts', loadComponent: () => import('./dashboard/ngo/distribution-shifts/distribution-shifts').then(m => m.DistributionShiftsComponent) },
                     { path: 'volunteers', loadComponent: () => import('./dashboard/ngo/volunteers/volunteers').then(m => m.VolunteersComponent) },
                     { path: 'logs', loadComponent: () => import('./dashboard/ngo/distribution-logs/distribution-logs').then(m => m.DistributionLogsComponent) },
+                    { path: 'forecast', loadComponent: () => import('./dashboard/ngo/resource-forecast/resource-forecast').then(m => m.ResourceForecastComponent) },
                 ]
             },
 

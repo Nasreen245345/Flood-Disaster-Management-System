@@ -47,7 +47,7 @@
                         <mat-icon>location_on</mat-icon>
                         <div>
                             <span class="label">Location</span>
-                            <span class="value">{{ activeShift.location }}</span>
+                            <span class="value">{{ activeShift.location | locationName | async }}</span>
                         </div>
                     </div>
 
@@ -171,7 +171,7 @@
                         <h3>Location</h3>
                         <div class="info-row">
                             <mat-icon>location_on</mat-icon>
-                            <span class="info-value">{{ victimDetails.aidRequest.location }}</span>
+                            <span class="info-value">{{ victimDetails.aidRequest.location | locationName | async }}</span>
                         </div>
                     </div>
                 </div>

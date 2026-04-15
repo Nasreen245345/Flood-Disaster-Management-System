@@ -15,6 +15,7 @@ const taskRoutes = require('./routes/task.routes');
 const distributionRoutes = require('./routes/distribution.routes');
 const mapRoutes = require('./routes/map.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const predictionRoutes = require('./routes/prediction.routes');
 
 // Admin stats route
 const { getAdminStats } = require('./controllers/user.controller');
@@ -49,6 +50,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/distribution', distributionRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/predictions', predictionRoutes);
 app.get('/api/admin/stats', protect, authorize('admin'), getAdminStats);
 
 // Health check route

@@ -26,14 +26,14 @@
                     <div class="header-left">
                         <mat-icon class="region-icon">location_on</mat-icon>
                         <div class="header-text">
-                            <h3 class="region-name">{{ assignment.region }}</h3>
+                            <h3 class="region-name">{{ assignment.regionDisplay }}</h3>
                             <p class="disaster-name">{{ assignment.disasterName }}</p>
                         </div>
                     </div>
-                    <mat-chip [style.background-color]="getStatusColor(assignment.status)" class="status-chip">
-                        <mat-icon class="chip-icon">{{ getStatusIcon(assignment.status) }}</mat-icon>
-                        {{ assignment.status | uppercase }}
-                    </mat-chip>
+                    <div class="status-badge status-{{ assignment.status }}">
+                        <mat-icon class="status-badge-icon">{{ getStatusIcon(assignment.status) }}</mat-icon>
+                        <span>{{ assignment.status | uppercase }}</span>
+                    </div>
                 </div>
             </mat-card-header>
 

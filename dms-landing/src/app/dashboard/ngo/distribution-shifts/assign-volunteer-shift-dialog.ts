@@ -1,4 +1,4 @@
-import { Component, inject, Inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, Inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -157,7 +157,7 @@ export class AssignVolunteerShiftDialogComponent implements OnInit {
     private ngoService = inject(NgoService);
     private snackBar = inject(MatSnackBar);
     private dialogRef = inject(MatDialogRef<AssignVolunteerShiftDialogComponent>);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
 
     volunteers: Volunteer[] = [];
     selectedVolunteer: Volunteer | null = null;
@@ -172,50 +172,52 @@ export class AssignVolunteerShiftDialogComponent implements OnInit {
 
     loadVolunteers() {
         this.loading = true;
-        this.cdr.detectChanges(); // Force UI update
         
         this.ngoService.getVolunteers(this.data.organizationId).subscribe({
             next: (response: any) => {
-                console.log('Volunteers loaded:', response);
-                if (response.success) {
-                    // Filter only verified volunteers
-                    this.volunteers = response.data.filter((v: Volunteer) => 
-                        v.verificationStatus === 'verified'
-                    );
-                }
-                this.loading = false;
-                this.cdr.detectChanges(); // Force UI update after data loads
+                this.ngZone.run(() => {
+                    console.log('Volunteers loaded:', response);
+                    if (response.success) {
+                        // Filter only verified volunteers
+                        this.volunteers = response.data.filter((v: Volunteer) => 
+                            v.verificationStatus === 'verified'
+                        );
+                    }
+                    this.loading = false;
+                });
             },
             error: (error: any) => {
-                console.error('Error loading volunteers:', error);
-                this.snackBar.open('Error loading volunteers', 'Close', { duration: 3000 });
-                this.loading = false;
-                this.cdr.detectChanges();
+                this.ngZone.run(() => {
+                    console.error('Error loading volunteers:', error);
+                    this.snackBar.open('Error loading volunteers', 'Close', { duration: 3000 });
+                    this.loading = false;
+                });
             }
         });
     }
 
     selectVolunteer(volunteer: Volunteer) {
         this.selectedVolunteer = volunteer;
-        this.cdr.detectChanges(); // Force UI update on selection
     }
 
     onAssign() {
         if (!this.selectedVolunteer) return;
 
         this.assigning = true;
-        this.cdr.detectChanges();
         
         this.ngoService.assignVolunteerToShift(this.data.shift._id, this.selectedVolunteer._id).subscribe({
             next: () => {
-                this.snackBar.open(`Shift assigned to ${this.selectedVolunteer!.fullName}`, 'Close', { duration: 2000 });
-                this.dialogRef.close(true);
+                this.ngZone.run(() => {
+                    this.snackBar.open(`Shift assigned to ${this.selectedVolunteer!.fullName}`, 'Close', { duration: 2000 });
+                    this.dialogRef.close(true);
+                });
             },
             error: (error: any) => {
-                console.error('Error assigning volunteer:', error);
-                this.snackBar.open('Error assigning volunteer', 'Close', { duration: 3000 });
-                this.assigning = false;
-                this.cdr.detectChanges();
+                this.ngZone.run(() => {
+                    console.error('Error assigning volunteer:', error);
+                    this.snackBar.open('Error assigning volunteer', 'Close', { duration: 3000 });
+                    this.assigning = false;
+                });
             }
         });
     }

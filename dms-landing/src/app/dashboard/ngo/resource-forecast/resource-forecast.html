@@ -1,0 +1,179 @@
+<div class="forecast-page">
+    <div class="page-header">
+        <div>
+            <h1>Resource Forecast</h1>
+            <p class="subtitle">AI-predicted aid package demand for the next 3 days</p>
+        </div>
+        <button mat-stroked-button (click)="loadForecast()" [disabled]="loading">
+            <mat-icon>refresh</mat-icon> Refresh
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Generating forecast...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="!loading && error" class="error-state">
+        <mat-icon>error_outline</mat-icon>
+        <p>Prediction service unavailable. Make sure the prediction server is running.</p>
+        <button mat-raised-button color="primary" (click)="loadForecast()">Retry</button>
+    </div>
+
+    <!-- Context Card -->
+    <mat-card *ngIf="!loading && !error && context" class="context-card">
+        <mat-card-content>
+            <div class="context-grid">
+                <div class="ctx-item" *ngIf="context.disasters?.length">
+                    <mat-icon>warning</mat-icon>
+                    <div>
+                        <span class="ctx-label">Active Disasters ({{ context.totalDisasters }})</span>
+                        <div *ngFor="let d of context.disasters" style="font-size:0.8rem;margin-top:2px;">
+                            <span class="ctx-value">{{ d.type | titlecase }} — {{ d.severity | titlecase }}</span>
+                            <span *ngIf="d.rateTrend > 1.2" style="color:#ef4444;margin-left:6px;">↑ Accelerating</span>
+                            <span *ngIf="d.rateTrend < 0.8" style="color:#10b981;margin-left:6px;">↓ Slowing</span>
+                            <span *ngIf="d.dominantCategory" style="color:#6b7280;margin-left:6px;">({{ d.dominantCategory }} demand)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ctx-item" *ngIf="context.ngoResponsibleFor">
+                    <mat-icon>people</mat-icon>
+                    <div>
+                        <span class="ctx-label">Your Responsible Population</span>
+                        <span class="ctx-value">{{ context.ngoResponsibleFor | number }} people</span>
+                    </div>
+                </div>
+                <div class="ctx-item">
+                    <mat-icon>pending_actions</mat-icon>
+                    <div>
+                        <span class="ctx-label">Pending Requests</span>
+                        <span class="ctx-value">{{ context.pendingRequests }}</span>
+                    </div>
+                </div>
+                <div class="ctx-item">
+                    <mat-icon>local_shipping</mat-icon>
+                    <div>
+                        <span class="ctx-label">Avg Daily Distributions</span>
+                        <span class="ctx-value">{{ context.avgDailyDistributions }}/day</span>
+                    </div>
+                </div>
+                <div class="ctx-item">
+                    <mat-icon>speed</mat-icon>
+                    <div>
+                        <span class="ctx-label">NGO Load</span>
+                        <span class="ctx-value">{{ context.ngoLoadPct }}%</span>
+                    </div>
+                </div>
+                <div class="ctx-item" *ngIf="context.volunteerCount !== undefined">
+                    <mat-icon>groups</mat-icon>
+                    <div>
+                        <span class="ctx-label">Active Volunteers</span>
+                        <span class="ctx-value">{{ context.volunteerCount }}</span>
+                    </div>
+                </div>
+                <div class="ctx-item" *ngIf="context.inventoryTotal !== undefined">
+                    <mat-icon>inventory_2</mat-icon>
+                    <div>
+                        <span class="ctx-label">Inventory Stock</span>
+                        <span class="ctx-value">{{ context.inventoryTotal }} units</span>
+                    </div>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Demand Insights Panel -->
+    <div *ngIf="!loading && !error && context?.disasters?.length" class="insights-panel">
+        <h3 class="insights-title">
+            <mat-icon>insights</mat-icon> Live Demand Insights
+        </h3>
+        <div class="insights-grid">
+            <div *ngFor="let d of context.disasters" class="insight-card">
+                <!-- Disaster header -->
+                <div class="insight-header">
+                    <span class="insight-disaster">{{ d.type | titlecase }}</span>
+                    <span class="insight-severity" [class]="'sev-' + d.severity">{{ d.severity | uppercase }}</span>
+                </div>
+
+                <!-- Request trend -->
+                <div class="insight-row">
+                    <mat-icon class="insight-icon">trending_up</mat-icon>
+                    <div class="insight-info">
+                        <span class="insight-label">Request Trend</span>
+                        <div class="trend-badge"
+                             [class.trend-up]="d.rateTrend > 1.2"
+                             [class.trend-stable]="d.rateTrend >= 0.8 && d.rateTrend <= 1.2"
+                             [class.trend-down]="d.rateTrend < 0.8">
+                            <mat-icon>{{ d.rateTrend > 1.2 ? 'trending_up' : d.rateTrend < 0.8 ? 'trending_down' : 'trending_flat' }}</mat-icon>
+                            {{ d.rateTrend > 1.2 ? 'Accelerating' : d.rateTrend < 0.8 ? 'Slowing Down' : 'Stable' }}
+                            <span class="trend-rate">({{ d.requestRatePerHour }}/hr)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- High demand resource -->
+                <div class="insight-row" *ngIf="d.dominantCategory">
+                    <mat-icon class="insight-icon">priority_high</mat-icon>
+                    <div class="insight-info">
+                        <span class="insight-label">Highest Demand</span>
+                        <div class="demand-badge">
+                            <mat-icon [style.color]="getCategoryColor(d.dominantCategory)">
+                                {{ getCategoryIcon(d.dominantCategory) }}
+                            </mat-icon>
+                            <span>{{ d.dominantCategory | titlecase }}</span>
+                            <span class="demand-tag">Most Requested</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending requests -->
+                <div class="insight-row">
+                    <mat-icon class="insight-icon">pending_actions</mat-icon>
+                    <div class="insight-info">
+                        <span class="insight-label">Pending Requests</span>
+                        <span class="insight-value">{{ d.pendingRequests }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast Cards -->
+    <div *ngIf="!loading && !error && forecast.length > 0" class="forecast-grid">
+        <mat-card *ngFor="let day of forecast; let i = index" class="day-card" [class.today-plus-one]="i === 0">
+            <mat-card-header>
+                <mat-card-title>
+                    <mat-icon>calendar_today</mat-icon>
+                    {{ day.label }}
+                </mat-card-title>
+                <div class="total-badge">{{ day.total }} packages</div>
+            </mat-card-header>
+
+            <mat-card-content>
+                <div class="category-list">
+                    <div *ngFor="let cat of categories" class="category-row">
+                        <div class="cat-info">
+                            <mat-icon [style.color]="cat.color">{{ cat.icon }}</mat-icon>
+                            <span class="cat-label">{{ cat.label }}</span>
+                        </div>
+                        <div class="bar-container">
+                            <div class="bar-fill"
+                                 [style.width.%]="getBarWidth(getCategoryValue(day, cat.key), i)"
+                                 [style.background]="cat.color">
+                            </div>
+                        </div>
+                        <span class="cat-value">{{ getCategoryValue(day, cat.key) }}</span>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Info note -->
+    <div *ngIf="!loading && !error" class="info-note">
+        <mat-icon>info</mat-icon>
+        <span>Predictions are based on disaster type, severity, people affected, and your NGO's current workload. Use these numbers to plan your inventory restocking.</span>
+    </div>
+</div>

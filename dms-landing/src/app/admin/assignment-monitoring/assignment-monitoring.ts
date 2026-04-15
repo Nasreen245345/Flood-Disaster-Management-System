@@ -6,9 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { AdminDataService } from '../services/admin-data.service';
 import { RegionAssignment, Organization } from '../models/admin.models';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { LocationNamePipe } from '../../shared/pipes/location.pipe';
 
 @Component({
   selector: 'app-assignment-monitoring',
@@ -21,7 +26,10 @@ import { RegionAssignment, Organization } from '../models/admin.models';
     MatChipsModule,
     MatSelectModule,
     MatFormFieldModule,
-    FormsModule
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    FormsModule,
+    LocationNamePipe
   ],
   templateUrl: './assignment-monitoring.html',
   styleUrls: ['./assignment-monitoring.css']
@@ -33,34 +41,39 @@ export class AssignmentMonitoringComponent implements OnInit {
   filteredAssignments: RegionAssignment[] = [];
   organizations: Organization[] = [];
   loading = true;
+  error = '';
 
-  // Filters
   selectedStatus: string = 'all';
-
-  // Table columns
   displayedColumns: string[] = ['disaster', 'region', 'ngos', 'coverage', 'population', 'status', 'assignedDate'];
 
   ngOnInit() {
     this.loadData();
   }
 
-  private loadData() {
-    // Load both assignments and organizations
-    this.adminService.getOrganizations().subscribe(orgs => {
-      console.log('=== LOADED ORGANIZATIONS ===');
-      console.log('Organizations:', orgs);
-      this.organizations = orgs;
-      this.loadAssignments();
-    });
-  }
+  loadData() {
+    this.loading = true;
+    this.error = '';
 
-  private loadAssignments() {
-    this.adminService.getAssignments().subscribe(assignments => {
-      console.log('=== LOADED ASSIGNMENTS ===');
-      console.log('Assignments:', assignments);
-      this.assignments = assignments;
-      this.applyFilters();
-      this.loading = false;
+    forkJoin({
+      orgs: this.adminService.getOrganizations().pipe(
+        catchError(err => { console.error('Orgs error:', err); return of([]); })
+      ),
+      assignments: this.adminService.getAssignments().pipe(
+        catchError(err => { console.error('Assignments error:', err); return of([]); })
+      )
+    }).subscribe({
+      next: ({ orgs, assignments }) => {
+        console.log('Loaded orgs:', orgs.length, 'assignments:', assignments.length);
+        this.organizations = orgs as Organization[];
+        this.assignments = assignments as RegionAssignment[];
+        this.applyFilters();
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('forkJoin error:', err);
+        this.error = 'Failed to load assignments. Please try again.';
+        this.loading = false;
+      }
     });
   }
 

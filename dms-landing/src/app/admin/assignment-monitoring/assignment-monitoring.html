@@ -5,6 +5,9 @@
             <h1 class="page-title">Assignment Monitoring</h1>
             <p class="page-subtitle">Track region assignments and relief progress</p>
         </div>
+        <button mat-icon-button (click)="loadData()" matTooltip="Refresh" [disabled]="loading">
+            <mat-icon>refresh</mat-icon>
+        </button>
     </div>
 
     <!-- Filters Section -->
@@ -26,12 +29,21 @@
 
     <!-- Loading State -->
     <div *ngIf="loading" class="loading-state">
-        <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+        <mat-spinner diameter="40"></mat-spinner>
         <p>Loading assignments...</p>
     </div>
 
+    <!-- Error State -->
+    <div *ngIf="!loading && error" class="error-state">
+        <mat-icon style="font-size:48px;width:48px;height:48px;color:#ef4444;">error_outline</mat-icon>
+        <p>{{ error }}</p>
+        <button mat-raised-button color="primary" (click)="loadData()">
+            <mat-icon>refresh</mat-icon> Retry
+        </button>
+    </div>
+
     <!-- Assignments Table -->
-    <div *ngIf="!loading" class="table-container">
+    <div *ngIf="!loading && !error" class="table-container">
         <table mat-table [dataSource]="filteredAssignments" class="assignments-table">
 
             <!-- Disaster Column -->
@@ -40,7 +52,7 @@
                 <td mat-cell *matCellDef="let assignment">
                     <div class="disaster-info">
                         <mat-icon class="disaster-icon">warning</mat-icon>
-                        <span class="disaster-name">{{ assignment.disasterName }}</span>
+                        <span class="disaster-name">{{ assignment.disasterName | locationName | async }}</span>
                     </div>
                 </td>
             </ng-container>
@@ -51,7 +63,7 @@
                 <td mat-cell *matCellDef="let assignment">
                     <div class="region-info">
                         <mat-icon class="region-icon">location_on</mat-icon>
-                        <span>{{ assignment.region }}</span>
+                        <span>{{ assignment.region | locationName | async }}</span>
                     </div>
                 </td>
             </ng-container>

@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgoService } from '../services/ngo.service';
 import { CreateTaskDialogComponent } from './create-task-dialog';
 import { AssignVolunteerDialogComponent } from './assign-volunteer-dialog';
+import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 
 interface Task {
     _id: string;
@@ -38,7 +39,8 @@ interface Task {
         MatChipsModule,
         MatDialogModule,
         MatSnackBarModule,
-        MatTooltipModule
+        MatTooltipModule,
+        LocationNamePipe
     ],
     templateUrl: './tasks.html',
     styleUrls: ['./tasks.css']

@@ -35,7 +35,7 @@
                 <th mat-header-cell *matHeaderCellDef> Location </th>
                 <td mat-cell *matCellDef="let req">
                     <div class="location-info">
-                        <span>{{ req.location }}</span>
+                        <span>{{ req.location | locationName | async }}</span>
                         <button mat-icon-button (click)="viewOnMap(req)" *ngIf="req.coordinates" 
                                 matTooltip="View on map">
                             <mat-icon>map</mat-icon>

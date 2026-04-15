@@ -121,7 +121,7 @@ async function findBestNGO(aidRequest) {
                 const totalScore = distanceScore + capacityScore;
 
                 console.log(`✅ ${ngo.name}: disaster ${distanceKm.toFixed(1)}km away, capacity=${available}, score=${totalScore.toFixed(1)}`);
-                candidates.push({ ngo, totalScore, distanceKm, available });
+                candidates.push({ ngo, totalScore, distanceKm, available, disasterId: assignment.disaster });
             }
         }
 
@@ -132,7 +132,7 @@ async function findBestNGO(aidRequest) {
 
         candidates.sort((a, b) => b.totalScore - a.totalScore);
         console.log(`✅ Best NGO: ${candidates[0].ngo.name} (score: ${candidates[0].totalScore.toFixed(1)}, distance: ${candidates[0].distanceKm.toFixed(1)}km)`);
-        return candidates[0].ngo;
+        return { ngo: candidates[0].ngo, disasterId: candidates[0].disasterId };
 
     } catch (error) {
         console.error('Error finding best NGO:', error);
@@ -182,10 +182,11 @@ exports.createRequest = async (req, res) => {
         }
 
         // Find best NGO for this request
-        const bestNGO = await findBestNGO(req.body);
+        const result = await findBestNGO(req.body);
 
-        if (bestNGO) {
-            req.body.assignedNGO = bestNGO._id;
+        if (result && result.ngo) {
+            req.body.assignedNGO = result.ngo._id;
+            req.body.assignedDisaster = result.disasterId;
             req.body.status = 'approved';
         } else {
             req.body.status = 'pending';

@@ -7,47 +7,48 @@ import { map, catchError } from 'rxjs/operators';
 export class GeocodingService {
     private http = inject(HttpClient);
     private cache = new Map<string, string>();
+    private apiBase = 'http://localhost:5000/api';
 
-    // Convert "lat, lng" string to place name using Nominatim
     reverseGeocode(locationStr: string): Observable<string> {
-        // If it doesn't look like coordinates, return as-is
-        if (!this.isCoordinates(locationStr)) {
-            return of(locationStr);
-        }
+        if (!locationStr) return of('Unknown');
 
-        const parts = locationStr.split(',').map(p => p.trim());
-        const lat = parseFloat(parts[0]);
-        const lng = parseFloat(parts[1]);
-        const key = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+        const trimmed = locationStr.trim();
 
-        // Return cached result
-        if (this.cache.has(key)) {
-            return of(this.cache.get(key)!);
-        }
+        // Not coordinate-like → return as-is
+        if (!this.isCoordinates(trimmed)) return of(trimmed);
+
+        const coords = this.parseCoords(trimmed);
+        if (!coords) return of(trimmed);
+
+        const key = `${coords.lat.toFixed(5)},${coords.lng.toFixed(5)}`;
+        if (this.cache.has(key)) return of(this.cache.get(key)!);
 
         return this.http.get<any>(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=10`,
-            { headers: { 'Accept-Language': 'en' } }
+            `${this.apiBase}/map/reverse-geocode?lat=${coords.lat}&lng=${coords.lng}`
         ).pipe(
             map(res => {
-                const addr = res.address;
-                // Build a readable name: city/town/village + state/province
-                const place = addr.city || addr.town || addr.village || addr.county || addr.state_district || '';
-                const state = addr.state || addr.province || '';
-                const name = place && state ? `${place}, ${state}` : place || state || res.display_name?.split(',')[0] || locationStr;
+                const name = res?.placeName || trimmed;
                 this.cache.set(key, name);
                 return name;
             }),
-            catchError(() => of(locationStr))
+            catchError(() => of(trimmed))
         );
     }
 
     isCoordinates(str: string): boolean {
         if (!str) return false;
-        const parts = str.split(',');
-        if (parts.length !== 2) return false;
-        const lat = parseFloat(parts[0].trim());
-        const lng = parseFloat(parts[1].trim());
-        return !isNaN(lat) && !isNaN(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+        // Starts with an optional sign and digits with decimal point
+        return /^-?\d+\.\d+/.test(str.trim());
+    }
+
+    private parseCoords(str: string): { lat: number; lng: number } | null {
+        // Match two decimal numbers: "32.681445, 71.791590" or "32.681445, 71.791590 Fire"
+        const two = str.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+        if (two) {
+            const a = parseFloat(two[1]), b = parseFloat(two[2]);
+            if (Math.abs(a) <= 90 && Math.abs(b) <= 180) return { lat: a, lng: b };
+            if (Math.abs(b) <= 90 && Math.abs(a) <= 180) return { lat: b, lng: a };
+        }
+        return null;
     }
 }

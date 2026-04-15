@@ -86,6 +86,12 @@ const aidRequestSchema = new mongoose.Schema({
         type: mongoose.Schema.ObjectId,
         ref: 'Organization'
     },
+
+    // Assigned Disaster (set when NGO is assigned via routing)
+    assignedDisaster: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Disaster'
+    },
     
     // Fulfillment tracking
     fulfilledBy: {

@@ -11,10 +11,84 @@
     color: #1e293b;
 }
 
-.capacity-section {
+/* Quick Actions */
+.quick-actions-section {
     margin-bottom: 32px;
 }
 
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #334155;
+    margin: 0 0 16px 0;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.quick-action-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: white;
+    border-radius: 12px;
+    border-left: 4px solid transparent;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.quick-action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.qa-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.qa-icon mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+}
+
+.qa-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.qa-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.qa-desc {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.qa-arrow {
+    color: #cbd5e1;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+}
+
+/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -61,28 +135,11 @@
     color: #64748b;
 }
 
-/* Colors */
-.stat-card.blue .stat-icon {
-    background: #e0f2fe;
-    color: #0284c7;
-}
+.stat-card.blue .stat-icon { background: #e0f2fe; color: #0284c7; }
+.stat-card.green .stat-icon { background: #dcfce7; color: #16a34a; }
+.stat-card.orange .stat-icon { background: #ffedd5; color: #ea580c; }
+.stat-card.purple .stat-icon { background: #f3e8ff; color: #9333ea; }
 
-.stat-card.green .stat-icon {
-    background: #dcfce7;
-    color: #16a34a;
-}
-
-.stat-card.orange .stat-icon {
-    background: #ffedd5;
-    color: #ea580c;
-}
-
-.stat-card.purple .stat-icon {
-    background: #f3e8ff;
-    color: #9333ea;
-}
-
-/* Activity Section */
 .activity-section h2 {
     font-size: 1.25rem;
     font-weight: 500;
@@ -95,9 +152,7 @@
     overflow: hidden;
 }
 
-.w-full {
-    width: 100%;
-}
+.w-full { width: 100%; }
 
 .view-all {
     padding: 16px;

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { VolunteerService } from '../services/volunteer.service';
+import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 
 interface ActiveShift {
     _id: string;
@@ -61,7 +62,8 @@ interface VictimDetails {
         MatChipsModule,
         MatProgressSpinnerModule,
         MatSnackBarModule,
-        MatDividerModule
+        MatDividerModule,
+        LocationNamePipe
     ],
     templateUrl: './distribution.html',
     styleUrls: ['./distribution.css']
@@ -69,7 +71,7 @@ interface VictimDetails {
 export class VolunteerDistributionComponent implements OnInit {
     private volunteerService = inject(VolunteerService);
     private snackBar = inject(MatSnackBar);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
 
     activeShift: ActiveShift | null = null;
     hasActiveShift = false;
@@ -89,30 +91,31 @@ export class VolunteerDistributionComponent implements OnInit {
 
     checkActiveShift() {
         this.loadingShift = true;
-        this.cdr.detectChanges(); // Force UI update
         
         this.volunteerService.getMyActiveShift().subscribe({
             next: (response) => {
-                console.log('Active shift response:', response);
-                if (response.success && response.data) {
-                    this.activeShift = response.data;
-                    this.hasActiveShift = response.hasActiveShift || false;
-                    console.log('Active shift found:', this.activeShift);
-                    console.log('Has active shift:', this.hasActiveShift);
-                } else {
-                    this.hasActiveShift = false;
-                    this.activeShift = null;
-                    console.log('No active shift found');
-                }
-                this.loadingShift = false;
-                this.cdr.detectChanges(); // Force UI update after data loads
+                this.ngZone.run(() => {
+                    console.log('Active shift response:', response);
+                    if (response.success && response.data) {
+                        this.activeShift = response.data;
+                        this.hasActiveShift = response.hasActiveShift || false;
+                        console.log('Active shift found:', this.activeShift);
+                        console.log('Has active shift:', this.hasActiveShift);
+                    } else {
+                        this.hasActiveShift = false;
+                        this.activeShift = null;
+                        console.log('No active shift found');
+                    }
+                    this.loadingShift = false;
+                });
             },
             error: (error) => {
-                console.error('Error checking active shift:', error);
-                this.hasActiveShift = false;
-                this.loadingShift = false;
-                this.cdr.detectChanges();
-                this.snackBar.open('Error checking shift status', 'Close', { duration: 3000 });
+                this.ngZone.run(() => {
+                    console.error('Error checking active shift:', error);
+                    this.hasActiveShift = false;
+                    this.loadingShift = false;
+                    this.snackBar.open('Error checking shift status', 'Close', { duration: 3000 });
+                });
             }
         });
     }
@@ -161,24 +164,25 @@ export class VolunteerDistributionComponent implements OnInit {
 
         this.verifying = true;
         this.victimDetails = null;
-        this.cdr.detectChanges();
 
         this.volunteerService.verifyVictim(this.cnicInput.trim()).subscribe({
             next: (response) => {
-                if (response.success && response.data) {
-                    this.victimDetails = response.data;
-                    this.snackBar.open('Victim verified successfully', 'Close', { duration: 2000 });
-                }
-                this.verifying = false;
-                this.cdr.detectChanges();
+                this.ngZone.run(() => {
+                    if (response.success && response.data) {
+                        this.victimDetails = response.data;
+                        this.snackBar.open('Victim verified successfully', 'Close', { duration: 2000 });
+                    }
+                    this.verifying = false;
+                });
             },
             error: (error) => {
-                console.error('Verification error:', error);
-                const message = error.error?.message || 'Victim not found or not eligible';
-                this.snackBar.open(message, 'Close', { duration: 4000 });
-                this.verifying = false;
-                this.victimDetails = null;
-                this.cdr.detectChanges();
+                this.ngZone.run(() => {
+                    console.error('Verification error:', error);
+                    const message = error.error?.message || 'Victim not found or not eligible';
+                    this.snackBar.open(message, 'Close', { duration: 4000 });
+                    this.verifying = false;
+                    this.victimDetails = null;
+                });
             }
         });
     }
@@ -188,33 +192,34 @@ export class VolunteerDistributionComponent implements OnInit {
 
         if (confirm(`Confirm distribution to ${this.victimDetails.aidRequest.victimName}?`)) {
             this.distributing = true;
-            this.cdr.detectChanges();
 
             this.volunteerService.markDistributed(
                 this.victimDetails.aidRequest._id,
                 this.victimDetails.aidRequest.victimCNIC
             ).subscribe({
                 next: (response) => {
-                    if (response.success) {
-                        this.snackBar.open('Aid marked as distributed successfully!', 'Close', { duration: 3000 });
-                        
-                        // Update shift statistics
-                        if (this.activeShift) {
-                            this.activeShift.totalDistributions += 1;
+                    this.ngZone.run(() => {
+                        if (response.success) {
+                            this.snackBar.open('Aid marked as distributed successfully!', 'Close', { duration: 3000 });
+                            
+                            // Update shift statistics
+                            if (this.activeShift) {
+                                this.activeShift.totalDistributions += 1;
+                            }
+                            
+                            // Reset form
+                            this.cnicInput = '';
+                            this.victimDetails = null;
                         }
-                        
-                        // Reset form
-                        this.cnicInput = '';
-                        this.victimDetails = null;
-                    }
-                    this.distributing = false;
-                    this.cdr.detectChanges();
+                        this.distributing = false;
+                    });
                 },
                 error: (error) => {
-                    console.error('Distribution error:', error);
-                    this.snackBar.open('Error marking as distributed', 'Close', { duration: 3000 });
-                    this.distributing = false;
-                    this.cdr.detectChanges();
+                    this.ngZone.run(() => {
+                        console.error('Distribution error:', error);
+                        this.snackBar.open('Error marking as distributed', 'Close', { duration: 3000 });
+                        this.distributing = false;
+                    });
                 }
             });
         }

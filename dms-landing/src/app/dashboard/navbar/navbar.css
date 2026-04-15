@@ -42,10 +42,18 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    padding-right: 8px;
 }
 
 .notification-btn {
     color: #64748b;
+    overflow: visible !important;
+}
+
+/* Ensure badge doesn't get clipped by the toolbar */
+:host ::ng-deep .notification-btn .mat-badge-content {
+    right: -4px !important;
+    top: -4px !important;
 }
 
 /* User Menu Button */

@@ -58,6 +58,7 @@ export class SidebarComponent implements OnInit {
     { label: 'Distribution Shifts', icon: 'schedule', route: '/dashboard/ngo/distribution-shifts', roles: ['ngo'] },
     { label: 'Volunteers', icon: 'groups', route: '/dashboard/ngo/volunteers', roles: ['ngo'] },
     { label: 'Distribution Logs', icon: 'history', route: '/dashboard/ngo/logs', roles: ['ngo'] },
+    { label: 'Resource Forecast', icon: 'insights', route: '/dashboard/ngo/forecast', roles: ['ngo'] },
 
     // Volunteer Menu Items
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard/volunteer/home', roles: ['volunteer'] },

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -10,19 +10,20 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import * as L from 'leaflet';
+import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 
 @Component({
     selector: 'app-assigned-region',
     standalone: true,
     imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule,
-              MatDividerModule, MatProgressSpinnerModule, MatChipsModule, MatSnackBarModule],
+              MatDividerModule, MatProgressSpinnerModule, MatChipsModule, MatSnackBarModule, LocationNamePipe],
     templateUrl: './assigned-region.html',
     styleUrls: ['./assigned-region.css']
 })
 export class AssignedRegionComponent implements OnInit, OnDestroy {
     private http = inject(HttpClient);
     private router = inject(Router);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
     private snackBar = inject(MatSnackBar);
     private map: L.Map | undefined;
 
@@ -38,17 +39,18 @@ export class AssignedRegionComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.http.get<any>(`${this.apiUrl}/volunteers/my-region`, { headers: this.getHeaders() }).subscribe({
             next: (res) => {
-                if (res.success) {
-                    this.assignedRegion = res.data.assignedRegion;
-                    this.disaster = res.data.assignedDisaster;
-                }
-                this.loading = false;
-                this.cdr.detectChanges();
-                if (this.disaster?.coordinates?.latitude) {
-                    setTimeout(() => this.initMap(), 200);
-                }
+                this.ngZone.run(() => {
+                    if (res.success) {
+                        this.assignedRegion = res.data.assignedRegion;
+                        this.disaster = res.data.assignedDisaster;
+                    }
+                    this.loading = false;
+                    if (this.disaster?.coordinates?.latitude) {
+                        setTimeout(() => this.initMap(), 200);
+                    }
+                });
             },
-            error: () => { this.loading = false; this.cdr.detectChanges(); }
+            error: () => { this.ngZone.run(() => { this.loading = false; }); }
         });
     }
 

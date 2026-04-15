@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NgoService } from '../services/ngo.service';
 import { CreateShiftDialogComponent } from './create-shift-dialog';
 import { AssignVolunteerShiftDialogComponent } from './assign-volunteer-shift-dialog';
+import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 
 interface DistributionShift {
     _id: string;
@@ -42,7 +43,8 @@ interface DistributionShift {
         MatDialogModule,
         MatSnackBarModule,
         MatTooltipModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
+        LocationNamePipe
     ],
     templateUrl: './distribution-shifts.html',
     styleUrls: ['./distribution-shifts.css']
@@ -51,7 +53,7 @@ export class DistributionShiftsComponent implements OnInit {
     private ngoService = inject(NgoService);
     private dialog = inject(MatDialog);
     private snackBar = inject(MatSnackBar);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
 
     shifts: DistributionShift[] = [];
     loading = false;
@@ -80,22 +82,23 @@ export class DistributionShiftsComponent implements OnInit {
         if (!this.organizationId) return;
 
         this.loading = true;
-        this.cdr.detectChanges(); // Force UI update
         
         this.ngoService.getDistributionShifts(this.organizationId).subscribe({
             next: (response: any) => {
-                console.log('Shifts loaded:', response);
-                if (response.success) {
-                    this.shifts = response.data;
-                }
-                this.loading = false;
-                this.cdr.detectChanges(); // Force UI update after data loads
+                this.ngZone.run(() => {
+                    console.log('Shifts loaded:', response);
+                    if (response.success) {
+                        this.shifts = response.data;
+                    }
+                    this.loading = false;
+                });
             },
             error: (error: any) => {
-                console.error('Error loading shifts:', error);
-                this.snackBar.open('Error loading shifts', 'Close', { duration: 3000 });
-                this.loading = false;
-                this.cdr.detectChanges();
+                this.ngZone.run(() => {
+                    console.error('Error loading shifts:', error);
+                    this.snackBar.open('Error loading shifts', 'Close', { duration: 3000 });
+                    this.loading = false;
+                });
             }
         });
     }

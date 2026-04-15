@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -15,7 +15,7 @@ import { VictimService, AidHistory } from '../services/victim.service';
 })
 export class AidHistoryComponent implements OnInit {
     private victimService = inject(VictimService);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
 
     history: AidHistory[] = [];
     loading = true;
@@ -23,9 +23,10 @@ export class AidHistoryComponent implements OnInit {
 
     ngOnInit() {
         this.victimService.history$.subscribe(h => {
-            this.history = h;
-            this.loading = false;
-            this.cdr.detectChanges();
+            this.ngZone.run(() => {
+                this.history = h;
+                this.loading = false;
+            });
         });
         // Reload to ensure latest data
         this.victimService.loadMyRequests();

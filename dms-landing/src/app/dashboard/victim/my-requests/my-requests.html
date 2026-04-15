@@ -85,7 +85,7 @@
                 <div class="point-card">
                     <div class="point-row">
                         <mat-icon>location_on</mat-icon>
-                        <strong>{{ req.nearestShift.location }}</strong>
+                        <strong>{{ req.nearestShift.location | locationName | async }}</strong>
                         <button mat-icon-button color="primary" (click)="openOnMap(req.nearestShift)"
                                 matTooltip="View on Map" style="margin-left:auto;">
                             <mat-icon>map</mat-icon>

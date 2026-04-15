@@ -443,9 +443,9 @@ export class AdminDataService {
                         name: org.name,
                         type: org.type,
                         contact: {
-                            email: org.contact.email,
-                            phone: org.contact.phone,
-                            address: org.contact.address
+                            email: org.contact?.email || '',
+                            phone: org.contact?.phone || '',
+                            address: org.contact?.address || ''
                         },
                         capacity: {
                             volunteers: org.capacity?.volunteers || 0,
@@ -495,19 +495,18 @@ export class AdminDataService {
             map(response => {
                 if (response.success) {
                     return response.data.map((disaster: any) => {
-                        // Create a name from location and type
                         const typeName = disaster.disasterType.charAt(0).toUpperCase() + disaster.disasterType.slice(1);
+                        // Use location as the name (pipe will geocode if it's coordinates)
                         const name = `${disaster.location} ${typeName}`;
-                        
-                        // Extract regions from location (split by comma)
-                        const regions = disaster.location.split(',').map((r: string) => r.trim());
-                        
-                        // Map backend status to frontend status
+
+                        // Keep location as a single region string so geocoding works on the full coord pair
+                        const regions = [disaster.location];
+
                         let status: 'active' | 'closed' = 'active';
                         if (disaster.status === 'resolved' || disaster.status === 'contained') {
                             status = 'closed';
                         }
-                        
+
                         return {
                             id: disaster._id,
                             type: disaster.disasterType,
@@ -527,20 +526,19 @@ export class AdminDataService {
     }
 
     getActiveDisasters(): Observable<Disaster[]> {
-        // Get all disasters and filter for active ones (not resolved or contained)
         return this.http.get<any>(`${this.apiUrl}/disasters`, { headers: this.getHeaders() }).pipe(
             map(response => {
                 if (response.success) {
                     return response.data
-                        .filter((disaster: any) => 
-                            disaster.status !== 'resolved' && 
+                        .filter((disaster: any) =>
+                            disaster.status !== 'resolved' &&
                             disaster.status !== 'contained'
                         )
                         .map((disaster: any) => {
                             const typeName = disaster.disasterType.charAt(0).toUpperCase() + disaster.disasterType.slice(1);
                             const name = `${disaster.location} ${typeName}`;
-                            const regions = disaster.location.split(',').map((r: string) => r.trim());
-                            
+                            const regions = [disaster.location];
+
                             return {
                                 id: disaster._id,
                                 type: disaster.disasterType,
@@ -596,27 +594,27 @@ export class AdminDataService {
             map(response => {
                 if (response.success) {
                     return response.data.map((assignment: any) => {
-                        // Extract NGO IDs and names
-                        const ngoData: Array<{id: string, name: string}> = assignment.assignedNGOs.map((ngo: any) => {
-                            if (typeof ngo === 'string') {
-                                return { id: ngo, name: 'Unknown' };
-                            }
-                            return { id: ngo._id, name: ngo.name };
+                        const ngoData: Array<{id: string, name: string}> = (assignment.assignedNGOs || []).map((ngo: any) => {
+                            if (typeof ngo === 'string') return { id: ngo, name: 'Unknown' };
+                            return { id: ngo._id || ngo, name: ngo.name || 'Unknown' };
                         });
-                        
+
+                        const disaster = assignment.disaster;
+                        const disasterId = disaster?._id || disaster || '';
+
                         return {
                             id: assignment._id,
-                            disasterId: assignment.disaster._id || assignment.disaster,
-                            disasterName: assignment.disasterName,
-                            region: assignment.region,
-                            assignedNGOs: ngoData.map((n: {id: string, name: string}) => n.id),
-                            ngoNames: ngoData.map((n: {id: string, name: string}) => n.name), // Add NGO names array
-                            resourceRequirements: assignment.resourceRequirements,
-                            resourceCoverage: assignment.resourceCoverage,
-                            affectedPopulation: assignment.affectedPopulation,
-                            status: assignment.status,
+                            disasterId,
+                            disasterName: assignment.disasterName || 'Unknown Disaster',
+                            region: assignment.region || '',
+                            assignedNGOs: ngoData.map(n => n.id),
+                            ngoNames: ngoData.map(n => n.name),
+                            resourceRequirements: assignment.resourceRequirements || { food: 0, medical: 0, shelter: 0 },
+                            resourceCoverage: assignment.resourceCoverage || 0,
+                            affectedPopulation: assignment.affectedPopulation || 0,
+                            status: assignment.status || 'assigned',
                             assignedDate: new Date(assignment.createdAt),
-                            assignedBy: assignment.assignedBy?.name || 'Admin User'
+                            assignedBy: assignment.assignedBy?.name || 'Admin'
                         };
                     });
                 }

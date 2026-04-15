@@ -1,0 +1,6 @@
+model.pkl
+training_data.csv
+__pycache__/
+*.pyc
+venv/
+.env

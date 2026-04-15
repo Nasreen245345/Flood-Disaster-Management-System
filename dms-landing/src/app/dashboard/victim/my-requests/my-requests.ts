@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -20,6 +20,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { VictimService, VictimRequest } from '../services/victim.service';
 import { HelpRequestDialogComponent } from '../../../shared/components/help-request-dialog/help-request-dialog';
+import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
+import { MapPreviewDialogComponent } from '../../../shared/components/map-preview-dialog/map-preview-dialog';
 
 @Component({
     selector: 'app-my-requests',
@@ -42,7 +44,8 @@ import { HelpRequestDialogComponent } from '../../../shared/components/help-requ
         MatDialogModule,
         MatChipsModule,
         MatProgressSpinnerModule,
-        MatTooltipModule
+        MatTooltipModule,
+        LocationNamePipe
     ],
     templateUrl: './my-requests.html',
     styleUrls: ['./my-requests.css']
@@ -53,7 +56,7 @@ export class MyRequestsComponent implements OnInit {
     private snackBar = inject(MatSnackBar);
     private dialog = inject(MatDialog);
     private http = inject(HttpClient);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
     private router = inject(Router);
 
     requests: VictimRequest[] = [];
@@ -63,28 +66,28 @@ export class MyRequestsComponent implements OnInit {
 
     ngOnInit() {
         this.victimService.requests$.subscribe(reqs => {
-            this.requests = reqs;
-            this.loading = false;
-            this.cdr.detectChanges();
+            this.ngZone.run(() => {
+                this.requests = reqs;
+                this.loading = false;
+            });
         });
         this.victimService.loadMyRequests();
     }
 
     openOnMap(shift: any) {
         if (shift.coordinates?.latitude && shift.coordinates?.longitude) {
-            // Navigate to full interactive map, centered on this specific distribution point
-            this.router.navigate(['/dashboard/map'], {
-                queryParams: {
+            this.dialog.open(MapPreviewDialogComponent, {
+                width: '640px',
+                maxWidth: '95vw',
+                data: {
                     lat: shift.coordinates.latitude,
                     lng: shift.coordinates.longitude,
-                    zoom: 15,
-                    highlight: 'distribution'
+                    label: shift.location,
+                    title: 'Distribution Point'
                 }
             });
         } else {
-            // No coordinates — open Google Maps with location name
-            const query = encodeURIComponent(shift.location);
-            window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+            this.snackBar.open('Location coordinates not available', 'Close', { duration: 3000 });
         }
     }
 

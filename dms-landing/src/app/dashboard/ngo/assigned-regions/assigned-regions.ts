@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,12 +8,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NgoService } from '../services/ngo.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { RegionDetailsDialogComponent } from './region-details-dialog';
 
 interface Assignment {
     id: string;
     disasterName: string;
     region: string;
+    regionDisplay: string;
     disaster: any;
     resourceRequirements: {
         food: number;
@@ -45,6 +48,8 @@ interface Assignment {
 export class AssignedRegionsComponent implements OnInit {
     ngoService = inject(NgoService);
     dialog = inject(MatDialog);
+    http = inject(HttpClient);
+    cdr = inject(ChangeDetectorRef);
     
     assignments: Assignment[] = [];
     ngoId: string | null = null;
@@ -54,31 +59,69 @@ export class AssignedRegionsComponent implements OnInit {
         this.loadAssignedRegions();
     }
 
+    /** Extract lat/lng from region string, falling back to disasterName if needed */
+    private parseCoordinates(region: string, disasterName?: string): { lat: number; lng: number } | null {
+        // Try to get two coords from region first
+        const twoCoordMatch = region?.match(/(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)/);
+        if (twoCoordMatch) {
+            const a = parseFloat(twoCoordMatch[1]);
+            const b = parseFloat(twoCoordMatch[2]);
+            if (Math.abs(a) <= 90 && Math.abs(b) <= 180) return { lat: a, lng: b };
+            if (Math.abs(b) <= 90 && Math.abs(a) <= 180) return { lat: b, lng: a };
+        }
+
+        // Single coord in region — try disasterName for the second coord
+        const singleCoord = region?.match(/^(-?\d+\.\d+)/);
+        if (singleCoord && disasterName) {
+            const allCoords = disasterName.match(/(-?\d+\.\d+)/g);
+            if (allCoords && allCoords.length >= 2) {
+                const nums = allCoords.map(parseFloat);
+                // Find lat (<=90) and lng (<=180)
+                const lat = nums.find(n => Math.abs(n) <= 90);
+                const lng = nums.find(n => Math.abs(n) <= 180 && n !== lat);
+                if (lat !== undefined && lng !== undefined) return { lat, lng };
+            }
+        }
+
+        return null;
+    }
+
+    private isCoordinateString(region: string): boolean {
+        // Starts with a decimal number (coordinate)
+        return /^-?\d+\.\d+/.test(region?.trim() || '');
+    }
+
+    private reverseGeocode(lat: number, lng: number): Promise<string> {
+        const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        return firstValueFrom(
+            this.http.get<any>(`http://localhost:5000/api/map/reverse-geocode?lat=${lat}&lng=${lng}`)
+        ).then(res => res?.placeName || fallback)
+         .catch(() => fallback);
+    }
+
     loadAssignedRegions() {
         this.isLoading = true;
         
-        // First get NGO organization to get the ID
         this.ngoService.getMyOrganization().subscribe({
             next: (response) => {
                 this.ngoId = response.data._id;
                 
-                // Check if ngoId is valid before making the call
                 if (!this.ngoId) {
                     console.error('❌ No NGO ID found');
                     this.isLoading = false;
                     return;
                 }
                 
-                // Then get assigned regions
                 this.ngoService.getAssignedRegions(this.ngoId).subscribe({
                     next: (assignmentResponse) => {
-                        console.log('=== ASSIGNED REGIONS ===');
-                        console.log('Response:', assignmentResponse);
-                        
-                        this.assignments = assignmentResponse.data.map((assignment: any) => ({
+                        const raw = assignmentResponse.data;
+
+                        // First pass: build assignments with raw region as display
+                        this.assignments = raw.map((assignment: any) => ({
                             id: assignment._id,
                             disasterName: assignment.disasterName,
-                            region: assignment.region,
+                            region: assignment.region || '',
+                            regionDisplay: assignment.region || '',
                             disaster: assignment.disaster,
                             resourceRequirements: assignment.resourceRequirements,
                             resourceCoverage: assignment.resourceCoverage,
@@ -86,9 +129,22 @@ export class AssignedRegionsComponent implements OnInit {
                             status: assignment.status,
                             createdAt: new Date(assignment.createdAt)
                         }));
-                        
-                        console.log('Processed assignments:', this.assignments);
                         this.isLoading = false;
+                        this.cdr.detectChanges();
+
+                        // Second pass: geocode coordinate-based regions asynchronously
+                        this.assignments.forEach((a, i) => {
+                            if (this.isCoordinateString(a.region)) {
+                                const coords = this.parseCoordinates(a.region, a.disasterName);
+                                if (coords) {
+                                    this.reverseGeocode(coords.lat, coords.lng).then(name => {
+                                        this.assignments[i] = { ...this.assignments[i], regionDisplay: name };
+                                        this.assignments = [...this.assignments];
+                                        this.cdr.detectChanges();
+                                    });
+                                }
+                            }
+                        });
                     },
                     error: (err) => {
                         console.error('Error loading assigned regions:', err);

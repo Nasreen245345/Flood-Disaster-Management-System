@@ -8,7 +8,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NgoService } from '../services/ngo.service';
+import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
+import { MapPreviewDialogComponent } from '../../../shared/components/map-preview-dialog/map-preview-dialog';
 
 interface AidRequest {
     _id: string;
@@ -42,7 +45,9 @@ interface AidRequest {
         MatIconModule, 
         MatChipsModule,
         MatProgressSpinnerModule,
-        MatTooltipModule
+        MatTooltipModule,
+        MatDialogModule,
+        LocationNamePipe
     ],
     templateUrl: './aid-requests.html',
     styleUrls: ['./aid-requests.css']
@@ -50,6 +55,7 @@ interface AidRequest {
 export class AidRequestsComponent implements OnInit {
     ngoService = inject(NgoService);
     snackBar = inject(MatSnackBar);
+    dialog = inject(MatDialog);
     
     requests: AidRequest[] = [];
     loading = true;
@@ -188,8 +194,16 @@ export class AidRequestsComponent implements OnInit {
 
     viewOnMap(request: AidRequest) {
         if (request.coordinates) {
-            const url = `https://www.google.com/maps?q=${request.coordinates.latitude},${request.coordinates.longitude}`;
-            window.open(url, '_blank');
+            this.dialog.open(MapPreviewDialogComponent, {
+                width: '640px',
+                maxWidth: '95vw',
+                data: {
+                    lat: request.coordinates.latitude,
+                    lng: request.coordinates.longitude,
+                    label: request.location,
+                    title: `${request.victimName}'s Location`
+                }
+            });
         } else {
             this.snackBar.open('Location coordinates not available', 'Close', { duration: 3000 });
         }

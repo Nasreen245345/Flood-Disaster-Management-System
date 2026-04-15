@@ -23,7 +23,7 @@
                 <span class="disaster-emoji">{{ getDisasterEmoji(disaster.disasterType) }}</span>
                 <div>
                     <h2>{{ disaster.disasterType | titlecase }} Disaster</h2>
-                    <p>{{ disaster.location }}</p>
+                    <p>{{ disaster.location | locationName | async }}</p>
                 </div>
                 <mat-chip [color]="getSeverityColor(disaster.severity)" selected style="margin-left:auto;">
                     {{ disaster.severity | uppercase }}
@@ -42,7 +42,7 @@
                     <mat-icon>location_on</mat-icon>
                     <div>
                         <span class="label">Your Assigned Region</span>
-                        <span class="value">{{ assignedRegion || disaster.location }}</span>
+                        <span class="value">{{ (assignedRegion || disaster.location) | locationName | async }}</span>
                     </div>
                 </div>
                 <div class="detail-row" *ngIf="disaster.comments">

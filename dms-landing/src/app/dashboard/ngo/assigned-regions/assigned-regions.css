@@ -136,24 +136,48 @@
     margin: 0;
 }
 
-/* Status Chip */
-.status-chip {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    padding: 8px 16px !important;
-    border-radius: 20px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: white !important;
-    height: auto !important;
-    min-height: 32px !important;
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
 }
 
-.chip-icon {
-    font-size: 16px !important;
-    width: 16px !important;
-    height: 16px !important;
+.status-badge-icon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+}
+
+.status-badge.status-assigned {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
+.status-badge.status-in-progress {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.status-badge.status-completed {
+    background: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.status-badge.status-cancelled {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
 }
 
 /* Card Content */

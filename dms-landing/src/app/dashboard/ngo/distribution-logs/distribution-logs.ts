@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -7,18 +7,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NgoService } from '../services/ngo.service';
+import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 
 @Component({
     selector: 'app-distribution-logs',
     standalone: true,
-    imports: [CommonModule, MatCardModule, MatTableModule, MatIconModule, MatProgressSpinnerModule, MatChipsModule],
+    imports: [CommonModule, MatCardModule, MatTableModule, MatIconModule, MatProgressSpinnerModule, MatChipsModule, LocationNamePipe],
     templateUrl: './distribution-logs.html',
     styleUrls: ['./distribution-logs.css']
 })
 export class DistributionLogsComponent implements OnInit {
     private ngoService = inject(NgoService);
     private http = inject(HttpClient);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
 
     private apiUrl = 'http://localhost:5000/api';
     logs: any[] = [];
@@ -32,20 +33,23 @@ export class DistributionLogsComponent implements OnInit {
     ngOnInit() {
         this.ngoService.getMyOrganization().subscribe({
             next: (res) => {
-                if (res.success) this.loadLogs(res.data._id);
+                this.ngZone.run(() => {
+                    if (res.success) this.loadLogs(res.data._id);
+                });
             },
-            error: () => { this.loading = false; this.cdr.detectChanges(); }
+            error: () => { this.ngZone.run(() => { this.loading = false; }); }
         });
     }
 
     loadLogs(orgId: string) {
         this.http.get<any>(`${this.apiUrl}/distribution/logs/${orgId}`, { headers: this.getHeaders() }).subscribe({
             next: (res) => {
-                if (res.success) this.logs = res.data;
-                this.loading = false;
-                this.cdr.detectChanges();
+                this.ngZone.run(() => {
+                    if (res.success) this.logs = res.data;
+                    this.loading = false;
+                });
             },
-            error: () => { this.loading = false; this.cdr.detectChanges(); }
+            error: () => { this.ngZone.run(() => { this.loading = false; }); }
         });
     }
 }

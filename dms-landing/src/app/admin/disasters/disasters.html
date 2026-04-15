@@ -60,7 +60,7 @@
             <div class="card-header" [style.background-color]="getDisasterColor(disaster.type)">
                 <mat-icon class="disaster-icon">{{ getDisasterIcon(disaster.type) }}</mat-icon>
                 <div class="header-info">
-                    <h3 class="disaster-name">{{ disaster.name }}</h3>
+                    <h3 class="disaster-name">{{ disaster.name | locationName | async }}</h3>
                     <span class="disaster-type">{{ disaster.type | uppercase }}</span>
                 </div>
             </div>
@@ -108,7 +108,7 @@
                     <span class="regions-label">Regions:</span>
                     <div class="regions-chips">
                         <mat-chip *ngFor="let region of disaster.affectedRegions" class="region-chip">
-                            {{ region }}
+                            {{ region | locationName | async }}
                         </mat-chip>
                     </div>
                 </div>

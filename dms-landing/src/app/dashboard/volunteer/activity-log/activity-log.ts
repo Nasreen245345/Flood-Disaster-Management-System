@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
@@ -18,7 +18,7 @@ import { VolunteerService, VolunteerStats } from '../services/volunteer.service'
 export class ActivityLogComponent implements OnInit {
     private volunteerService = inject(VolunteerService);
     private http = inject(HttpClient);
-    private cdr = inject(ChangeDetectorRef);
+    private ngZone = inject(NgZone);
     private apiUrl = 'http://localhost:5000/api';
 
     stats: VolunteerStats = { hoursServed: 0, tasksCompleted: 0, distributionsAssisted: 0, currentStreak: 0 };
@@ -33,25 +33,26 @@ export class ActivityLogComponent implements OnInit {
         // Get volunteer profile to get ID
         this.http.get<any>(`${this.apiUrl}/volunteers/me`, { headers: this.getHeaders() }).subscribe({
             next: (res) => {
-                if (res.success) {
-                    const volunteerId = res.data._id;
-                    this.volunteerService.loadStats(volunteerId);
-                    this.volunteerService.getMyTasks(volunteerId).subscribe();
-                }
-                this.loading = false;
-                this.cdr.detectChanges();
+                this.ngZone.run(() => {
+                    if (res.success) {
+                        const volunteerId = res.data._id;
+                        this.volunteerService.loadStats(volunteerId);
+                        this.volunteerService.getMyTasks(volunteerId).subscribe();
+                    }
+                    this.loading = false;
+                });
             },
-            error: () => { this.loading = false; this.cdr.detectChanges(); }
+            error: () => { this.ngZone.run(() => { this.loading = false; }); }
         });
 
         this.volunteerService.stats$.subscribe(s => {
-            this.stats = s;
-            this.cdr.detectChanges();
+            this.ngZone.run(() => { this.stats = s; });
         });
 
         this.volunteerService.tasks$.subscribe(tasks => {
-            this.completedTasks = tasks.filter(t => t.status === 'completed');
-            this.cdr.detectChanges();
+            this.ngZone.run(() => {
+                this.completedTasks = tasks.filter(t => t.status === 'completed');
+            });
         });
     }
 }
