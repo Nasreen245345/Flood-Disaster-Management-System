@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, map, Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -31,7 +32,7 @@ export interface VolunteerStats {
 })
 export class VolunteerService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     private getHeaders(): HttpHeaders {
         const token = localStorage.getItem('dms_token');
@@ -224,3 +225,5 @@ export class VolunteerService {
         };
     }
 }
+
+

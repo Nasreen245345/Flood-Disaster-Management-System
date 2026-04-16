@@ -14,10 +14,16 @@
         <p>Loading your requests...</p>
     </div>
 
+    <!-- Empty State -->
     <div *ngIf="!loading && requests.length === 0" class="empty-state">
-        <mat-icon>inbox</mat-icon>
-        <p>No requests found. Submit your first aid request.</p>
-        <button mat-raised-button color="primary" (click)="openRequestDialog()">Request Aid</button>
+        <div class="empty-icon-wrapper">
+            <mat-icon>inbox</mat-icon>
+        </div>
+        <h3>No Aid Requests Found</h3>
+        <p>You haven't submitted any aid requests yet. If you need assistance, please submit a request so NGOs can locate and help you.</p>
+        <button mat-raised-button color="primary" class="action-btn" (click)="openRequestDialog()">
+            <mat-icon>add_circle_outline</mat-icon> Request Aid Now
+        </button>
     </div>
 
     <div class="requests-list">

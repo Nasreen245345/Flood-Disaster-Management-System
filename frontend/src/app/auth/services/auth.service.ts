@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -24,7 +25,7 @@ interface AuthResponse {
 })
 export class AuthService {
   private currentUser = signal<User | null>(null);
-  private apiUrl = 'http://localhost:5000/api/auth';
+  private apiUrl = environment.apiUrl + '/auth';
 
   constructor(
     private router: Router,
@@ -132,3 +133,5 @@ export class AuthService {
     this.router.navigate([route]);
   }
 }
+
+

@@ -10,16 +10,24 @@
         </button>
     </div>
 
-    <div *ngIf="isLoading" class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Loading inventory...</p>
+    <div *ngIf="isLoading" class="skeleton-table-wrapper">
+        <div class="skeleton-header-row" style="width: 100%;"></div>
+        <div class="skeleton-body-row" style="width: 100%;"></div>
+        <div class="skeleton-body-row" style="width: 95%;"></div>
+        <div class="skeleton-body-row" style="width: 98%;"></div>
+        <div class="skeleton-body-row" style="width: 92%;"></div>
+        <div class="skeleton-body-row" style="width: 96%;"></div>
     </div>
 
     <mat-card class="table-card" *ngIf="!isLoading">
         <div *ngIf="inventory.length === 0" class="empty-state">
-            <mat-icon>inventory_2</mat-icon>
-            <h3>No packages in inventory</h3>
-            <p>Add your first package to start managing inventory</p>
+            <div class="empty-icon-wrapper">
+                <mat-icon>inventory_2</mat-icon>
+            </div>
+            <div class="empty-text">
+                <h3>No Packages in Inventory</h3>
+                <p>Add your first package to start managing inventory.</p>
+            </div>
             <button mat-flat-button color="primary" (click)="addItem()">
                 <mat-icon>add</mat-icon>
                 Add Package
@@ -105,7 +113,7 @@
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+        </table>`n        
     </mat-card>
 
     <!-- Summary Cards -->

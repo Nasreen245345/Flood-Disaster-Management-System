@@ -13,6 +13,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NgoService } from '../services/ngo.service';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
     selector: 'app-create-shift-dialog',
     standalone: true,
@@ -98,7 +100,7 @@ export class CreateShiftDialogComponent implements OnInit {
     private snackBar = inject(MatSnackBar);
     private dialogRef = inject(MatDialogRef<CreateShiftDialogComponent>);
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
     loading = false;
     loadingDisasters = true;
     disasters: any[] = [];

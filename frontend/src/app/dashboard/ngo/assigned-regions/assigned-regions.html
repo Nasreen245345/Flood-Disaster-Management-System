@@ -5,17 +5,31 @@
     </div>
 
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-state">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading assigned regions...</p>
+    <div *ngIf="isLoading" class="skeleton-table-wrapper" style="box-shadow: none; background: transparent;">
+        <div class="regions-grid">
+            <mat-card class="region-card" *ngFor="let i of [1, 2, 3]">
+                <mat-card-header>
+                    <div class="skeleton-header-row" style="width: 100%;"></div>
+                </mat-card-header>
+                <mat-card-content>
+                    <div class="skeleton-body-row" style="width: 80%;"></div>
+                    <div class="skeleton-body-row" style="width: 60%; margin-top: 16px;"></div>
+                    <div class="skeleton-body-row" style="width: 100%; margin-top: 16px; height: 80px;"></div>
+                </mat-card-content>
+            </mat-card>
+        </div>
     </div>
 
     <!-- Empty State -->
     <div *ngIf="!isLoading && assignments.length === 0" class="empty-state">
-        <mat-icon class="empty-icon">location_off</mat-icon>
-        <h3>No Assigned Regions</h3>
-        <p>Your organization has not been assigned to any disaster relief regions yet.</p>
-        <p class="hint">Assignments are made by system administrators based on disaster needs and your organization's capacity.</p>
+        <div class="empty-icon-wrapper">
+            <mat-icon>location_off</mat-icon>
+        </div>
+        <div class="empty-text">
+            <h3>No Assigned Regions</h3>
+            <p>Your organization has not been assigned to any disaster relief regions yet.</p>
+            <p class="hint">Assignments are made by system administrators based on disaster needs and your organization's capacity.</p>
+        </div>
     </div>
 
     <!-- Assignments Grid -->

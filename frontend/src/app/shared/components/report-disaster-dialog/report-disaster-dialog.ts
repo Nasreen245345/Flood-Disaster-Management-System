@@ -1,3 +1,4 @@
+import { environment } from '../../../../environments/environment';
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -35,7 +36,7 @@ export class ReportDisasterDialogComponent {
   private dialogRef = inject(MatDialogRef<ReportDisasterDialogComponent>);
   private snackBar = inject(MatSnackBar);
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5000/api/disasters';
+  private apiUrl = environment.apiUrl + '/disasters';
 
   coordinates: { latitude: number; longitude: number } | null = null;
   isDetectingLocation = false;
@@ -116,3 +117,5 @@ export class ReportDisasterDialogComponent {
     this.dialogRef.close();
   }
 }
+
+

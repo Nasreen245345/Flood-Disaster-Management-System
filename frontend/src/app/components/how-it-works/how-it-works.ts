@@ -23,7 +23,7 @@ export class HowItWorksComponent {
         {
             num: 3,
             title: 'NGOs Deliver Aid',
-            desc: 'NGOs are assigned requests and deliver verified aid using QR codes.'
+            desc: 'NGOs are assigned requests and deliver verified aid to citizens.'
         }
     ];
 }

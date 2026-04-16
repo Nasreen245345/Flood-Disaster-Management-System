@@ -13,6 +13,7 @@ import { NgoService } from '../services/ngo.service';
 import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 import { MapPreviewDialogComponent } from '../../../shared/components/map-preview-dialog/map-preview-dialog';
 
+
 interface AidRequest {
     _id: string;
     victimName: string;
@@ -46,8 +47,12 @@ interface AidRequest {
         MatChipsModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
+<<<<<<< HEAD
         MatDialogModule,
         LocationNamePipe
+=======
+        
+>>>>>>> nasreen_repo/main
     ],
     templateUrl: './aid-requests.html',
     styleUrls: ['./aid-requests.css']

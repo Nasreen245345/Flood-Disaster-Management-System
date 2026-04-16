@@ -1,0 +1,9 @@
+{
+  "outputDirectory": "dist/dms-landing/browser",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

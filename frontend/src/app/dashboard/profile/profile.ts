@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -31,7 +32,7 @@ export class ProfileComponent implements OnInit {
     private fb = inject(FormBuilder);
     private cdr = inject(ChangeDetectorRef);
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     user = this.authService.getCurrentUser();
     volunteerProfile: any = null;
@@ -129,3 +130,5 @@ export class ProfileComponent implements OnInit {
         return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : '';
     }
 }
+
+

@@ -11,6 +11,7 @@
     color: #1e293b;
 }
 
+<<<<<<< HEAD
 /* Quick Actions */
 .quick-actions-section {
     margin-bottom: 32px;
@@ -89,6 +90,12 @@
 }
 
 /* Stats Grid */
+=======
+.capacity-section {
+    margin-bottom: 32px;
+}
+
+>>>>>>> nasreen_repo/main
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -135,11 +142,36 @@
     color: #64748b;
 }
 
+<<<<<<< HEAD
 .stat-card.blue .stat-icon { background: #e0f2fe; color: #0284c7; }
 .stat-card.green .stat-icon { background: #dcfce7; color: #16a34a; }
 .stat-card.orange .stat-icon { background: #ffedd5; color: #ea580c; }
 .stat-card.purple .stat-icon { background: #f3e8ff; color: #9333ea; }
 
+=======
+/* Colors */
+.stat-card.blue .stat-icon {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.stat-card.green .stat-icon {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.stat-card.orange .stat-icon {
+    background: #ffedd5;
+    color: #ea580c;
+}
+
+.stat-card.purple .stat-icon {
+    background: #f3e8ff;
+    color: #9333ea;
+}
+
+/* Activity Section */
+>>>>>>> nasreen_repo/main
 .activity-section h2 {
     font-size: 1.25rem;
     font-weight: 500;
@@ -152,7 +184,13 @@
     overflow: hidden;
 }
 
+<<<<<<< HEAD
 .w-full { width: 100%; }
+=======
+.w-full {
+    width: 100%;
+}
+>>>>>>> nasreen_repo/main
 
 .view-all {
     padding: 16px;

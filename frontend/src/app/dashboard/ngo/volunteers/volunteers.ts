@@ -1,3 +1,5 @@
+
+import { environment } from '../../../../environments/environment';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -18,7 +20,8 @@ import { AssignRegionDialogComponent } from './assign-region-dialog';
 @Component({
     selector: 'app-volunteers',
     standalone: true,
-    imports: [CommonModule, MatCardModule, MatTableModule, MatButtonModule, MatIconModule, MatMenuModule, MatChipsModule, MatDividerModule, MatDialogModule, MatSnackBarModule],
+    imports: [
+        CommonModule, MatCardModule, MatTableModule, MatButtonModule, MatIconModule, MatMenuModule, MatChipsModule, MatDividerModule, MatDialogModule, MatSnackBarModule],
     templateUrl: './volunteers.html',
     styleUrls: ['./volunteers.css']
 })
@@ -27,7 +30,7 @@ export class VolunteersComponent implements OnInit {
     dialog = inject(MatDialog);
     private http = inject(HttpClient);
     private snackBar = inject(MatSnackBar);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     volunteers: any[] = [];
     loading = true;
@@ -132,3 +135,6 @@ export class VolunteersComponent implements OnInit {
         return colors[status] || 'accent';
     }
 }
+
+
+

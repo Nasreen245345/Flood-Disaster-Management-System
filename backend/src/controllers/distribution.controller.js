@@ -78,7 +78,7 @@ exports.createShift = async (req, res) => {
         
         const shift = await DistributionShift.create(req.body);
         
-        console.log('✅ Distribution Shift Created:', shift._id);
+        console.log(' Distribution Shift Created:', shift._id);
         
         res.status(201).json({
             success: true,
@@ -308,7 +308,7 @@ exports.verifyVictim = async (req, res) => {
             });
         }
         
-        console.log('✅ Volunteer has active shift:', activeShift._id);
+        console.log('Volunteer has active shift:', activeShift._id);
         
         // Find aid request by CNIC
         const aidRequest = await AidRequest.findOne({
@@ -325,7 +325,7 @@ exports.verifyVictim = async (req, res) => {
             });
         }
         
-        console.log('✅ Aid Request Found:', aidRequest._id);
+        console.log('Aid Request Found:', aidRequest._id);
         
         // Return full victim details (authorized during active shift)
         res.status(200).json({

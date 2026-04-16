@@ -12,6 +12,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import * as L from 'leaflet';
 import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 
+import { environment } from '../../../../environments/environment';
+
 @Component({
     selector: 'app-assigned-region',
     standalone: true,
@@ -27,7 +29,7 @@ export class AssignedRegionComponent implements OnInit, OnDestroy {
     private snackBar = inject(MatSnackBar);
     private map: L.Map | undefined;
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
     loading = true;
     assignedRegion: string | null = null;
     disaster: any = null;

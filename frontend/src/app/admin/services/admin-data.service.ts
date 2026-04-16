@@ -1,3 +1,4 @@
+import { environment } from '../../../environments/environment';
 import { Injectable, inject } from '@angular/core';
 import { Observable, of, delay, tap } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -16,7 +17,7 @@ import {
 })
 export class AdminDataService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     private getHeaders(): HttpHeaders {
         const token = localStorage.getItem('dms_token');
@@ -713,3 +714,5 @@ export class AdminDataService {
         );
     }
 }
+
+
