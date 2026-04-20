@@ -47,12 +47,8 @@ interface AidRequest {
         MatChipsModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
-<<<<<<< HEAD
         MatDialogModule,
         LocationNamePipe
-=======
-        
->>>>>>> nasreen_repo/main
     ],
     templateUrl: './aid-requests.html',
     styleUrls: ['./aid-requests.css']
