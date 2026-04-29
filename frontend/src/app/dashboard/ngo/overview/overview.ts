@@ -10,6 +10,7 @@ import { NgoService } from '../services/ngo.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
     selector: 'app-ngo-overview',
@@ -44,7 +45,7 @@ export class NgoOverviewComponent implements OnInit {
     loading = true;
     ngoId: string | null = null;
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     quickActions = [
         { icon: 'assignment_ind', label: 'Assign Volunteer', desc: 'Assign a volunteer to a disaster region', route: '/dashboard/ngo/volunteers', color: '#3b82f6', bg: '#eff6ff' },

@@ -22,6 +22,7 @@ import { VictimService, VictimRequest } from '../services/victim.service';
 import { HelpRequestDialogComponent } from '../../../shared/components/help-request-dialog/help-request-dialog';
 import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 import { MapPreviewDialogComponent } from '../../../shared/components/map-preview-dialog/map-preview-dialog';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
     selector: 'app-my-requests',
@@ -62,7 +63,7 @@ export class MyRequestsComponent implements OnInit {
     requests: VictimRequest[] = [];
     loading = true;
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     ngOnInit() {
         this.victimService.requests$.subscribe(reqs => {

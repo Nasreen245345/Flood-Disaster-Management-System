@@ -11,6 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { RegionDetailsDialogComponent } from './region-details-dialog';
+import { environment } from '../../../../../environments/environment';
 
 interface Assignment {
     id: string;
@@ -95,7 +96,7 @@ export class AssignedRegionsComponent implements OnInit {
     private reverseGeocode(lat: number, lng: number): Promise<string> {
         const fallback = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
         return firstValueFrom(
-            this.http.get<any>(`http://localhost:5000/api/map/reverse-geocode?lat=${lat}&lng=${lng}`)
+            this.http.get<any>(`${environment.apiUrl}/map/reverse-geocode?lat=${lat}&lng=${lng}`)
         ).then(res => res?.placeName || fallback)
          .catch(() => fallback);
     }

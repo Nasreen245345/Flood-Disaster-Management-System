@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { NgoService } from '../services/ngo.service';
+import { environment } from '../../../../../environments/environment';
 
 interface DayForecast {
     day: number;
@@ -35,7 +36,7 @@ export class ResourceForecastComponent implements OnInit {
     private ngoService = inject(NgoService);
     private ngZone = inject(NgZone);
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     loading = true;
     error = false;

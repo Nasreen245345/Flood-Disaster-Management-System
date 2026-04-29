@@ -11,6 +11,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { of } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
     selector: 'app-assign-region-dialog',
@@ -78,7 +79,7 @@ export class AssignRegionDialogComponent implements OnInit {
     saving = false;
     errorMsg = '';
 
-    private apiUrl = 'http://localhost:5000/api';
+    private apiUrl = environment.apiUrl;
 
     constructor(@Inject(MAT_DIALOG_DATA) public data: { volunteerId: string; volunteerName: string; ngoId?: string }) {}
 

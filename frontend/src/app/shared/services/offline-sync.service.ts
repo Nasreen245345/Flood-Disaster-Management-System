@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface QueuedRequest {
   id: string;
@@ -19,7 +20,7 @@ const DB_VERSION = 1;
 @Injectable({ providedIn: 'root' })
 export class OfflineSyncService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5000/api';
+  private apiUrl = environment.apiUrl;
 
   isOnline$ = new BehaviorSubject<boolean>(navigator.onLine);
   pendingCount$ = new BehaviorSubject<number>(0);

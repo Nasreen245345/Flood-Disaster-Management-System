@@ -2,12 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
     private http = inject(HttpClient);
     private cache = new Map<string, string>();
-    private apiBase = 'http://localhost:5000/api';
+    private apiBase = environment.apiUrl;
 
     reverseGeocode(locationStr: string): Observable<string> {
         if (!locationStr) return of('Unknown');
