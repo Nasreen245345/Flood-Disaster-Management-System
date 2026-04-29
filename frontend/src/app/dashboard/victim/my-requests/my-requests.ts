@@ -22,7 +22,7 @@ import { VictimService, VictimRequest } from '../services/victim.service';
 import { HelpRequestDialogComponent } from '../../../shared/components/help-request-dialog/help-request-dialog';
 import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
 import { MapPreviewDialogComponent } from '../../../shared/components/map-preview-dialog/map-preview-dialog';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 @Component({
     selector: 'app-my-requests',

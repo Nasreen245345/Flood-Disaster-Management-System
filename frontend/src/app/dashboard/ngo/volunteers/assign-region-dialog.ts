@@ -11,7 +11,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { of } from 'rxjs';
 import { catchError, timeout } from 'rxjs/operators';
 import { LocationNamePipe } from '../../../shared/pipes/location.pipe';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 @Component({
     selector: 'app-assign-region-dialog',
