@@ -5,7 +5,7 @@ const RegionAssignment = require('../models/RegionAssignment');
 const https = require('https');
 const http = require('http');
 
-const PREDICTION_API_URL = process.env.PREDICTION_API_URL || 'http://localhost:8000';
+const PREDICTION_API_URL = process.env.PREDICTION_API_URL || 'https://surprising-love-production-feb0.up.railway.app';
 
 function callPredictionAPI(payload) {
     return new Promise((resolve, reject) => {
