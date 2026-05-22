@@ -220,7 +220,7 @@ exports.getPrediction = async (req, res) => {
                 success: true,
                 data: {
                     forecast: [],
-                    context: { message: 'No active disasters assigned to this NGO', pendingRequests, volunteerCount, inventoryTotal }
+                    context: { message: 'No active disasters assigned to this NGO', pendingRequests: allPendingRequests.length, volunteerCount, inventoryTotal }
                 }
             });
         }
