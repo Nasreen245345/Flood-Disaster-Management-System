@@ -108,7 +108,13 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('Signup error:', error);
-          return throwError(() => error);
+          if (error.status === 0 || !error.status) {
+             return throwError(() => new Error('Cannot connect to the server (Network error or CORS issue). Please try again later.'));
+          }
+          if (error.error && error.error.message) {
+             return throwError(() => new Error(error.error.message));
+          }
+          return throwError(() => new Error('An unexpected error occurred during signup.'));
         })
       ) as any;
   }

@@ -34,7 +34,8 @@ app.use(cors({
         'http://localhost:4201', 
         'http://localhost:4202', 
         'http://127.0.0.1:4200',
-        'https://flood-disaster-management-system.vercel.app'
+        'https://flood-disaster-management-system.vercel.app',
+        'https://flood-disaster-management-system-ncclg3syl.vercel.app'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
