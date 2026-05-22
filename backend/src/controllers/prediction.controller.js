@@ -5,7 +5,7 @@ const RegionAssignment = require('../models/RegionAssignment');
 const https = require('https');
 const http = require('http');
 
-const PREDICTION_API_URL = process.env.PREDICTION_API_URL || 'https://surprising-love-production-feb0.up.railway.app';
+const PREDICTION_API_URL = 'https://surprising-love-production-feb0.up.railway.app';
 
 function callPredictionAPI(payload) {
     return new Promise((resolve, reject) => {
@@ -332,10 +332,10 @@ exports.getPrediction = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Prediction error:', error.message);
+        console.error('Prediction error:', error.message, error.stack);
         if (error.message.includes('timeout') || error.message.includes('ECONNREFUSED')) {
             return res.status(503).json({ success: false, message: 'Prediction service unavailable. Please try again later.' });
         }
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: 'Internal Server Error: ' + error.message });
     }
 };
