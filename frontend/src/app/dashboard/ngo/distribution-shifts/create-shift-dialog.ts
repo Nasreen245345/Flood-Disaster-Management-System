@@ -52,7 +52,7 @@ import { environment } from '../../../../environments/environment';
                 <mat-form-field appearance="outline">
                     <mat-label>Shift Start Date</mat-label>
                     <input matInput [matDatepicker]="startPicker" formControlName="shiftStart" required>
-                    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
                     <mat-datepicker #startPicker></mat-datepicker>
                 </mat-form-field>
 
@@ -65,7 +65,7 @@ import { environment } from '../../../../environments/environment';
                 <mat-form-field appearance="outline">
                     <mat-label>Shift End Date</mat-label>
                     <input matInput [matDatepicker]="endPicker" formControlName="shiftEnd" required>
-                    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
                     <mat-datepicker #endPicker></mat-datepicker>
                 </mat-form-field>
 

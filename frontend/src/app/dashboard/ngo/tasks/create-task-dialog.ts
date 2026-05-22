@@ -69,7 +69,7 @@ import { NgoService } from '../services/ngo.service';
                 <mat-form-field appearance="outline">
                     <mat-label>Due Date (Optional)</mat-label>
                     <input matInput [matDatepicker]="picker" formControlName="dueDate">
-                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                     <mat-datepicker #picker></mat-datepicker>
                 </mat-form-field>
             </form>
