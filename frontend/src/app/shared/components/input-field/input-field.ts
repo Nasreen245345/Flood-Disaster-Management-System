@@ -16,6 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
       <mat-icon matPrefix class="mr-2 text-primary/60">{{ icon }}</mat-icon>
       
       <mat-error *ngIf="control.hasError('required')">{{ label }} is required</mat-error>
+      <mat-error *ngIf="control.hasError('pattern')">Invalid format</mat-error>
       <mat-error *ngIf="control.hasError('email')">Please enter a valid email</mat-error>
       <mat-error *ngIf="control.hasError('minlength')">Password is too short</mat-error>
     </mat-form-field>

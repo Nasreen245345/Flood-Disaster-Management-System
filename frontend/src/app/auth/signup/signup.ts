@@ -37,7 +37,7 @@ export class SignupComponent implements OnInit {
   signupForm: FormGroup = this.fb.group({
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    phone: ['', Validators.required],
+    phone: ['', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
     role: ['victim', Validators.required],
     password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', Validators.required]
@@ -72,8 +72,8 @@ export class SignupComponent implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-        const message = err.error?.message || 'Signup failed. Try again.';
-        this.snackBar.open(message, 'Close', { duration: 3000 });
+        const message = err.message || err.error?.message || 'Signup failed. Try again.';
+        this.snackBar.open(message, 'Close', { duration: 4000 });
       }
     });
   }

@@ -106,10 +106,10 @@ export class CreateTaskDialogComponent {
     constructor(@Inject(MAT_DIALOG_DATA) public data: { organizationId: string }) {
         this.taskForm = this.fb.group({
             taskType: ['delivery', Validators.required],
-            title: ['', Validators.required],
-            description: ['', Validators.required],
+            title: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(100)]],
+            description: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
             priority: ['medium', Validators.required],
-            location: [''],
+            location: ['', Validators.maxLength(200)],
             dueDate: [null]
         });
     }

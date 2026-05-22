@@ -2,7 +2,7 @@ import { environment } from '../../../environments/environment';
 import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, timeout } from 'rxjs';
 
 export interface User {
   id: string;
@@ -59,6 +59,7 @@ export class AuthService {
   login(email: string, password: string): Observable<User> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password })
       .pipe(
+        timeout(15000),
         tap(response => {
           if (response.success) {
             this.currentUser.set(response.user);
@@ -69,6 +70,15 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('Login error:', error);
+          if (error.name === 'TimeoutError') {
+             return throwError(() => new Error('Login request timed out. Please check your connection or try again later.'));
+          }
+          if (error.status === 0 || !error.status) {
+             return throwError(() => new Error('Cannot connect to the server. Please try again later.'));
+          }
+          if (error.error && error.error.message) {
+             return throwError(() => new Error(error.error.message));
+          }
           return throwError(() => error);
         })
       ) as any;
@@ -78,6 +88,7 @@ export class AuthService {
   cnicLogin(cnic: string, phone: string): Observable<User> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/cnic-login`, { cnic, phone })
       .pipe(
+        timeout(15000),
         tap(response => {
           if (response.success) {
             this.currentUser.set(response.user);
@@ -88,6 +99,15 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('CNIC Login error:', error);
+          if (error.name === 'TimeoutError') {
+             return throwError(() => new Error('Login request timed out. Please check your connection or try again later.'));
+          }
+          if (error.status === 0 || !error.status) {
+             return throwError(() => new Error('Cannot connect to the server. Please try again later.'));
+          }
+          if (error.error && error.error.message) {
+             return throwError(() => new Error(error.error.message));
+          }
           return throwError(() => error);
         })
       ) as any;
@@ -97,6 +117,7 @@ export class AuthService {
   signup(data: any): Observable<User> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, data)
       .pipe(
+        timeout(15000),
         tap(response => {
           if (response.success) {
             // Auto-login after signup
@@ -108,6 +129,9 @@ export class AuthService {
         }),
         catchError(error => {
           console.error('Signup error:', error);
+          if (error.name === 'TimeoutError') {
+             return throwError(() => new Error('Signup request timed out. Please check your connection or try again later.'));
+          }
           if (error.status === 0 || !error.status) {
              return throwError(() => new Error('Cannot connect to the server (Network error or CORS issue). Please try again later.'));
           }

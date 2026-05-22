@@ -112,12 +112,12 @@ export class CreateShiftDialogComponent implements OnInit {
         const today = new Date();
         this.shiftForm = this.fb.group({
             disaster: ['', Validators.required],
-            location: ['', Validators.required],
+            location: ['', [Validators.required, Validators.maxLength(200)]],
             shiftStart: [today, Validators.required],
-            startTime: ['09:00', Validators.required],
+            startTime: ['09:00', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
             shiftEnd: [today, Validators.required],
-            endTime: ['17:00', Validators.required],
-            notes: ['']
+            endTime: ['17:00', [Validators.required, Validators.pattern('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$')]],
+            notes: ['', Validators.maxLength(500)]
         });
     }
 

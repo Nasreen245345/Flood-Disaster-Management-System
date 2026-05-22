@@ -44,8 +44,8 @@ export class LoginComponent {
   });
 
   cnicForm: FormGroup = this.fb.group({
-    cnic: ['', [Validators.required]],
-    phone: ['', [Validators.required]]
+    cnic: ['', [Validators.required, Validators.pattern('^[0-9]{5}-[0-9]{7}-[0-9]{1}$')]],
+    phone: ['', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]]
   });
 
   isLoading = false;
@@ -57,9 +57,10 @@ export class LoginComponent {
 
     this.authService.login(email, password).subscribe({
       next: () => { this.isLoading = false; },
-      error: () => {
+      error: (err: any) => {
         this.isLoading = false;
-        this.snackBar.open('Invalid credentials', 'Close', { duration: 3000 });
+        const msg = err.message || 'Invalid credentials';
+        this.snackBar.open(msg, 'Close', { duration: 4000 });
         this.cdr.detectChanges();
       }
     });
@@ -76,7 +77,7 @@ export class LoginComponent {
       next: () => { this.isLoading = false; },
       error: (err: any) => {
         this.isLoading = false;
-        const msg = err.error?.message || 'CNIC or phone number not found';
+        const msg = err.message || err.error?.message || 'CNIC or phone number not found';
         this.snackBar.open(msg, 'Close', { duration: 4000 });
         this.cdr.detectChanges();
       }

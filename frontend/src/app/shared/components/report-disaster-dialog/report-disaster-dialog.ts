@@ -43,10 +43,10 @@ export class ReportDisasterDialogComponent {
   locationDetected = false;
 
   reportForm: FormGroup = this.fb.group({
-    location: ['', Validators.required],
+    location: ['', [Validators.required, Validators.maxLength(200)]],
     disasterType: ['', Validators.required],
     severity: ['medium', Validators.required],
-    peopleAffected: [null],
+    peopleAffected: [null, [Validators.min(0), Validators.max(1000000)]],
     needs: this.fb.group({
       food: [false],
       water: [false],
@@ -55,9 +55,9 @@ export class ReportDisasterDialogComponent {
       rescue: [false],
       other: [false]
     }),
-    comments: [''],
-    contactName: [''],
-    contactPhone: ['']
+    comments: ['', Validators.maxLength(1000)],
+    contactName: ['', Validators.maxLength(100)],
+    contactPhone: ['', Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]
   });
 
   isSubmitting = false;

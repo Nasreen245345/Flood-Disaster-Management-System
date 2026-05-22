@@ -32,16 +32,16 @@ export class HelpRequestDialogComponent {
 
   helpForm: FormGroup = this.fb.group({
     // Victim Information
-    victimName: ['', Validators.required],
-    victimCNIC: ['', [Validators.required, Validators.pattern(/^\d{5}-\d{7}-\d{1}$/)]],
-    victimPhone: ['', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
+    victimName: ['', [Validators.required, Validators.maxLength(100)]],
+    victimCNIC: ['', [Validators.required, Validators.pattern(/^\\d{5}-\\d{7}-\\d{1}$/)]],
+    victimPhone: ['', [Validators.required, Validators.pattern(/^\\+?\\d{10,15}$/)]],
     
     // Request Details
-    location: ['', Validators.required],
-    peopleCount: [1, [Validators.required, Validators.min(1)]], // This determines quantity!
+    location: ['', [Validators.required, Validators.maxLength(300)]],
+    peopleCount: [1, [Validators.required, Validators.min(1), Validators.max(500)]], // This determines quantity!
     packagesNeeded: this.fb.array([this.createPackageItem()]), // Just category selection, no quantity
     urgency: ['high', Validators.required],
-    additionalNotes: ['']
+    additionalNotes: ['', Validators.maxLength(1000)]
   });
 
   isSubmitting = false;

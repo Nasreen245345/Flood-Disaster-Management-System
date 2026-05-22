@@ -114,13 +114,13 @@ export class AddVolunteerDialogComponent {
     private dialogRef = inject(MatDialogRef<AddVolunteerDialogComponent>);
 
     volunteerForm = this.fb.group({
-        name: ['', Validators.required],
-        cnic: [''],
-        contact: ['', Validators.required],
-        email: [''],
+        name: ['', [Validators.required, Validators.maxLength(100)]],
+        cnic: ['', Validators.pattern('^[0-9]{5}-[0-9]{7}-[0-9]{1}$')],
+        contact: ['', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
+        email: ['', Validators.email],
         type: [{ value: 'NGO Volunteer', disabled: true }],
-        expertise: ['', Validators.required],
-        experience: ['']
+        expertise: ['', [Validators.required, Validators.maxLength(500)]],
+        experience: ['', [Validators.maxLength(50)]]
     });
 
     onSubmit() {
