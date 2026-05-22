@@ -38,16 +38,37 @@ import { NgoService } from '../services/ngo.service';
                         <mat-option value="field_work">Field Work</mat-option>
                         <mat-option value="other">Other</mat-option>
                     </mat-select>
+                    <mat-error *ngIf="taskForm.get('taskType')?.hasError('required')">
+                        Task Type is required
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Title</mat-label>
                     <input matInput formControlName="title" required>
+                    <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
+                        Title is required
+                    </mat-error>
+                    <mat-error *ngIf="taskForm.get('title')?.hasError('minlength')">
+                        Title must be at least 5 characters long
+                    </mat-error>
+                    <mat-error *ngIf="taskForm.get('title')?.hasError('maxlength')">
+                        Title cannot exceed 100 characters
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Description</mat-label>
                     <textarea matInput formControlName="description" rows="3" required></textarea>
+                    <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
+                        Description is required
+                    </mat-error>
+                    <mat-error *ngIf="taskForm.get('description')?.hasError('minlength')">
+                        Description must be at least 10 characters long
+                    </mat-error>
+                    <mat-error *ngIf="taskForm.get('description')?.hasError('maxlength')">
+                        Description cannot exceed 1000 characters
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -58,12 +79,18 @@ import { NgoService } from '../services/ngo.service';
                         <mat-option value="high">High</mat-option>
                         <mat-option value="critical">Critical</mat-option>
                     </mat-select>
+                    <mat-error *ngIf="taskForm.get('priority')?.hasError('required')">
+                        Priority is required
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Location (Optional)</mat-label>
                     <input matInput formControlName="location">
                     <mat-hint>e.g., "24.8607, 67.0011" or "Sector F-10"</mat-hint>
+                    <mat-error *ngIf="taskForm.get('location')?.hasError('maxlength')">
+                        Location cannot exceed 200 characters
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">

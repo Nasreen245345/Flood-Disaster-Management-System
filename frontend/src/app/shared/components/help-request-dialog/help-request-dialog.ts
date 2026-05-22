@@ -33,8 +33,8 @@ export class HelpRequestDialogComponent {
   helpForm: FormGroup = this.fb.group({
     // Victim Information
     victimName: ['', [Validators.required, Validators.maxLength(100)]],
-    victimCNIC: ['', [Validators.required, Validators.pattern(/^\\d{5}-\\d{7}-\\d{1}$/)]],
-    victimPhone: ['', [Validators.required, Validators.pattern(/^\\+?\\d{10,15}$/)]],
+    victimCNIC: ['', [Validators.required, Validators.pattern(/^\d{5}-\d{7}-\d{1}$/)]],
+    victimPhone: ['', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
     
     // Request Details
     location: ['', [Validators.required, Validators.maxLength(300)]],

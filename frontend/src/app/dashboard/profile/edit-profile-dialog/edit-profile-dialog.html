@@ -28,14 +28,19 @@
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Full Name</mat-label>
                             <input matInput formControlName="fullName">
+                            <mat-error *ngIf="profileForm.get('fullName')?.hasError('required')">Name is required</mat-error>
                         </mat-form-field>
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Email Address</mat-label>
                             <input matInput formControlName="email">
+                            <mat-error *ngIf="profileForm.get('email')?.hasError('required')">Email is required</mat-error>
+                            <mat-error *ngIf="profileForm.get('email')?.hasError('email')">Invalid email address</mat-error>
                         </mat-form-field>
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Phone Number</mat-label>
                             <input matInput formControlName="phone">
+                            <mat-error *ngIf="profileForm.get('phone')?.hasError('required')">Phone is required</mat-error>
+                            <mat-error *ngIf="profileForm.get('phone')?.hasError('pattern')">Invalid phone number format</mat-error>
                         </mat-form-field>
                     </ng-container>
 
@@ -44,20 +49,27 @@
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Organization Name</mat-label>
                             <input matInput formControlName="orgName">
+                            <mat-error *ngIf="profileForm.get('orgName')?.hasError('required')">Organization name is required</mat-error>
                         </mat-form-field>
                         <div class="row">
                             <mat-form-field appearance="outline" class="half">
                                 <mat-label>Contact Email</mat-label>
                                 <input matInput formControlName="email">
+                                <mat-error *ngIf="profileForm.get('email')?.hasError('required')">Email is required</mat-error>
+                                <mat-error *ngIf="profileForm.get('email')?.hasError('email')">Invalid email address</mat-error>
                             </mat-form-field>
                             <mat-form-field appearance="outline" class="half">
                                 <mat-label>Main Phone</mat-label>
                                 <input matInput formControlName="phone">
+                                <mat-error *ngIf="profileForm.get('phone')?.hasError('required')">Phone is required</mat-error>
+                                <mat-error *ngIf="profileForm.get('phone')?.hasError('pattern')">Invalid phone number format</mat-error>
                             </mat-form-field>
                         </div>
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Office Address</mat-label>
                             <textarea matInput formControlName="address" rows="2"></textarea>
+                            <mat-error *ngIf="profileForm.get('address')?.hasError('required')">Office address is required</mat-error>
+                            <mat-error *ngIf="profileForm.get('address')?.hasError('maxlength')">Address cannot exceed 300 characters</mat-error>
                         </mat-form-field>
                     </ng-container>
 
@@ -66,15 +78,20 @@
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Full Name</mat-label>
                             <input matInput formControlName="fullName">
+                            <mat-error *ngIf="profileForm.get('fullName')?.hasError('required')">Name is required</mat-error>
                         </mat-form-field>
                         <div class="row">
                             <mat-form-field appearance="outline" class="half">
                                 <mat-label>Email</mat-label>
                                 <input matInput formControlName="email">
+                                <mat-error *ngIf="profileForm.get('email')?.hasError('required')">Email is required</mat-error>
+                                <mat-error *ngIf="profileForm.get('email')?.hasError('email')">Invalid email address</mat-error>
                             </mat-form-field>
                             <mat-form-field appearance="outline" class="half">
                                 <mat-label>Phone</mat-label>
                                 <input matInput formControlName="phone">
+                                <mat-error *ngIf="profileForm.get('phone')?.hasError('required')">Phone is required</mat-error>
+                                <mat-error *ngIf="profileForm.get('phone')?.hasError('pattern')">Invalid phone number format</mat-error>
                             </mat-form-field>
                         </div>
                     </ng-container>
@@ -91,10 +108,14 @@
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Current Contact Phone</mat-label>
                             <input matInput formControlName="phone" placeholder="+92...">
+                            <mat-error *ngIf="profileForm.get('phone')?.hasError('required')">Phone is required</mat-error>
+                            <mat-error *ngIf="profileForm.get('phone')?.hasError('pattern')">Invalid phone number format</mat-error>
                         </mat-form-field>
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Current Location / Temporary Address</mat-label>
                             <textarea matInput formControlName="address" rows="2"></textarea>
+                            <mat-error *ngIf="profileForm.get('address')?.hasError('required')">Address is required</mat-error>
+                            <mat-error *ngIf="profileForm.get('address')?.hasError('maxlength')">Address cannot exceed 300 characters</mat-error>
                         </mat-form-field>
                     </ng-container>
                 </div>
@@ -116,11 +137,15 @@
                             <mat-form-field appearance="outline" class="half">
                                 <mat-label>Daily Capacity (Pax)</mat-label>
                                 <input matInput type="number" formControlName="maxCapacity">
+                                <mat-error *ngIf="profileForm.get('maxCapacity')?.hasError('min')">Capacity cannot be negative</mat-error>
+                                <mat-error *ngIf="profileForm.get('maxCapacity')?.hasError('max')">Capacity cannot exceed 100,000</mat-error>
                             </mat-form-field>
                         </div>
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Emergency Contact Person</mat-label>
                             <input matInput formControlName="emergencyContact">
+                            <mat-error *ngIf="profileForm.get('emergencyContact')?.hasError('required')">Emergency contact is required</mat-error>
+                            <mat-error *ngIf="profileForm.get('emergencyContact')?.hasError('pattern')">Invalid phone number format</mat-error>
                         </mat-form-field>
 
                         <div class="readonly-section">
@@ -160,6 +185,8 @@
                         <mat-form-field appearance="outline" class="w-full">
                             <mat-label>Family Members</mat-label>
                             <input matInput type="number" formControlName="familySize">
+                            <mat-error *ngIf="profileForm.get('familySize')?.hasError('min')">Family size must be at least 1</mat-error>
+                            <mat-error *ngIf="profileForm.get('familySize')?.hasError('max')">Family size cannot exceed 50</mat-error>
                         </mat-form-field>
 
                         <!-- Simplified handling for special needs array for now -->
@@ -172,21 +199,24 @@
             </mat-tab>
 
             <!-- TAB 3: Security -->
-            <mat-tab label="Security">
+            <mat-tab label="Security" *ngIf="role !== 'victim'">
                 <div class="tab-content">
                     <div class="warning-box">
                         <mat-icon>security</mat-icon>
                         <p>Changing your password will require you to log in again on all devices.</p>
                     </div>
 
-                    <mat-form-field appearance="outline" class="w-full">
+                    <mat-form-field appearance="outline" class="w-full" *ngIf="profileForm.get('currentPassword')">
                         <mat-label>Current Password</mat-label>
                         <input matInput type="password" formControlName="currentPassword">
                     </mat-form-field>
 
-                    <mat-form-field appearance="outline" class="w-full">
+                    <mat-form-field appearance="outline" class="w-full" *ngIf="profileForm.get('newPassword')">
                         <mat-label>New Password</mat-label>
                         <input matInput type="password" formControlName="newPassword">
+                        <mat-error *ngIf="profileForm.get('newPassword')?.hasError('minlength')">
+                            Password must be at least 6 characters long
+                        </mat-error>
                     </mat-form-field>
 
                     <button mat-stroked-button color="warn" type="button" class="w-full mt-4">

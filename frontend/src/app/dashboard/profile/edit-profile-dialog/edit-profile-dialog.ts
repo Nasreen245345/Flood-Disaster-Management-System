@@ -62,7 +62,7 @@ export class EditProfileDialogComponent implements OnInit {
             this.profileForm = this.fb.group({
                 fullName: [user.name, [Validators.required, Validators.maxLength(100)]],
                 email: [user.email, [Validators.required, Validators.email]],
-                phone: [user.phone || '', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
+                phone: [user.phone || '', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
                 currentPassword: [''],
                 newPassword: ['', [Validators.minLength(6)]]
             });
@@ -71,11 +71,11 @@ export class EditProfileDialogComponent implements OnInit {
             this.profileForm = this.fb.group({
                 orgName: [user.name, [Validators.required, Validators.maxLength(150)]],
                 email: [user.email, [Validators.required, Validators.email]],
-                phone: [user.phone || '', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
+                phone: [user.phone || '', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
                 address: [user.address || '', [Validators.required, Validators.maxLength(300)]],
                 serviceCategory: [user.category || 'Food'],
                 maxCapacity: [user.capacity || 100, [Validators.min(0), Validators.max(100000)]],
-                emergencyContact: [user.emergencyContact || '', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
+                emergencyContact: [user.emergencyContact || '', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
                 currentPassword: [''],
                 newPassword: ['', [Validators.minLength(6)]]
             });
@@ -84,7 +84,7 @@ export class EditProfileDialogComponent implements OnInit {
             this.profileForm = this.fb.group({
                 fullName: [user.name, [Validators.required, Validators.maxLength(100)]],
                 email: [user.email, [Validators.required, Validators.email]],
-                phone: [user.phone || '', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
+                phone: [user.phone || '', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
                 expertise: [user.expertise || []],
                 availability: [user.availability || 'Active'],
                 currentPassword: [''],
@@ -94,7 +94,7 @@ export class EditProfileDialogComponent implements OnInit {
         else if (this.role === 'victim') {
             this.profileForm = this.fb.group({
                 fullName: [{ value: user.name, disabled: true }], // Read-only for victim
-                phone: [user.phone || '', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
+                phone: [user.phone || '', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
                 address: [user.address || '', [Validators.required, Validators.maxLength(300)]], // Temp address
                 familySize: [user.familySize || 1, [Validators.min(1), Validators.max(50)]],
                 specialNeeds: [user.specialNeeds || []]

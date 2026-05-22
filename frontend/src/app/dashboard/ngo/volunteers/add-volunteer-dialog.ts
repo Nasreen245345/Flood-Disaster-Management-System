@@ -42,17 +42,24 @@ import { MatIconModule } from '@angular/material/icon';
                         <mat-form-field appearance="outline">
                             <mat-label>CNIC / National ID</mat-label>
                             <input matInput formControlName="cnic" placeholder="12345-1234567-1">
+                            <mat-error *ngIf="volunteerForm.get('cnic')?.hasError('pattern')">
+                                CNIC must be in 12345-1234567-1 format
+                            </mat-error>
                         </mat-form-field>
                         <mat-form-field appearance="outline">
                             <mat-label>Phone Number</mat-label>
                             <input matInput formControlName="contact" placeholder="+92 300 1234567">
-                             <mat-error *ngIf="volunteerForm.get('contact')?.hasError('required')">Phone is required</mat-error>
+                            <mat-error *ngIf="volunteerForm.get('contact')?.hasError('required')">Phone is required</mat-error>
+                            <mat-error *ngIf="volunteerForm.get('contact')?.hasError('pattern')">Invalid phone number format</mat-error>
                         </mat-form-field>
                     </div>
                     <div class="row">
                          <mat-form-field appearance="outline" class="col-span-2">
                             <mat-label>Email Address</mat-label>
                             <input matInput formControlName="email" placeholder="john@example.com">
+                            <mat-error *ngIf="volunteerForm.get('email')?.hasError('email')">
+                                Please enter a valid email address
+                            </mat-error>
                         </mat-form-field>
                     </div>
                 </div>
@@ -115,8 +122,8 @@ export class AddVolunteerDialogComponent {
 
     volunteerForm = this.fb.group({
         name: ['', [Validators.required, Validators.maxLength(100)]],
-        cnic: ['', Validators.pattern('^[0-9]{5}-[0-9]{7}-[0-9]{1}$')],
-        contact: ['', [Validators.required, Validators.pattern('^\\+?[0-9\\s\\-\\(y\\)]{10,15}$')]],
+        cnic: ['', Validators.pattern(/^\d{5}-\d{7}-\d{1}$/)],
+        contact: ['', [Validators.required, Validators.pattern(/^\+?\d{10,15}$/)]],
         email: ['', Validators.email],
         type: [{ value: 'NGO Volunteer', disabled: true }],
         expertise: ['', [Validators.required, Validators.maxLength(500)]],

@@ -91,6 +91,9 @@
             <mat-form-field appearance="outline" class="w-full">
                 <mat-label>Phone (Optional)</mat-label>
                 <input matInput formControlName="contactPhone" type="tel">
+                <mat-error *ngIf="reportForm.get('contactPhone')?.hasError('pattern')">
+                    Invalid phone format (e.g., +923001234567)
+                </mat-error>
             </mat-form-field>
         </div>
 

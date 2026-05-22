@@ -41,12 +41,21 @@ import { environment } from '../../../../environments/environment';
                         </mat-option>
                     </mat-select>
                     <mat-hint>Select the disaster this shift is for</mat-hint>
+                    <mat-error *ngIf="shiftForm.get('disaster')?.hasError('required')">
+                        Associated disaster is required
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Distribution Point Location</mat-label>
                     <input matInput formControlName="location" required>
                     <mat-hint>e.g., "Main Relief Camp, Nowshera"</mat-hint>
+                    <mat-error *ngIf="shiftForm.get('location')?.hasError('required')">
+                        Location is required
+                    </mat-error>
+                    <mat-error *ngIf="shiftForm.get('location')?.hasError('maxlength')">
+                        Location cannot exceed 200 characters
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -54,12 +63,21 @@ import { environment } from '../../../../environments/environment';
                     <input matInput [matDatepicker]="startPicker" formControlName="shiftStart" required>
                     <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
                     <mat-datepicker #startPicker></mat-datepicker>
+                    <mat-error *ngIf="shiftForm.get('shiftStart')?.hasError('required')">
+                        Start date is required
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>Start Time (HH:MM)</mat-label>
                     <input matInput formControlName="startTime" placeholder="09:00" required>
                     <mat-hint>24-hour format</mat-hint>
+                    <mat-error *ngIf="shiftForm.get('startTime')?.hasError('required')">
+                        Start time is required
+                    </mat-error>
+                    <mat-error *ngIf="shiftForm.get('startTime')?.hasError('pattern')">
+                        Invalid time format (HH:MM in 24-hour format)
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
@@ -67,12 +85,21 @@ import { environment } from '../../../../environments/environment';
                     <input matInput [matDatepicker]="endPicker" formControlName="shiftEnd" required>
                     <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
                     <mat-datepicker #endPicker></mat-datepicker>
+                    <mat-error *ngIf="shiftForm.get('shiftEnd')?.hasError('required')">
+                        End date is required
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
                     <mat-label>End Time (HH:MM)</mat-label>
                     <input matInput formControlName="endTime" placeholder="17:00" required>
                     <mat-hint>24-hour format</mat-hint>
+                    <mat-error *ngIf="shiftForm.get('endTime')?.hasError('required')">
+                        End time is required
+                    </mat-error>
+                    <mat-error *ngIf="shiftForm.get('endTime')?.hasError('pattern')">
+                        Invalid time format (HH:MM in 24-hour format)
+                    </mat-error>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">

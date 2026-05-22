@@ -5,18 +5,24 @@
     <div class="flex flex-col gap-4">
         <mat-form-field appearance="outline">
             <mat-label>Choose a date</mat-label>
-            <input matInput [matDatepicker]="picker" [(ngModel)]="data.date">
+            <input matInput [matDatepicker]="picker" [(ngModel)]="data.date" name="date" required #dateModel="ngModel">
             <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
+            <mat-error *ngIf="dateModel.invalid && (dateModel.dirty || dateModel.touched)">
+                Date is required
+            </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
             <mat-label>Reason</mat-label>
-            <input matInput [(ngModel)]="data.reason" placeholder="e.g., Doctor Appointment">
+            <input matInput [(ngModel)]="data.reason" name="reason" placeholder="e.g., Doctor Appointment" required #reasonModel="ngModel">
+            <mat-error *ngIf="reasonModel.invalid && (reasonModel.dirty || reasonModel.touched)">
+                Reason is required
+            </mat-error>
         </mat-form-field>
     </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
     <button mat-button (click)="onNoClick()">Cancel</button>
-    <button mat-flat-button color="primary" (click)="save()" [disabled]="!data.reason">Add</button>
+    <button mat-flat-button color="primary" (click)="save()" [disabled]="!data.reason || !data.date">Add</button>
 </mat-dialog-actions>
