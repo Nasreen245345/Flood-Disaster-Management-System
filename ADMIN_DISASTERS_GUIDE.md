@@ -1,296 +1,308 @@
-# Admin Disasters Page - User Guide
+# Disaster Management System (DMS)
 
-## 🎯 What You'll See
+A full-stack disaster response platform for managing aid requests, disaster reports, NGO operations, volunteer workflows, regional assignments, distribution shifts, and demand forecasting.
 
-When you navigate to the Admin Dashboard → Disasters page, you will now see **REAL disaster data** from your database instead of mock data.
+This repository contains three major parts:
 
----
+- Frontend: Angular 21 application with role-based dashboards
+- Backend: Node.js + Express + MongoDB REST API
+- Prediction Service: Flask + scikit-learn forecasting service
 
-## 📍 Current Disasters in Your Database
+## Project Goals
 
-### Active Disasters (5-6 disasters)
+- Enable victims to request aid quickly
+- Allow NGOs to manage volunteers, inventory, tasks, and shifts
+- Support admins with governance and approvals
+- Provide map-based visibility for disasters and active distributions
+- Forecast aid package demand for assigned regions/disasters
 
-1. **Karachi, Hyderabad, Thatta Flood**
-   - 🌊 Type: FLOOD (Blue card)
-   - ⚠️ Severity: HIGH
-   - 👥 Affected: 25,000 people
-   - 📍 Regions: Karachi, Hyderabad, Thatta
-   - 📝 Description: Heavy torrential rains causing urban flooding in DHA and Clifton areas
+## Architecture
 
-2. **Murree, Galyat Landslide**
-   - ⛰️ Type: LANDSLIDE (Brown card)
-   - 🔴 Severity: CRITICAL
-   - 👥 Affected: 1,000 people
-   - 📍 Regions: Murree, Galyat
-   - 📝 Description: Major landslide blocking Murree Expressway. Tourists stranded.
-
-3. **Gwadar, Pasni, Ormara Cyclone**
-   - 🌀 Type: CYCLONE (Purple card)
-   - ⚠️ Severity: HIGH
-   - 👥 Affected: 15,000 people
-   - 📍 Regions: Gwadar, Pasni, Ormara
-   - 📝 Description: Cyclone approaching Makran coastal belt. Section 144 imposed.
-
-4. **Quetta Earthquake**
-   - 🏔️ Type: EARTHQUAKE (Orange card)
-   - 🔴 Severity: CRITICAL
-   - 👥 Affected: 5,000 people
-   - 📍 Regions: Quetta
-   - 📝 Description: Magnitude 6.2 earthquake. Multiple buildings damaged.
-
-5. **Rikhi Fire**
-   - 🔥 Type: FIRE (Red card)
-   - 🟢 Severity: LOW
-   - 👥 Affected: 200 people
-   - 📍 Regions: Rikhi
-   - 📝 Description: Need rescue team, people stuck in fire area
-
-### Closed Disasters (2 disasters)
-
-6. **Rawalpindi Fire**
-   - 🔥 Type: FIRE (Red card)
-   - 🟡 Severity: MEDIUM
-   - 👥 Affected: 500 people
-   - 📍 Regions: Rawalpindi
-   - 📝 Description: Fire in Raja Bazaar now extinguished
-   - ✅ Status: CLOSED
-
-7. **Lahore Accident**
-   - 🚗 Type: ACCIDENT (Yellow card)
-   - 🟡 Severity: MEDIUM
-   - 👥 Affected: 200 people
-   - 📍 Regions: Lahore
-   - 📝 Description: Major traffic accident on motorway
-   - ✅ Status: CLOSED
-
----
-
-## 🎨 Visual Layout
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Disaster Management                                         │
-│  Monitor active and closed disasters (Read-Only)            │
-├─────────────────────────────────────────────────────────────┤
-│  [Filter by Type ▼] [Filter by Severity ▼] [Filter by Status ▼]  │
-│  Showing 8 of 8 disasters                                   │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌────────────┐│
-│  │ 🌊 Karachi Flood │  │ ⛰️ Murree Landslide│  │ 🔥 Rawalpindi│
-│  │ HIGH | ACTIVE   │  │ CRITICAL | ACTIVE│  │ MED | CLOSED│
-│  │ 25,000 people   │  │ 1,000 people     │  │ 500 people  │
-│  │ 3 regions       │  │ 2 regions        │  │ 1 region    │
-│  └──────────────────┘  └──────────────────┘  └────────────┘│
-│                                                              │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌────────────┐│
-│  │ 🌀 Gwadar Cyclone│  │ 🏔️ Quetta Earthquake│ │ 🔥 Rikhi Fire│
-│  │ HIGH | ACTIVE   │  │ CRITICAL | ACTIVE│  │ LOW | ACTIVE│
-│  │ 15,000 people   │  │ 5,000 people     │  │ 200 people  │
-│  │ 3 regions       │  │ 1 region         │  │ 1 region    │
-│  └──────────────────┘  └──────────────────┘  └────────────┘│
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    U[Users: Victim NGO Volunteer Admin] --> F[Angular Frontend]
+    F -->|REST API| B[Express Backend]
+    B -->|Mongoose| M[(MongoDB Atlas)]
+    B -->|HTTP POST /predict| P[Flask Prediction Service]
+    B -->|Reverse Geocode Proxy| OSM[OpenStreetMap Nominatim]
 ```
 
----
+## Repository Structure
 
-## 🔍 How to Use Filters
+```text
+90-done-fyp/
+  backend/       # Express API, MongoDB models, business logic, utility scripts
+  frontend/      # Angular standalone app (role-based dashboards + shared components)
+  prediction/    # Flask prediction API + model training assets
+  *.md           # Implementation guides, status docs, flow notes
+```
 
-### Filter by Type
-Click the "Filter by Type" dropdown and select:
-- **All Types** - Shows all disasters
-- **Flood** - Shows only Karachi flood
-- **Fire** - Shows Rawalpindi and Rikhi fires
-- **Earthquake** - Shows only Quetta earthquake
-- **Landslide** - Shows only Murree landslide
-- **Cyclone** - Shows only Gwadar cyclone
-- **Accident** - Shows only Lahore accident
+## Core Features
 
-### Filter by Severity
-Click the "Filter by Severity" dropdown and select:
-- **All Levels** - Shows all disasters
-- **Low** - Shows Rikhi fire
-- **Medium** - Shows Rawalpindi fire and Lahore accident
-- **High** - Shows Karachi flood and Gwadar cyclone
-- **Critical** - Shows Murree landslide and Quetta earthquake
+### Authentication and Roles
 
-### Filter by Status
-Click the "Filter by Status" dropdown and select:
-- **All Status** - Shows all 8 disasters
-- **Active** - Shows 5-6 active disasters
-- **Closed** - Shows 2 closed disasters (Rawalpindi, Lahore)
+- Signup/Login with JWT-based auth
+- Roles: admin, ngo, volunteer, victim
+- CNIC-based login flow for victim users
+- User status controls (active/inactive/blocked)
 
-### Combine Filters
-You can combine multiple filters:
-- **Type: Fire + Status: Active** → Shows only Rikhi fire
-- **Severity: Critical + Status: Active** → Shows Murree and Quetta
-- **Type: Flood + Severity: High** → Shows Karachi flood
+### Aid Request Management
 
----
+- Public/optional-auth aid request submission
+- Victim-centric tracking (my requests, status updates)
+- NGO-side request viewing and task creation from requests
 
-## 📊 Card Information
+### Disaster Reporting and Tracking
 
-Each disaster card displays:
+- Public disaster reporting
+- Disaster lifecycle/status management
+- Disaster stats endpoint
 
-### Header (Colored by type)
-- 🎨 Background color based on disaster type
-- 🔷 Icon representing the disaster type
-- 📝 Disaster name (Location + Type)
-- 🏷️ Disaster type label
+### NGO Operations
 
-### Status Badges
-- 🔴 Severity chip (Low/Medium/High/Critical)
-- 🟢 Status chip (Active/Closed)
+- NGO registration and approval lifecycle
+- Inventory management (package/category/quantity based)
+- Capacity insights and workload tracking
+- Assigned region awareness
 
-### Description
-- 📄 Brief description of the disaster
-- 💬 Comments from the reporter
+### Volunteer Operations
 
-### Statistics
-- 👥 Affected Population (number of people)
-- 📍 Affected Regions (number of regions)
+- Volunteer registration and profile
+- Verification by NGO/admin
+- Availability and region assignment
+- Capacity contribution by role/skill/shift profile
 
-### Regions List
-- 🏷️ Chips showing each affected region
-- 📍 Multiple regions displayed as separate chips
+### Task and Distribution Workflow
 
-### Footer
-- 🕐 Reported date and time
-- 📅 Formatted as: "Dec 19, 2025, 04:00 PM"
+- NGO task creation and assignment
+- Volunteer task views and status updates
+- Distribution shift creation/assignment/verification
+- Distribution logs and active shift operations
 
----
+### Mapping and Geo Features
 
-## 🎨 Color Coding
+- Unified map feed (active disasters + distribution points)
+- Reverse geocode proxy for friendly place names
 
-### Disaster Types
-- **Flood** 🌊 - Blue (#3b82f6)
-- **Fire** 🔥 - Red (#ef4444)
-- **Earthquake** 🏔️ - Orange (#f97316)
-- **Landslide** ⛰️ - Brown (#92400e)
-- **Cyclone** 🌀 - Purple (#a855f7)
-- **Accident** 🚗 - Yellow (#eab308)
+### Forecasting
 
-### Severity Levels
-- **Low** 🟢 - Green chip
-- **Medium** 🟡 - Yellow chip
-- **High** 🟠 - Orange chip
-- **Critical** 🔴 - Red chip
+- Backend endpoint for NGO forecast retrieval
+- Multi-day package demand forecast (food, medical, shelter, clothing, water)
+- Trend-aware decay and combined multi-disaster forecasting logic
 
-### Status
-- **Active** 🔴 - Red chip with emergency icon
-- **Closed** 🟢 - Green chip with check icon
+## Tech Stack
 
----
+### Frontend
 
-## ✅ What to Verify
+- Angular 21 (standalone components)
+- Angular Material + CDK
+- Leaflet (map rendering)
 
-### 1. Data Accuracy
-- [ ] All 8 disasters are showing
-- [ ] Names are formatted correctly (Location + Type)
-- [ ] Affected population numbers are correct
-- [ ] Regions are displayed as chips
-- [ ] Descriptions are showing
+### Backend
 
-### 2. Filters Working
-- [ ] Type filter shows correct disasters
-- [ ] Severity filter shows correct disasters
-- [ ] Status filter shows correct disasters
-- [ ] Combined filters work correctly
-- [ ] Results count updates when filtering
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT + bcryptjs
+- CORS + dotenv
 
-### 3. Visual Display
-- [ ] Cards have correct colors based on type
-- [ ] Severity badges show correct colors
-- [ ] Status badges show correct icons
-- [ ] Dates are formatted properly
-- [ ] Layout is responsive
+### Prediction
 
-### 4. No Errors
-- [ ] No console errors in browser
-- [ ] No network errors in Network tab
-- [ ] Page loads quickly
-- [ ] Filters respond instantly
+- Flask + flask-cors
+- scikit-learn
+- pandas + numpy
 
----
+## Prerequisites
 
-## 🐛 Troubleshooting
+- Node.js 20+ recommended
+- npm (workspace uses npm)
+- Python 3.10+ recommended
+- MongoDB Atlas connection string
 
-### Problem: Page shows "Loading disasters..."
-**Cause**: API call is taking too long or failing
-**Solution**:
-1. Check browser console for errors
-2. Check Network tab for failed requests
-3. Verify backend is running on port 5000
-4. Refresh the page
+## Local Setup
 
-### Problem: Shows 0 disasters
-**Cause**: API returned empty data or mapping error
-**Solution**:
-1. Check browser console for errors
-2. Verify you're logged in as admin
-3. Check backend terminal for API logs
-4. Run seed script again: `node backend/seed-disasters.js`
+## 1) Backend Setup
 
-### Problem: Filters not working
-**Cause**: JavaScript error or state issue
-**Solution**:
-1. Check browser console for errors
-2. Clear browser cache
-3. Refresh the page
-4. Try different filter combinations
+```bash
+cd backend
+npm install
+```
 
-### Problem: Cards look broken
-**Cause**: CSS not loading or data format issue
-**Solution**:
-1. Hard refresh (Ctrl + Shift + R)
-2. Check browser console for CSS errors
-3. Verify data structure in Network tab
+Create or update backend environment variables in backend/.env:
 
----
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_secure_secret
+JWT_EXPIRE=30d
+```
 
-## 📸 Screenshots to Take
+Run backend:
 
-If you want to share the results, take screenshots of:
+```bash
+npm run dev
+```
 
-1. **Full page view** - Showing all disaster cards
-2. **Filtered view** - Type: Flood (should show 1 disaster)
-3. **Filtered view** - Severity: Critical (should show 2 disasters)
-4. **Filtered view** - Status: Closed (should show 2 disasters)
-5. **Single card close-up** - Showing all card details
-6. **Browser console** - Showing no errors
-7. **Network tab** - Showing successful API call
+or
 
----
+```bash
+npm start
+```
 
-## 🎉 Success Criteria
+Backend base URL:
 
-You'll know it's working when:
+- http://localhost:5000/api
 
-✅ You see 8 disaster cards (not 4 mock disasters)
-✅ Each card shows real data from your database
-✅ Filters work and update the results count
-✅ No console errors
-✅ Cards have proper colors and icons
-✅ Dates show actual reported dates
-✅ Regions display as chips
-✅ Affected population shows real numbers
+Health check:
 
----
+- GET http://localhost:5000/api/health
 
-## 🚀 What's Next
+## 2) Frontend Setup
 
-After verifying the disasters page works:
+```bash
+cd frontend
+npm install
+npm start
+```
 
-1. ✅ Organizations page (already done)
-2. ✅ Users page (already done)
-3. ✅ Disasters page (just completed!)
-4. 🔄 Region assignments page (next)
-5. 🔄 Activity logs page (next)
-6. 🔄 System stats (next)
+Frontend URL:
 
----
+- http://localhost:4200
 
-**Enjoy your real-time disaster monitoring system!** 🎉
+Important local-dev note:
 
-If everything looks good, you now have a fully functional admin dashboard showing real data from your database for organizations, users, and disasters!
+- frontend/src/environments/environment.ts currently points to a deployed backend URL.
+- For full local development, switch apiUrl to:
+
+```ts
+apiUrl: 'http://localhost:5000/api'
+```
+
+## 3) Prediction Service Setup (Optional for local ML service work)
+
+```bash
+cd prediction
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+Prediction service default URL:
+
+- http://localhost:8000
+
+Health check:
+
+- GET http://localhost:8000/health
+
+Important integration note:
+
+- Backend prediction controller currently calls a deployed prediction API URL directly.
+- If you want backend to use local Flask service, update the prediction service URL in backend/src/controllers/prediction.controller.js.
+
+## Running the Full System Locally
+
+Use three terminals:
+
+1. Terminal A:
+
+```bash
+cd backend
+npm run dev
+```
+
+2. Terminal B:
+
+```bash
+cd frontend
+npm start
+```
+
+3. Terminal C (optional local prediction):
+
+```bash
+cd prediction
+.venv\Scripts\activate
+python app.py
+```
+
+## API Surface (High-Level)
+
+Mounted backend route groups:
+
+- /api/auth
+- /api/aid-requests
+- /api/disasters
+- /api/users
+- /api/volunteers
+- /api/organizations
+- /api/region-assignments
+- /api/tasks
+- /api/distribution
+- /api/map
+- /api/notifications
+- /api/predictions
+- /api/admin/stats
+- /api/health
+
+Examples:
+
+- POST /api/auth/signup
+- POST /api/auth/login
+- POST /api/auth/cnic-login
+- GET /api/auth/me
+- GET /api/organizations/approved/list
+- GET /api/map/data
+- GET /api/predictions/:orgId
+
+## Utility and Seed Scripts
+
+The backend folder contains helper scripts used during development/testing, including:
+
+- create-admin.js
+- seed-organizations.js
+- seed-disasters.js
+- seed-map-data.js
+- create-test-shift.js
+- add-test-inventory.js
+- create-organization-for-ngo.js
+
+Run as needed from backend:
+
+```bash
+node create-admin.js
+```
+
+## Troubleshooting
+
+### CORS or auth issues
+
+- Ensure frontend and backend URLs match allowed origins and apiUrl config.
+- Confirm Authorization header is present for protected routes.
+
+### 401/403 from protected endpoints
+
+- Verify token validity and user status (active required).
+- Check role-based restrictions on each route.
+
+### MongoDB connection failures
+
+- Validate MONGODB_URI in backend/.env.
+- Check Atlas network access and database user permissions.
+
+### Forecast endpoint unavailable
+
+- Prediction service may be offline/unreachable.
+- If using local prediction service, ensure backend target URL is updated accordingly.
+
+
+## Security Notes
+
+- Do not commit secrets in backend/.env
+- Use strong JWT secrets in non-dev environments
+- Restrict CORS origins appropriately for production
+
+## License
+
+ISC (as defined in backend/package.json)
