@@ -1,4 +1,4 @@
-# Disaster Management System (DMS)
+# ReliefNet AI -- Intelligent Disaster Management Platform
 
 A full-stack disaster response platform for managing aid requests, disaster reports, NGO operations, volunteer workflows, regional assignments, distribution shifts, and demand forecasting.
 
